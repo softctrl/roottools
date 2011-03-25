@@ -315,7 +315,7 @@ public class RootTools {
 
 			while (line != null) {
 				if(null == result)
-					response.add(reader.readLine());
+					response.add(line);
 				else
 					result.process(line);
 				line = reader.readLine();
