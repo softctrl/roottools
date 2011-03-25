@@ -115,34 +115,34 @@ public class RootTools {
 		Log.i(TAG, "Checking for BusyBox");
 		File tmpDir = new File("/data/local/tmp");
 		if (!tmpDir.exists()) {
-		    doExec(new String[] { "mkdir /data/local/tmp" });
+			doExec(new String[] { "mkdir /data/local/tmp" });
 		}
 		Set<String> tmpSet = new HashSet<String>();
 		//Try to read from the file.
-        LineNumberReader lnr = null;
-        try {
-            doExec(new String[] { "cp /init.rc /data/local/tmp",
-                    "chmod 0777 /data/local/tmp/init.rc"});
-	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
-	        String line;
-	        while( (line = lnr.readLine()) != null ){
-	        	if (line.contains("export PATH")) {
-	        		int tmp = line.indexOf("/");
-	        		tmpSet = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
-	        		for(String paths : tmpSet) {
-	    				File file = new File(paths + "/busybox");
-	    				if (file.exists()) {
-	    					Log.i(TAG, "Found BusyBox!");
-	    					return true;
-	    				}
-	    			}
-	        	}
-	        }
-        } catch (Exception e) {
+		LineNumberReader lnr = null;
+		try {
+			doExec(new String[] { "cp /init.rc /data/local/tmp",
+					"chmod 0777 /data/local/tmp/init.rc"});
+			lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
+			String line;
+			while( (line = lnr.readLine()) != null ){
+				if (line.contains("export PATH")) {
+					int tmp = line.indexOf("/");
+					tmpSet = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
+					for(String paths : tmpSet) {
+						File file = new File(paths + "/busybox");
+						if (file.exists()) {
+							Log.i(TAG, "Found BusyBox!");
+							return true;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
 			Log.i(TAG, "BusyBox was not found, some error happened!");
 			e.printStackTrace();
-        	return false;
-        }
+			return false;
+		}
 		return false;
 	}
 	
@@ -165,10 +165,10 @@ public class RootTools {
 	 * Checks if there is enough Space on SDCard
 	 * 
 	 * @param UpdateSize
-	 *            Size to Check (long)
+	 *			Size to Check (long)
 	 * @return True if the Update will fit on SDCard, false if not enough space
-	 *         on SDCard Will also return false, if the SDCard is not mounted as
-	 *         read/write
+	 *		 on SDCard Will also return false, if the SDCard is not mounted as
+	 *		 read/write
 	 */
 	public static boolean EnoughSpaceOnSdCard(long UpdateSize) {
 		Log.i(TAG, "Checking SDcard size and that it is mounted as RW");
@@ -186,98 +186,98 @@ public class RootTools {
 	 * Sends one shell command as su (attempts to)
 	 * 
 	 * @param (String) command to send to the shell
-     * @param (Result) injected result object that implements the Result class
-	 *           
+	 * @param (Result) injected result object that implements the Result class
+	 *		   
 	 * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
 	 * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
 	 * @throws IOException 
 	 * @throws InterruptedException 
-     * @throws RootToolsException
+	 * @throws RootToolsException
 	 *
 	 * 
 	 */
 	public static List<String> sendShell(String command, Result result) throws IOException, InterruptedException, RootToolsException {
 		Log.i(TAG, "Sending one shell command");
 		List<String> response = null;
-        if(null == result)
-            response = new LinkedList<String>();
+		if(null == result)
+			response = new LinkedList<String>();
 
 		Process process = null;
 		DataOutputStream os = null;
 		InputStreamReader osRes = null;
 
-        try {
-            process = Runtime.getRuntime().exec("su");
-            if(null != result)
-                result.setProcess(process);
-            os = new DataOutputStream(process.getOutputStream());
-            osRes = new InputStreamReader(process.getInputStream());
-            BufferedReader reader = new BufferedReader(osRes);
+		try {
+			process = Runtime.getRuntime().exec("su");
+			if(null != result)
+				result.setProcess(process);
+			os = new DataOutputStream(process.getOutputStream());
+			osRes = new InputStreamReader(process.getInputStream());
+			BufferedReader reader = new BufferedReader(osRes);
 
-            os.writeBytes(command + "\n");
-            os.flush();
+			os.writeBytes(command + "\n");
+			os.flush();
 
-            os.writeBytes("exit \n");
-            os.flush();
+			os.writeBytes("exit \n");
+			os.flush();
 
-            String line = reader.readLine();
+			String line = reader.readLine();
 
-            while (line != null) {
-                if(null == result)
-                    response.add(line);
-                else
-                     result.process(line);
-                line = reader.readLine();
-            }
-        }
-        catch (Exception ex) {
-            if(null != result) {
-                result.onFailure(ex);
-            }
-        }
-        finally {
-            int diag = process.waitFor();
-            if(null != result)
-                result.onComplete(diag);
+			while (line != null) {
+				if(null == result)
+					response.add(line);
+				else
+					 result.process(line);
+				line = reader.readLine();
+			}
+		}
+		catch (Exception ex) {
+			if(null != result) {
+				result.onFailure(ex);
+			}
+		}
+		finally {
+			int diag = process.waitFor();
+			if(null != result)
+				result.onComplete(diag);
 
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (osRes != null) {
-                    osRes.close();
-                }
-                process.destroy();
-            } catch (Exception e) {
-                return response;
-            }
-            return response;
-        }
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (osRes != null) {
+					osRes.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				return response;
+			}
+			return response;
+		}
 	}
 
-    /**
-     * Sends one shell command as su (attempts to)
-     *
-     * @param (String) command to send to the shell
-     *
-     * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
-     * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
-     * @throws IOException
-     * @throws InterruptedException
-     *
-     *
-     */
-    public static List<String> sendShell(String command) throws IOException, InterruptedException, RootToolsException {
-        return sendShell(command, null);
-    }
+	/**
+	 * Sends one shell command as su (attempts to)
+	 *
+	 * @param (String) command to send to the shell
+	 *
+	 * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
+	 * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
+	 * @throws IOException
+	 * @throws InterruptedException
+	 *
+	 *
+	 */
+	public static List<String> sendShell(String command) throws IOException, InterruptedException, RootToolsException {
+		return sendShell(command, null);
+	}
 	
 	/**
 	 * Sends several shell command as su (attempts to)
 	 * 
 	 * @param (String[]) command to send to the shell
 	 * @param (int) Time to sleep between each command, delay.
-     * @param (Result) injected result object that implements the Result class
-     *
+	 * @param (Result) injected result object that implements the Result class
+	 *
 	 * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
 	 * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
 	 * 
@@ -287,82 +287,82 @@ public class RootTools {
 	public static List<String> sendShell(String[] commands, int sleeptime, Result result) throws IOException, InterruptedException, RootToolsException {
 		Log.i(TAG, "Sending some shell commands");
 		List<String> response = null;
-        if(null == result)
-            response = new LinkedList<String>();
+		if(null == result)
+			response = new LinkedList<String>();
 
 		Process process = null;
 		DataOutputStream os = null;
 		InputStreamReader osRes = null;
 
-        try {
-            process = Runtime.getRuntime().exec("su");
-            if(null != result)
-                result.setProcess(process);
-            os = new DataOutputStream(process.getOutputStream());
-            osRes = new InputStreamReader(process.getInputStream());
-            BufferedReader reader = new BufferedReader(osRes);
-            // Doing Stuff ;)
-            for (String single : commands) {
-                os.writeBytes(single + "\n");
-                os.flush();
-                Thread.sleep(sleeptime);
-            }
+		try {
+			process = Runtime.getRuntime().exec("su");
+			if(null != result)
+				result.setProcess(process);
+			os = new DataOutputStream(process.getOutputStream());
+			osRes = new InputStreamReader(process.getInputStream());
+			BufferedReader reader = new BufferedReader(osRes);
+			// Doing Stuff ;)
+			for (String single : commands) {
+				os.writeBytes(single + "\n");
+				os.flush();
+				Thread.sleep(sleeptime);
+			}
 
-            os.writeBytes("exit \n");
-            os.flush();
+			os.writeBytes("exit \n");
+			os.flush();
 
-            String line = reader.readLine();
+			String line = reader.readLine();
 
-            while (line != null) {
-                if(null == result)
-                    response.add(reader.readLine());
-                else
-                    result.process(line);
-                line = reader.readLine();
-            }
-        }
-        catch (Exception ex) {
-            if(null != result) {
-                result.onFailure(ex);
-            }
-        }
-        finally {
-            int diag = process.waitFor();
-            if(null != result)
-                result.onComplete(diag);
+			while (line != null) {
+				if(null == result)
+					response.add(reader.readLine());
+				else
+					result.process(line);
+				line = reader.readLine();
+			}
+		}
+		catch (Exception ex) {
+			if(null != result) {
+				result.onFailure(ex);
+			}
+		}
+		finally {
+			int diag = process.waitFor();
+			if(null != result)
+				result.onComplete(diag);
 
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (osRes != null) {
-                    osRes.close();
-                }
-                process.destroy();
-            } catch (Exception e) {
-                //return what we have
-                return response;
-            }
-            return response;
-        }
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (osRes != null) {
+					osRes.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				//return what we have
+				return response;
+			}
+			return response;
+		}
 	}
 
-    /**
-     * Sends several shell command as su (attempts to)
-     *
-     * @param (String[]) command to send to the shell
-     *
-     * @param (int) Time to sleep between each command, delay.
-     *
-     * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
-     * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
-     *
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public static List<String> sendShell(String[] commands, int sleeptime) throws IOException, InterruptedException, RootToolsException {
-        return sendShell(commands, sleeptime,  null);
-    }
+	/**
+	 * Sends several shell command as su (attempts to)
+	 *
+	 * @param (String[]) command to send to the shell
+	 *
+	 * @param (int) Time to sleep between each command, delay.
+	 *
+	 * @return a LinkedList containing each line that was returned by the shell after executing or while trying to execute the given commands.
+	 * 			You must iterate over this list, it does not allow random access, so no specifying an index of an item you want, not like your going to know that anyways.
+	 *
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public static List<String> sendShell(String[] commands, int sleeptime) throws IOException, InterruptedException, RootToolsException {
+		return sendShell(commands, sleeptime,  null);
+	}
 
 	//-------------
 	//# Remounter #
@@ -379,7 +379,7 @@ public class RootTools {
 	 * 
 	 * @param (String) Mount Type, pass in RO (Read only) or RW (Read Write)
 	 * 
-	 *           
+	 *		   
 	 * @return a boolean which indicates whether or not the partition has been remounted as specified.
 	 *   
 	 */
@@ -412,167 +412,167 @@ public class RootTools {
 				}
 			}
 		}
-	    Mount mountPoint = findMountPointRecursive(file);
+		Mount mountPoint = findMountPointRecursive(file);
 
-	    Log.i(TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType);
-	    final boolean isMountMode = mountPoint.flags.contains(mountType);
+		Log.i(TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType);
+		final boolean isMountMode = mountPoint.flags.contains(mountType);
 
-	    if ( isMountMode ) {
-	        doExec(new String[] { String.format( "mount -o remount,%s %s %s",mountType, mountPoint.device.getAbsolutePath(), mountPoint.mountPoint.getAbsolutePath() ) });
-	        mountPoint = findMountPointRecursive(file);
-	    } 
-	    
-	    if ( mountPoint.flags.contains(mountType) ) {
-	    	return false;
-	    } else {
-	    	return false;
-	    }
+		if ( isMountMode ) {
+			doExec(new String[] { String.format( "mount -o remount,%s %s %s",mountType, mountPoint.device.getAbsolutePath(), mountPoint.mountPoint.getAbsolutePath() ) });
+			mountPoint = findMountPointRecursive(file);
+		} 
+		
+		if ( mountPoint.flags.contains(mountType) ) {
+			return false;
+		} else {
+			return false;
+		}
 	}
 	
 	protected static class Mount {
-        final File device;
-        final File mountPoint;
-        final String type;
-        final Set<String> flags;
+		final File device;
+		final File mountPoint;
+		final String type;
+		final Set<String> flags;
 
-        Mount(File device, File path, String type, String flagsStr) {
-            this.device = device;
-            this.mountPoint = path;
-            this.type = type;
-            this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
-        }
+		Mount(File device, File path, String type, String flagsStr) {
+			this.device = device;
+			this.mountPoint = path;
+			this.type = type;
+			this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
+		}
 
-        @Override
-        public String toString() {
-            return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
-        }
-    }
+		@Override
+		public String toString() {
+			return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
+		}
+	}
 
 	protected static Mount findMountPointRecursive(String file) {
-        try {
-            ArrayList<Mount> mounts = getMounts();
-            for( File path = new File(file); path != null; )
-                for(Mount mount : mounts ) {
-                	if ( mount.mountPoint.equals( path )) {
-                		return mount;
-                	}
-                }
-            return null;
-        }
-        catch (IOException e) {
-            throw new RuntimeException( e );
-        }
+		try {
+			ArrayList<Mount> mounts = getMounts();
+			for( File path = new File(file); path != null; )
+				for(Mount mount : mounts ) {
+					if ( mount.mountPoint.equals( path )) {
+						return mount;
+					}
+				}
+			return null;
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	protected static ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
-        LineNumberReader lnr = null;
-        try {
-            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
-            String line;
-            ArrayList<Mount> mounts = new ArrayList<Mount>();
-            while( (line = lnr.readLine()) != null ){
-                String[] fields = line.split(" ");
-                mounts.add( new Mount(
-                    new File(fields[0]), // device
-                    new File(fields[1]), // mountPoint
-                    fields[2], // fstype
-                    fields[3] // flags
-                ) );
-            }
-            return mounts;
-        }
-        finally {
-            //no need to do anything here. 
-        }
+		LineNumberReader lnr = null;
+		try {
+			lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
+			String line;
+			ArrayList<Mount> mounts = new ArrayList<Mount>();
+			while( (line = lnr.readLine()) != null ){
+				String[] fields = line.split(" ");
+				mounts.add( new Mount(
+					new File(fields[0]), // device
+					new File(fields[1]), // mountPoint
+					fields[2], // fstype
+					fields[3] // flags
+				) );
+			}
+			return mounts;
+		}
+		finally {
+			//no need to do anything here. 
+		}
 	}
 
-    //--------------------
-    //# Internal methods #
-    //--------------------
+	//--------------------
+	//# Internal methods #
+	//--------------------
 	
-    protected static void doExec(String[] commands) {
-        Process process = null;
-        DataOutputStream os = null;
-        InputStreamReader osRes = null;
+	protected static void doExec(String[] commands) {
+		Process process = null;
+		DataOutputStream os = null;
+		InputStreamReader osRes = null;
 
-        try {
-            process = Runtime.getRuntime().exec("su");
-            os = new DataOutputStream(process.getOutputStream());
-            osRes = new InputStreamReader(process.getInputStream());
-            BufferedReader reader = new BufferedReader(osRes);
+		try {
+			process = Runtime.getRuntime().exec("su");
+			os = new DataOutputStream(process.getOutputStream());
+			osRes = new InputStreamReader(process.getInputStream());
+			BufferedReader reader = new BufferedReader(osRes);
 
-    		// Doing Stuff ;)
-    		for (String single : commands) {
-    			os.writeBytes(single + "\n");
-    			os.flush();
-    		}
+			// Doing Stuff ;)
+			for (String single : commands) {
+				os.writeBytes(single + "\n");
+				os.flush();
+			}
 
 
-            os.writeBytes("exit \n");
-            os.flush();
+			os.writeBytes("exit \n");
+			os.flush();
 
-            String line = reader.readLine();
+			String line = reader.readLine();
 
-            while (line != null) {
-                if (commands[0].equals("id")) {
-                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-                    for (String id : ID) {
-                        if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
-                            accessGiven = true;
-                            Log.i(TAG, "Access Given");
-                            break;
-                        }
-                    }
-                    if (!accessGiven) {
-                        Log.i(TAG, "Access Denied?");
-                    }
-                }
-                line = reader.readLine();
-            }
+			while (line != null) {
+				if (commands[0].equals("id")) {
+					Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
+					for (String id : ID) {
+						if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
+							accessGiven = true;
+							Log.i(TAG, "Access Given");
+							break;
+						}
+					}
+					if (!accessGiven) {
+						Log.i(TAG, "Access Denied?");
+					}
+				}
+				line = reader.readLine();
+			}
 
-            process.waitFor();
+			process.waitFor();
 
-        } catch (Exception e) {
-            Log.d(TAG,
-                    "Error: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (osRes != null) {
-                    osRes.close();
-                }
-                process.destroy();
-            } catch (Exception e) {
-                Log.d(TAG,
-                        "Error: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
+		} catch (Exception e) {
+			Log.d(TAG,
+					"Error: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (osRes != null) {
+					osRes.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				Log.d(TAG,
+						"Error: " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
+	}
 
    public static abstract class Result {
-       public abstract void process(String line) throws Exception;
-       public abstract void onFailure(Exception ex);
-       public abstract void onComplete(int diag);
+	   public abstract void process(String line) throws Exception;
+	   public abstract void onFailure(Exception ex);
+	   public abstract void onComplete(int diag);
 
-       protected Result setProcess(Process process) { this.process = process; return this; }
-       public Process   getProcess() { return process; }
-       protected Result    setData(Serializable data) { this.data = data; return this; }
-       public Serializable getData() { return data; }
-       protected Result setError(int error) { this.error = error; return this; }
-       public int       getError() { return error; }
+	   protected Result setProcess(Process process) { this.process = process; return this; }
+	   public Process   getProcess() { return process; }
+	   protected Result	setData(Serializable data) { this.data = data; return this; }
+	   public Serializable getData() { return data; }
+	   protected Result setError(int error) { this.error = error; return this; }
+	   public int	   getError() { return error; }
 
-       private Process      process = null;
-       private Serializable data    = null;
-       private int          error   = 0;
+	   private Process	  process = null;
+	   private Serializable data	= null;
+	   private int		  error   = 0;
    }
 
-    public static class RootToolsException extends Exception {
-        public RootToolsException(Throwable th) {
-            super(th);
-        }
-    }
+	public static class RootToolsException extends Exception {
+		public RootToolsException(Throwable th) {
+			super(th);
+		}
+	}
 }
