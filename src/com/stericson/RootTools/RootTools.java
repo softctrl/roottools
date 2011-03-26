@@ -102,6 +102,17 @@ public class RootTools {
     }
 
     /**
+     * 
+     * @return  <code>true</code> if su was found
+     * 
+     * @deprecated As of release 0.7, replaced by {@link #isRootAvailable()}
+     */
+    @Deprecated
+    public static boolean rootAvailable() {
+        return isRootAvailable();
+    }
+
+    /**
      * @return  <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
@@ -115,6 +126,16 @@ public class RootTools {
             }
         }
         return false;
+    }
+
+    /**
+     * @return <code>true</code> if BusyBox was found
+     * 
+     * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
+     */
+    @Deprecated
+    public static boolean busyboxAvailable() {
+        return isBusyboxAvailable();
     }
 
     /**
@@ -153,6 +174,16 @@ public class RootTools {
             return false;
         }
         return false;
+    }
+
+    /**
+     * @return  <code>true</code> if your app has been given root access.
+     * 
+     * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()} 
+     */
+    @Deprecated
+    public static boolean accessGiven() {
+        return isAccessGiven();
     }
 
     /**
