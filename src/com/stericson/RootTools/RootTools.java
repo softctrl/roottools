@@ -214,66 +214,7 @@ public class RootTools {
      */
     public static List<String> sendShell(String command, Result result)
             throws IOException, InterruptedException, RootToolsException {
-        Log.i(TAG, "Sending one shell command");
-        List<String> response = null;
-        if(null == result) {
-            response = new LinkedList<String>();
-        }
-
-        Process process = null;
-        DataOutputStream os = null;
-        InputStreamReader osRes = null;
-
-        try {
-            process = Runtime.getRuntime().exec("su");
-            if(null != result) {
-                result.setProcess(process);
-            }
-            os = new DataOutputStream(process.getOutputStream());
-            osRes = new InputStreamReader(process.getInputStream());
-            BufferedReader reader = new BufferedReader(osRes);
-
-            os.writeBytes(command + "\n");
-            os.flush();
-
-            os.writeBytes("exit \n");
-            os.flush();
-
-            String line = reader.readLine();
-
-            while (line != null) {
-                if(null == result) {
-                    response.add(line);
-                } else {
-                    result.process(line);
-                }
-                line = reader.readLine();
-            }
-        }
-        catch (Exception ex) {
-            if(null != result) {
-                result.onFailure(ex);
-            }
-        }
-        finally {
-            int diag = process.waitFor();
-            if(null != result) {
-                result.onComplete(diag);
-            }
-
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (osRes != null) {
-                    osRes.close();
-                }
-                process.destroy();
-            } catch (Exception e) {
-                return response;
-            }
-            return response;
-        }
+        return sendShell(new String[] { command}, 0, result);
     }
 
     /**
@@ -317,7 +258,7 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
-        Log.i(TAG, "Sending some shell commands");
+        Log.i(TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
         List<String> response = null;
         if(null == result) {
             response = new LinkedList<String>();
