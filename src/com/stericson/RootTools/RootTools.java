@@ -130,7 +130,7 @@ public class RootTools {
         //Try to read from the file.
         LineNumberReader lnr = null;
         try {
-            doExec(new String[] { "cp /init.rc /data/local/tmp",
+            doExec(new String[] { "dd if=/init.rc of=/data/local/tmp/init.rc",
                     "chmod 0777 /data/local/tmp/init.rc"});
             lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
             String line;
