@@ -208,6 +208,23 @@ public class RootTools {
      *
      * @return              <code>true</code> if the Update will fit on SDCard,
      *                      <code>false</code> if not enough space on SDCard.
+     *                      Will also return <code>false</code>,
+     *                      if the SDCard is not mounted as read/write
+     * 
+     * @deprecated As of release 0.7, replaced by {@link #hasEnoughSpaceOnSdCard(long)}
+     */
+    @Deprecated
+    public static boolean EnoughSpaceOnSdCard(long updateSize) {
+        return hasEnoughSpaceOnSdCard(updateSize);
+    }
+
+    /**
+     * Checks if there is enough Space on SDCard
+     * 
+     * @param updateSize    size to Check (long)
+     *
+     * @return              <code>true</code> if the Update will fit on SDCard,
+     *                      <code>false</code> if not enough space on SDCard.
      *		                Will also return <code>false</code>,
      *		                if the SDCard is not mounted as read/write
      */
