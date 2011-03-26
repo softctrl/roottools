@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -106,7 +107,7 @@ public class RootTools {
     public static boolean isRootAvailable() {
         Log.i(TAG, "Checking for Root binary");
         String[] places = { "/system/bin/", "/system/xbin/",
-            "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
         for (String where : places) {
             File file = new File(where + "su");
             if (file.exists()) {
@@ -182,8 +183,9 @@ public class RootTools {
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
         Log.i(TAG, "Checking SDcard size and that it is mounted as RW");
         String status = Environment.getExternalStorageState();
-        if (!status.equals(Environment.MEDIA_MOUNTED))
+        if (!status.equals(Environment.MEDIA_MOUNTED)) {
             return false;
+        }
         File path = Environment.getExternalStorageDirectory();
         StatFs stat = new StatFs(path.getPath());
         long blockSize = stat.getBlockSize();
@@ -197,12 +199,12 @@ public class RootTools {
      * @param command   command to send to the shell
      *
      * @param result    injected result object that implements the Result class
-     *		   
+     *
      * @return          a <code>LinkedList</code> containing each line that was returned
      *                  by the shell after executing or while trying to execute the given commands.
-     * 			        You must iterate over this list, it does not allow random access,
-     * 			        so no specifying an index of an item you want,
-     * 			        not like you're going to know that anyways.
+     *                  You must iterate over this list, it does not allow random access,
+     *                  so no specifying an index of an item you want,
+     *                  not like you're going to know that anyways.
      *
      * @throws InterruptedException
      *
@@ -214,8 +216,9 @@ public class RootTools {
             throws IOException, InterruptedException, RootToolsException {
         Log.i(TAG, "Sending one shell command");
         List<String> response = null;
-        if(null == result)
+        if(null == result) {
             response = new LinkedList<String>();
+        }
 
         Process process = null;
         DataOutputStream os = null;
@@ -223,8 +226,9 @@ public class RootTools {
 
         try {
             process = Runtime.getRuntime().exec("su");
-            if(null != result)
+            if(null != result) {
                 result.setProcess(process);
+            }
             os = new DataOutputStream(process.getOutputStream());
             osRes = new InputStreamReader(process.getInputStream());
             BufferedReader reader = new BufferedReader(osRes);
@@ -238,10 +242,11 @@ public class RootTools {
             String line = reader.readLine();
 
             while (line != null) {
-                if(null == result)
+                if(null == result) {
                     response.add(line);
-                else
+                } else {
                     result.process(line);
+                }
                 line = reader.readLine();
             }
         }
@@ -252,8 +257,9 @@ public class RootTools {
         }
         finally {
             int diag = process.waitFor();
-            if(null != result)
+            if(null != result) {
                 result.onComplete(diag);
+            }
 
             try {
                 if (os != null) {
@@ -277,9 +283,9 @@ public class RootTools {
      *
      * @return          a LinkedList containing each line that was returned by the shell
      *                  after executing or while trying to execute the given commands.
-     * 			        You must iterate over this list, it does not allow random access,
-     * 			        so no specifying an index of an item you want,
-     * 			        not like you're going to know that anyways.
+     *                  You must iterate over this list, it does not allow random access,
+     *                  so no specifying an index of an item you want,
+     *                  not like you're going to know that anyways.
      *
      * @throws InterruptedException
      *
@@ -301,9 +307,9 @@ public class RootTools {
      *
      * @return          a <code>LinkedList</code> containing each line that was returned
      *                  by the shell after executing or while trying to execute the given commands.
-     * 			        You must iterate over this list, it does not allow random access,
-     * 			        so no specifying an index of an item you want,
-     * 			        not like you're going to know that anyways.
+     *                  You must iterate over this list, it does not allow random access,
+     *                  so no specifying an index of an item you want,
+     *                  not like you're going to know that anyways.
      *
      * @throws InterruptedException
      *
@@ -313,8 +319,9 @@ public class RootTools {
             throws IOException, InterruptedException, RootToolsException {
         Log.i(TAG, "Sending some shell commands");
         List<String> response = null;
-        if(null == result)
+        if(null == result) {
             response = new LinkedList<String>();
+        }
 
         Process process = null;
         DataOutputStream os = null;
@@ -322,8 +329,9 @@ public class RootTools {
 
         try {
             process = Runtime.getRuntime().exec("su");
-            if(null != result)
+            if(null != result) {
                 result.setProcess(process);
+            }
             os = new DataOutputStream(process.getOutputStream());
             osRes = new InputStreamReader(process.getInputStream());
             BufferedReader reader = new BufferedReader(osRes);
@@ -340,10 +348,11 @@ public class RootTools {
             String line = reader.readLine();
 
             while (line != null) {
-                if(null == result)
+                if(null == result) {
                     response.add(line);
-                else
+                } else {
                     result.process(line);
+                }
                 line = reader.readLine();
             }
         }
@@ -354,8 +363,9 @@ public class RootTools {
         }
         finally {
             int diag = process.waitFor();
-            if(null != result)
+            if(null != result) {
                 result.onComplete(diag);
+            }
 
             try {
                 if (os != null) {
@@ -382,9 +392,9 @@ public class RootTools {
      *
      * @return          a LinkedList containing each line that was returned by the shell
      *                  after executing or while trying to execute the given commands.
-     * 			        You must iterate over this list, it does not allow random access,
-     * 			        so no specifying an index of an item you want,
-     * 			        not like you're going to know that anyways.
+     *                  You must iterate over this list, it does not allow random access,
+     *                  so no specifying an index of an item you want,
+     *                  not like you're going to know that anyways.
      *
      * @throws InterruptedException
      *
@@ -405,14 +415,14 @@ public class RootTools {
      * 
      * For example, passing in the following string:
      * "/system/bin/some/directory/that/really/would/never/exist"
-     * will result in /system ultimately being remounted. 
+     * will result in /system ultimately being remounted.
      * However, keep in mind that the longer the path you supply, the more work this has to do,
      * and the slower it will run.
      * 
      * @param file      file path
      * 
      * @param mountType mount type: pass in RO (Read only) or RW (Read Write)
-     *		   
+     * 
      * @return          a <code>boolean</code> which indicates whether or not the partition
      *                  has been remounted as specified.
      */
@@ -460,7 +470,7 @@ public class RootTools {
                     }
             );
             mountPoint = findMountPointRecursive(file);
-        } 
+        }
 
         if ( mountPoint.flags.contains(mountType) ) {
             return false;
@@ -491,12 +501,13 @@ public class RootTools {
     protected static Mount findMountPointRecursive(String file) {
         try {
             ArrayList<Mount> mounts = getMounts();
-            for( File path = new File(file); path != null; )
+            for( File path = new File(file); path != null; ) {
                 for(Mount mount : mounts ) {
                     if ( mount.mountPoint.equals( path )) {
                         return mount;
                     }
                 }
+            }
             return null;
         }
         catch (IOException e) {
@@ -513,16 +524,16 @@ public class RootTools {
             while( (line = lnr.readLine()) != null ){
                 String[] fields = line.split(" ");
                 mounts.add( new Mount(
-                            new File(fields[0]), // device
-                            new File(fields[1]), // mountPoint
-                            fields[2], // fstype
-                            fields[3] // flags
-                            ) );
+                        new File(fields[0]), // device
+                        new File(fields[1]), // mountPoint
+                        fields[2], // fstype
+                        fields[3] // flags
+                ) );
             }
             return mounts;
         }
         finally {
-            //no need to do anything here. 
+            //no need to do anything here.
         }
     }
 
@@ -595,8 +606,8 @@ public class RootTools {
 
     public static abstract class Result {
         private Process         process = null;
-        private Serializable    data	= null;
-        private int		        error   = 0;
+        private Serializable    data    = null;
+        private int             error   = 0;
 
         public abstract void process(String line) throws Exception;
         public abstract void onFailure(Exception ex);
@@ -604,10 +615,10 @@ public class RootTools {
 
         protected Result    setProcess(Process process) { this.process = process; return this; }
         public Process      getProcess()                { return process; }
-        protected Result	setData(Serializable data)  { this.data = data; return this; }
+        protected Result    setData(Serializable data)  { this.data = data; return this; }
         public Serializable getData()                   { return data; }
         protected Result    setError(int error)         { this.error = error; return this; }
-        public int	        getError()                  { return error; }
+        public int          getError()                  { return error; }
     }
 
     public static class RootToolsException extends Exception {
