@@ -3,13 +3,11 @@ package com.stericson.RootTools;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -25,18 +23,28 @@ import android.util.Log;
 
 public class RootTools {
 
+    /*
+     *This class is the gateway to every functionality within the RootTools library.
+     *The developer should only have access to this class and this class only.
+     *This means that this class should be the only one to be public.
+     *The rest of the classes within this library must not have the public modifier.
+     *
+     *All methods and Variables that the developer may need to have access to should be here.
+     *
+     *If a method, or a specific functionality, requires a fair amount of code, or work to be done,
+     *then that functionality should probably be moved to its own class and the call to it done here.
+     *For examples of this being done, look at the remount functionality.
+     */
+	
+	//grab an instance of InternalMethods
+	//Must be private to remain secure.
+	private static InternalMethods internal = new InternalMethods();
+
     //--------------------
     //# Public Variables #
     //--------------------
 
-
-    //----------------------
-    //# Internal Variables #
-    //----------------------
-
-    protected static String TAG = "RootTools";
-    protected static boolean accessGiven = false;
-
+	
     //------------------
     //# Public Methods #
     //------------------
@@ -47,7 +55,7 @@ public class RootTools {
      * @param activity  pass in your Activity
      */
     public static void offerBusyBox(Activity activity) {
-        Log.i(TAG, "Launching Market for BusyBox");
+        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivity(i);
@@ -64,7 +72,7 @@ public class RootTools {
      * @return              intent fired
      */
     public static Intent offerBusyBox(Activity activity, int requestCode) {
-        Log.i(TAG, "Launching Market for BusyBox");
+        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivityForResult(i, requestCode);
@@ -77,7 +85,7 @@ public class RootTools {
      * @param activity  pass in your Activity
      */
     public static void offerSuperUser(Activity activity) {
-        Log.i(TAG, "Launching Market for SuperUser");
+        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivity(i);
@@ -94,7 +102,7 @@ public class RootTools {
      * @return              intent fired
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
-        Log.i(TAG, "Launching Market for SuperUser");
+        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivityForResult(i, requestCode);
@@ -116,7 +124,7 @@ public class RootTools {
      * @return  <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
-        Log.i(TAG, "Checking for Root binary");
+        Log.i(InternalVariables.TAG, "Checking for Root binary");
         String[] places = { "/system/bin/", "/system/xbin/",
                 "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
         for (String where : places) {
@@ -142,16 +150,16 @@ public class RootTools {
      * @return  <code>true</code> if BusyBox was found.
      */
     public static boolean isBusyboxAvailable() {
-        Log.i(TAG, "Checking for BusyBox");
+        Log.i(InternalVariables.TAG, "Checking for BusyBox");
         File tmpDir = new File("/data/local/tmp");
         if (!tmpDir.exists()) {
-            doExec(new String[] { "mkdir /data/local/tmp" });
+            internal.doExec(new String[] { "mkdir /data/local/tmp" });
         }
         Set<String> tmpSet = new HashSet<String>();
         //Try to read from the file.
         LineNumberReader lnr = null;
         try {
-            doExec(new String[] { "dd if=/init.rc of=/data/local/tmp/init.rc",
+            internal.doExec(new String[] { "dd if=/init.rc of=/data/local/tmp/init.rc",
                     "chmod 0777 /data/local/tmp/init.rc"});
             lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
             String line;
@@ -162,14 +170,14 @@ public class RootTools {
                     for(String paths : tmpSet) {
                         File file = new File(paths + "/busybox");
                         if (file.exists()) {
-                            Log.i(TAG, "Found BusyBox!");
+                            Log.i(InternalVariables.TAG, "Found BusyBox!");
                             return true;
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            Log.i(TAG, "BusyBox was not found, some error happened!");
+            Log.i(InternalVariables.TAG, "BusyBox was not found, some error happened!");
             e.printStackTrace();
             return false;
         }
@@ -190,11 +198,11 @@ public class RootTools {
      * @return  <code>true</code> if your app has been given root access.
      */
     public static boolean isAccessGiven() {
-        Log.i(TAG, "Checking for Root access");
-        accessGiven = false;
-        doExec(new String[] { "id" });
+        Log.i(InternalVariables.TAG, "Checking for Root access");
+        InternalVariables.accessGiven = false;
+        internal.doExec(new String[] { "id" });
 
-        if (accessGiven) {
+        if (InternalVariables.accessGiven) {
             return true;
         } else {
             return false;
@@ -229,7 +237,7 @@ public class RootTools {
      *		                if the SDCard is not mounted as read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        Log.i(TAG, "Checking SDcard size and that it is mounted as RW");
+        Log.i(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
         String status = Environment.getExternalStorageState();
         if (!status.equals(Environment.MEDIA_MOUNTED)) {
             return false;
@@ -241,6 +249,12 @@ public class RootTools {
         return (updateSize < availableBlocks * blockSize);
     }
 
+    //TODO ALL - I would like to see the SendShell commands moved to their own class.
+    //That class should be package-private and this class should pass requests to that class.
+    //If you want to see an example of this, look at Remounter.
+    //I did not move these yet because of the ties to Chris's work.
+    //TODO
+    
     /**
      * Sends one shell command as su (attempts to)
      * 
@@ -306,7 +320,7 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
-        Log.i(TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
+        Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
         List<String> response = null;
         if(null == result) {
             response = new LinkedList<String>();
@@ -394,10 +408,6 @@ public class RootTools {
         return sendShell(commands, sleepTime,  null);
     }
 
-    //-------------
-    //# Remounter #
-    //-------------
-
     /**
      * This will take a path, which can contain the file name as well,
      * and attempt to remount the underlying partition.
@@ -417,182 +427,22 @@ public class RootTools {
      */
 
     public static boolean remount(String file, String mountType) {
-        //if the path has a trailing slash get rid of it.
-        if (file.endsWith("/")) {
-            file = file.substring(0, file.lastIndexOf("/"));
-        }
-        //Make sure that what we are trying to remount is in the mount list.
-        boolean foundMount = false;
-        while (!foundMount) {
-            try {
-                for (Mount mount : getMounts()) {
-                    if (file.equals(mount.mountPoint.toString())) {
-                        foundMount = true;
-                        break;
-                    }
-                }
-            }
-            catch (Exception e) {
-                return false;
-            }
-            if (!foundMount) {
-                try {
-                    file = (new File(file).getParent()).toString();
-                }
-                catch (Exception e) {
-                    return false;
-                }
-            }
-        }
-        Mount mountPoint = findMountPointRecursive(file);
-
-        Log.i(TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType);
-        final boolean isMountMode = mountPoint.flags.contains(mountType);
-
-        if ( isMountMode ) {
-            doExec(new String[] {
-                    String.format(
-                            "mount -o remount,%s %s %s",
-                            mountType,
-                            mountPoint.device.getAbsolutePath(),
-                            mountPoint.mountPoint.getAbsolutePath() )
-                    }
-            );
-            mountPoint = findMountPointRecursive(file);
-        }
-
-        if ( mountPoint.flags.contains(mountType) ) {
-            return false;
-        } else {
-            return false;
-        }
-    }
-
-    protected static class Mount {
-        final File device;
-        final File mountPoint;
-        final String type;
-        final Set<String> flags;
-
-        Mount(File device, File path, String type, String flagsStr) {
-            this.device = device;
-            this.mountPoint = path;
-            this.type = type;
-            this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
-        }
-
-        @Override
-        public String toString() {
-            return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
-        }
-    }
-
-    protected static Mount findMountPointRecursive(String file) {
-        try {
-            ArrayList<Mount> mounts = getMounts();
-            for( File path = new File(file); path != null; ) {
-                for(Mount mount : mounts ) {
-                    if ( mount.mountPoint.equals( path )) {
-                        return mount;
-                    }
-                }
-            }
-            return null;
-        }
-        catch (IOException e) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    protected static ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
-        LineNumberReader lnr = null;
-        try {
-            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
-            String line;
-            ArrayList<Mount> mounts = new ArrayList<Mount>();
-            while( (line = lnr.readLine()) != null ){
-                String[] fields = line.split(" ");
-                mounts.add( new Mount(
-                        new File(fields[0]), // device
-                        new File(fields[1]), // mountPoint
-                        fields[2], // fstype
-                        fields[3] // flags
-                ) );
-            }
-            return mounts;
-        }
-        finally {
-            //no need to do anything here.
-        }
+        //Recieved a request, get an instance of Remounter
+    	Remounter remounter = new Remounter();
+    	//send the request.
+    	if(remounter.remount(file, mountType)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
 
     //--------------------
     //# Internal methods #
     //--------------------
-
-    protected static void doExec(String[] commands) {
-        Process process = null;
-        DataOutputStream os = null;
-        InputStreamReader osRes = null;
-
-        try {
-            process = Runtime.getRuntime().exec("su");
-            os = new DataOutputStream(process.getOutputStream());
-            osRes = new InputStreamReader(process.getInputStream());
-            BufferedReader reader = new BufferedReader(osRes);
-
-            // Doing Stuff ;)
-            for (String single : commands) {
-                os.writeBytes(single + "\n");
-                os.flush();
-            }
-
-
-            os.writeBytes("exit \n");
-            os.flush();
-
-            String line = reader.readLine();
-
-            while (line != null) {
-                if (commands[0].equals("id")) {
-                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-                    for (String id : ID) {
-                        if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
-                            accessGiven = true;
-                            Log.i(TAG, "Access Given");
-                            break;
-                        }
-                    }
-                    if (!accessGiven) {
-                        Log.i(TAG, "Access Denied?");
-                    }
-                }
-                line = reader.readLine();
-            }
-
-            process.waitFor();
-
-        } catch (Exception e) {
-            Log.d(TAG,
-                    "Error: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (osRes != null) {
-                    osRes.close();
-                }
-                process.destroy();
-            } catch (Exception e) {
-                Log.d(TAG,
-                        "Error: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-
+    // These should be moved to Internal if possible.
+    //TODO Chris - I will let you move these as you see fit.
+    
     public static abstract class Result {
         private Process         process = null;
         private Serializable    data    = null;
