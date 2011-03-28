@@ -2,6 +2,7 @@ package com.stericson.RootTools;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -23,12 +24,14 @@ public class TestRootTools extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
         mTextView = new TextView(this);
         mTextView.setText("");
         mScrollView = new ScrollView(this);
         mScrollView.addView(mTextView);
         setContentView(mScrollView);
 
+        // Great the user with our version number
         String version = "?";
         try {
             PackageInfo packageInfo =
@@ -43,11 +46,12 @@ public class TestRootTools extends Activity
             return;
         }
 
+        // Display infinite progress bar
         mPDialog = new ProgressDialog(this);
         mPDialog.setCancelable(false);
         mPDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
-        new TestThread(new TestHandler()).start();
+        new TestThread(this, new TestHandler()).start();
     }
 
     protected void print(CharSequence text) {
@@ -59,16 +63,29 @@ public class TestRootTools extends Activity
         });
     }
 
+    // Run our long-running tests in their separate thread so as to
+    // not interfere with proper rendering.
     private class TestThread extends Thread {
+        private Context context;
         private Handler handler;
 
-        public TestThread(Handler handler) {
+        public TestThread(Context context, Handler handler) {
+            this.context = context;
             this.handler = handler;
         }
 
         public void run() {
             visualUpdate(TestHandler.ACTION_SHOW, null);
 
+            // First test: Install a binary file for future use
+            // if it wasn't already installed.
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Installing binary if needed");
+            if(false == RootTools.installBinary(context, R.raw.nes, "nes_binary")) {
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: Failed to install binary. Please see log file.");
+                return;
+            }
+
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ return array");
             try {
                 List<String> response = RootTools.sendShell("ls /");
                 visualUpdate(TestHandler.ACTION_DISPLAY, "[ Listing of / (passing a List)]\n");
@@ -76,16 +93,17 @@ public class TestRootTools extends Activity
                     visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
                 }
             } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             }
 
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ callbacks");
             try {
                 visualUpdate(TestHandler.ACTION_DISPLAY, "\n[ Listing of / (callback)]\n");
                 RootTools.Result result = new RootTools.Result() {
@@ -96,7 +114,7 @@ public class TestRootTools extends Activity
 
                     @Override
                     public void onFailure(Exception ex) {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + ex);
+                        visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + ex);
                         setError(1);
                     }
 
@@ -109,16 +127,17 @@ public class TestRootTools extends Activity
                 if(0 != result.getError())
                     return;
             } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
             }
 
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() for multiple commands");
             try {
                 visualUpdate(TestHandler.ACTION_DISPLAY, "\n[ ps + ls + date / (callback)]\n");
                 RootTools.Result result = new RootTools.Result() {
@@ -129,7 +148,7 @@ public class TestRootTools extends Activity
 
                     @Override
                     public void onFailure(Exception ex) {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + ex);
+                        visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + ex);
                         setError(1);
                     }
 
@@ -153,13 +172,14 @@ public class TestRootTools extends Activity
                 if(0 != result.getError())
                     return;
             } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
             } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
             } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "ERROR: " + e);
+                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
             }
 
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);
         }
 
@@ -178,6 +198,7 @@ public class TestRootTools extends Activity
             static final public int ACTION_SHOW 	= 0x01;
             static final public int ACTION_HIDE 	= 0x02;
             static final public int ACTION_DISPLAY 	= 0x03;
+            static final public int ACTION_PDISPLAY	= 0x04;
         static final public String TEXT   = "text";
 
         public void handleMessage(Message msg) {
@@ -190,10 +211,15 @@ public class TestRootTools extends Activity
                     mPDialog.setMessage("Running Root Library Tests...");
                     break;
                 case ACTION_HIDE:
+                    if(null != text)
+                        print(text);
                     mPDialog.hide();
                     break;
                 case ACTION_DISPLAY:
                     print(text);
+                    break;
+                case ACTION_PDISPLAY:
+                    mPDialog.setMessage(text);
                     break;
             }
         }

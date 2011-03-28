@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
@@ -36,10 +37,6 @@ public class RootTools {
      *For examples of this being done, look at the remount functionality.
      */
 	
-	//grab an instance of InternalMethods
-	//Must be private to remain secure.
-	private static InternalMethods internal = new InternalMethods();
-
     //--------------------
     //# Public Variables #
     //--------------------
@@ -153,13 +150,13 @@ public class RootTools {
         Log.i(InternalVariables.TAG, "Checking for BusyBox");
         File tmpDir = new File("/data/local/tmp");
         if (!tmpDir.exists()) {
-            internal.doExec(new String[] { "mkdir /data/local/tmp" });
+            InternalMethods.instance().doExec(new String[]{"mkdir /data/local/tmp"});
         }
         Set<String> tmpSet = new HashSet<String>();
         //Try to read from the file.
         LineNumberReader lnr = null;
         try {
-            internal.doExec(new String[] { "dd if=/init.rc of=/data/local/tmp/init.rc",
+            InternalMethods.instance().doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
                     "chmod 0777 /data/local/tmp/init.rc"});
             lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
             String line;
@@ -200,7 +197,7 @@ public class RootTools {
     public static boolean isAccessGiven() {
         Log.i(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
-        internal.doExec(new String[] { "id" });
+        InternalMethods.instance().doExec(new String[]{"id"});
 
         if (InternalVariables.accessGiven) {
             return true;
@@ -435,6 +432,60 @@ public class RootTools {
     	} else {
     		return false;
     	}
+    }
+
+    /**
+     * This method can be used to unpack a binary from the raw resources folder and store it in
+     * /data/data/app.package/files/
+     * This is typically useful if you provide your own C- or C++-based binary.
+     * This binary can then be executed using sendShell() and its full path.
+     *
+     * @param context   the current activity's <code>Context</code>
+     *
+     * @param sourceId  resource id; typically <code>R.raw.id</code>
+     *
+     * @param destName  destination file name; appended to /data/data/app.package/files/
+     *
+     * @param mode      chmod value for this file
+     *
+     * @return          a <code>boolean</code> which indicates whether or not we were
+     *                  able to create the new file.
+     */
+    public static boolean installBinary(Context context, int sourceId, String destName, String mode) {
+        Installer installer;
+
+        try {
+            installer = new Installer(context);
+        }
+        catch(IOException ex) {
+            return false;
+        }
+
+        if(installer.installBinary(sourceId, destName, mode)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * This method can be used to unpack a binary from the raw resources folder and store it in
+     * /data/data/app.package/files/
+     * This is typically useful if you provide your own C- or C++-based binary.
+     * This binary can then be executed using sendShell() and its full path.
+     *
+     * @param context   the current activity's <code>Context</code>
+     *
+     * @param sourceId  resource id; typically <code>R.raw.id</code>
+     *
+     * @param destName  destination file name; appended to /data/data/app.package/files/
+     *
+     * @return          a <code>boolean</code> which indicates whether or not we were
+     *                  able to create the new file.
+     */
+    public static boolean installBinary(Context context, int sourceId, String destName) {
+        return installBinary(context, sourceId, destName, "700");
     }
 
     //--------------------

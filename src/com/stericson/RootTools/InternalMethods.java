@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.content.Context;
 import android.util.Log;
 
 //no modifier, this is package-prInternalVariablesate which means that no one but the library can access it.
@@ -15,6 +16,19 @@ class InternalMethods {
     //--------------------
     //# Internal methods #
     //--------------------
+
+    static private InternalMethods instance_;
+
+    static protected InternalMethods instance() {
+        if(null == instance_) {
+            instance_ = new InternalMethods();
+        }
+        return instance_;
+    }
+
+    private InternalMethods() {
+        super();
+    }
 
     protected void doExec(String[] commands) {
         Process process = null;
