@@ -427,11 +427,7 @@ public class RootTools {
         //Recieved a request, get an instance of Remounter
     	Remounter remounter = new Remounter();
     	//send the request.
-    	if(remounter.remount(file, mountType)) {
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return(remounter.remount(file, mountType));
     }
 
     /**

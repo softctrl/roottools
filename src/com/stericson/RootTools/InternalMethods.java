@@ -6,11 +6,9 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import android.content.Context;
 import android.util.Log;
 
-//no modifier, this is package-prInternalVariablesate which means that no one but the library can access it.
+//no modifier, this is package-private which means that no one but the library can access it.
 class InternalMethods {
 	
     //--------------------

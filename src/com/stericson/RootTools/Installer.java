@@ -1,8 +1,6 @@
 package com.stericson.RootTools;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.util.Log;
 
 import java.io.*;
