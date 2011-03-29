@@ -34,7 +34,6 @@ public class Executer {
      *
      * @throws IOException
      */
-    @SuppressWarnings("finally")
     public List<String> sendShell(String[] commands, int sleepTime, IResult result)
             throws IOException, InterruptedException, RootToolsException {
         Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
