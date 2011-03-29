@@ -246,10 +246,82 @@ public class RootTools {
         return (updateSize < availableBlocks * blockSize);
     }
 
+    /**
+     * This will take a path, which can contain the file name as well,
+     * and attempt to remount the underlying partition.
+     * 
+     * For example, passing in the following string:
+     * "/system/bin/some/directory/that/really/would/never/exist"
+     * will result in /system ultimately being remounted.
+     * However, keep in mind that the longer the path you supply, the more work this has to do,
+     * and the slower it will run.
+     * 
+     * @param file      file path
+     * 
+     * @param mountType mount type: pass in RO (Read only) or RW (Read Write)
+     * 
+     * @return          a <code>boolean</code> which indicates whether or not the partition
+     *                  has been remounted as specified.
+     */
+
+    public static boolean remount(String file, String mountType) {
+        //Recieved a request, get an instance of Remounter
+    	Remounter remounter = new Remounter();
+    	//send the request.
+    	return(remounter.remount(file, mountType));
+    }
+
+    /**
+     * This method can be used to unpack a binary from the raw resources folder and store it in
+     * /data/data/app.package/files/
+     * This is typically useful if you provide your own C- or C++-based binary.
+     * This binary can then be executed using sendShell() and its full path.
+     *
+     * @param context   the current activity's <code>Context</code>
+     *
+     * @param sourceId  resource id; typically <code>R.raw.id</code>
+     *
+     * @param destName  destination file name; appended to /data/data/app.package/files/
+     *
+     * @param mode      chmod value for this file
+     *
+     * @return          a <code>boolean</code> which indicates whether or not we were
+     *                  able to create the new file.
+     */
+    public static boolean installBinary(Context context, int sourceId, String destName, String mode) {
+        Installer installer;
+
+        try {
+            installer = new Installer(context);
+        }
+        catch(IOException ex) {
+            return false;
+        }
+
+        return (installer.installBinary(sourceId, destName, mode));
+    }
+
+    /**
+     * This method can be used to unpack a binary from the raw resources folder and store it in
+     * /data/data/app.package/files/
+     * This is typically useful if you provide your own C- or C++-based binary.
+     * This binary can then be executed using sendShell() and its full path.
+     *
+     * @param context   the current activity's <code>Context</code>
+     *
+     * @param sourceId  resource id; typically <code>R.raw.id</code>
+     *
+     * @param destName  destination file name; appended to /data/data/app.package/files/
+     *
+     * @return          a <code>boolean</code> which indicates whether or not we were
+     *                  able to create the new file.
+     */
+    public static boolean installBinary(Context context, int sourceId, String destName) {
+        return installBinary(context, sourceId, destName, "700");
+    }
+
     //TODO ALL - I would like to see the SendShell commands moved to their own class.
     //That class should be package-private and this class should pass requests to that class.
-    //If you want to see an example of this, look at Remounter.
-    //I did not move these yet because of the ties to Chris's work.
     //TODO
     
     /**
@@ -315,7 +387,8 @@ public class RootTools {
      *
      * @throws IOException
      */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result)
+    @SuppressWarnings("finally")
+	public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
         Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
         List<String> response = null;
@@ -404,91 +477,6 @@ public class RootTools {
             throws IOException, InterruptedException, RootToolsException {
         return sendShell(commands, sleepTime,  null);
     }
-
-    /**
-     * This will take a path, which can contain the file name as well,
-     * and attempt to remount the underlying partition.
-     * 
-     * For example, passing in the following string:
-     * "/system/bin/some/directory/that/really/would/never/exist"
-     * will result in /system ultimately being remounted.
-     * However, keep in mind that the longer the path you supply, the more work this has to do,
-     * and the slower it will run.
-     * 
-     * @param file      file path
-     * 
-     * @param mountType mount type: pass in RO (Read only) or RW (Read Write)
-     * 
-     * @return          a <code>boolean</code> which indicates whether or not the partition
-     *                  has been remounted as specified.
-     */
-
-    public static boolean remount(String file, String mountType) {
-        //Recieved a request, get an instance of Remounter
-    	Remounter remounter = new Remounter();
-    	//send the request.
-    	return(remounter.remount(file, mountType));
-    }
-
-    /**
-     * This method can be used to unpack a binary from the raw resources folder and store it in
-     * /data/data/app.package/files/
-     * This is typically useful if you provide your own C- or C++-based binary.
-     * This binary can then be executed using sendShell() and its full path.
-     *
-     * @param context   the current activity's <code>Context</code>
-     *
-     * @param sourceId  resource id; typically <code>R.raw.id</code>
-     *
-     * @param destName  destination file name; appended to /data/data/app.package/files/
-     *
-     * @param mode      chmod value for this file
-     *
-     * @return          a <code>boolean</code> which indicates whether or not we were
-     *                  able to create the new file.
-     */
-    public static boolean installBinary(Context context, int sourceId, String destName, String mode) {
-        Installer installer;
-
-        try {
-            installer = new Installer(context);
-        }
-        catch(IOException ex) {
-            return false;
-        }
-
-        if(installer.installBinary(sourceId, destName, mode)) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * This method can be used to unpack a binary from the raw resources folder and store it in
-     * /data/data/app.package/files/
-     * This is typically useful if you provide your own C- or C++-based binary.
-     * This binary can then be executed using sendShell() and its full path.
-     *
-     * @param context   the current activity's <code>Context</code>
-     *
-     * @param sourceId  resource id; typically <code>R.raw.id</code>
-     *
-     * @param destName  destination file name; appended to /data/data/app.package/files/
-     *
-     * @return          a <code>boolean</code> which indicates whether or not we were
-     *                  able to create the new file.
-     */
-    public static boolean installBinary(Context context, int sourceId, String destName) {
-        return installBinary(context, sourceId, destName, "700");
-    }
-
-    //--------------------
-    //# Internal methods #
-    //--------------------
-    // These should be moved to Internal if possible.
-    //TODO Chris - I will let you move these as you see fit.
     
     public static abstract class Result {
         private Process         process = null;
@@ -507,7 +495,8 @@ public class RootTools {
         public int          getError()                  { return error; }
     }
 
-    public static class RootToolsException extends Exception {
+    @SuppressWarnings("serial")
+	public static class RootToolsException extends Exception {
         public RootToolsException(Throwable th) {
             super(th);
         }
