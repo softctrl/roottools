@@ -98,8 +98,8 @@ public class TestRootTools extends Activity
             } catch (InterruptedException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
-            } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
+            } catch (RootToolsException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
                 return;
             }
 
@@ -132,8 +132,8 @@ public class TestRootTools extends Activity
             } catch (InterruptedException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
-            } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
+            } catch (RootToolsException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
                 return;
             }
 
@@ -175,8 +175,8 @@ public class TestRootTools extends Activity
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
             } catch (InterruptedException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-            } catch (RootTools.RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
+            } catch (RootToolsException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
             }
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
