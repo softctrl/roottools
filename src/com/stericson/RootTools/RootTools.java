@@ -3,6 +3,7 @@ package com.stericson.RootTools;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import android.app.Activity;
@@ -35,7 +36,7 @@ public class RootTools {
     /**
      * This will return the environment variable $PATH
      * 
-     * @return Set<String> A Set of Strings representing the environment variable $PATH
+     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
      * 
      * @throws Exception if we cannot return the $PATH variable
      */
@@ -45,6 +46,33 @@ public class RootTools {
         } else {
             if (InternalMethods.instance().returnPath()) {
                 return InternalVariables.path;	
+            } else {
+                throw new Exception();
+            }
+        }
+    }
+    
+    /**
+     * This will return an ArrayList of the class Mount.
+     * The class mount contains the following property's:
+     *     device
+     *     mountPoint
+     *     type
+     *     flags
+     * 
+     * These will provide you with any information you need to work with the mount points.
+     * 
+     * @return <code>ArrayList<Mount></code> an ArrayList of the class Mount.
+     * 
+     * @throws Exception if we cannot return the mount points.
+     */
+    public static ArrayList<Mount> getMounts() throws Exception {
+        if (InternalVariables.mounts.size() >= 1) {
+            return InternalVariables.mounts;	
+        } else {
+        	InternalVariables.mounts = InternalMethods.instance().getMounts();
+        	if (InternalVariables.mounts.size() >= 1) {
+                return InternalVariables.mounts;	
             } else {
                 throw new Exception();
             }

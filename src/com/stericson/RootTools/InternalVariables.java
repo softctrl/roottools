@@ -1,5 +1,6 @@
 package com.stericson.RootTools;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 //no modifier, this is package-private which means that no one but the library can access it.
@@ -16,5 +17,6 @@ class InternalVariables {
     protected static String[] space;
     protected static String getSpaceFor;
     protected static Set<String> path;
+    protected static ArrayList<Mount> mounts;
 
 }

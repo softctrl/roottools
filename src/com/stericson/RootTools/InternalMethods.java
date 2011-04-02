@@ -3,9 +3,12 @@ package com.stericson.RootTools;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -123,6 +126,28 @@ class InternalMethods {
                     "Error: " + e.getMessage());
             e.printStackTrace();
         	return false;
+        }
+    }
+    
+    protected ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
+        LineNumberReader lnr = null;
+        try {
+            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
+            String line;
+            ArrayList<Mount> mounts = new ArrayList<Mount>();
+            while( (line = lnr.readLine()) != null ){
+                String[] fields = line.split(" ");
+                mounts.add( new Mount(
+                        new File(fields[0]), // device
+                        new File(fields[1]), // mountPoint
+                        fields[2], // fstype
+                        fields[3] // flags
+                ) );
+            }
+            return mounts;
+        }
+        finally {
+            //no need to do anything here.
         }
     }
 }

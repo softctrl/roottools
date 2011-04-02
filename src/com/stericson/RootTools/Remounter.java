@@ -1,15 +1,8 @@
 package com.stericson.RootTools;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import android.util.Log;
 
 //no modifier, this means it is package-private. Only our internal classes can use this.
@@ -46,7 +39,7 @@ class Remounter {
         boolean foundMount = false;
         while (!foundMount) {
             try {
-                for (Mount mount : getMounts()) {
+                for (Mount mount : RootTools.getMounts()) {
                     if (file.equals(mount.mountPoint.toString())) {
                         foundMount = true;
                         break;
@@ -93,29 +86,10 @@ class Remounter {
             return false;
         }
     }
-
-    private class Mount {
-        final File device;
-        final File mountPoint;
-        final String type;
-        final Set<String> flags;
-
-        Mount(File device, File path, String type, String flagsStr) {
-            this.device = device;
-            this.mountPoint = path;
-            this.type = type;
-            this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
-        }
-
-        @Override
-        public String toString() {
-            return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
-        }
-    }
-
+    
     private Mount findMountPointRecursive(String file) {
         try {
-            ArrayList<Mount> mounts = getMounts();
+            ArrayList<Mount> mounts = RootTools.getMounts();
             for( File path = new File(file); path != null; ) {
                 for(Mount mount : mounts ) {
                     if ( mount.mountPoint.equals( path )) {
@@ -127,28 +101,10 @@ class Remounter {
         }
         catch (IOException e) {
             throw new RuntimeException( e );
-        }
-    }
-
-    private ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
-        LineNumberReader lnr = null;
-        try {
-            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
-            String line;
-            ArrayList<Mount> mounts = new ArrayList<Mount>();
-            while( (line = lnr.readLine()) != null ){
-                String[] fields = line.split(" ");
-                mounts.add( new Mount(
-                        new File(fields[0]), // device
-                        new File(fields[1]), // mountPoint
-                        fields[2], // fstype
-                        fields[3] // flags
-                ) );
-            }
-            return mounts;
-        }
-        finally {
-            //no need to do anything here.
-        }
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 }
