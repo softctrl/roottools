@@ -412,7 +412,7 @@ public class RootTools {
      *                  If the space was not found then the string is -1
      *
      */
-    public static String getSpace(String path) {
+    public static int getSpace(String path) {
 		InternalVariables.getSpaceFor = path;
 		boolean found = false;
 		String[] commands = { "df" };
@@ -422,13 +422,13 @@ public class RootTools {
 			if (found) {
 				String space = spaceSearch.substring(0,
 						spaceSearch.length() - 1);
-				return space;
+				return Integer.parseInt(space.trim());
 			}
 			else if (spaceSearch.equals("used,")) {
 				found = true;
 			}
 		}
-		return "-1";
+		return -1;
 	}
 	
     public static abstract class Result implements IResult {
