@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
 import android.util.Log;
 
 //no modifier, this means it is package-private. Only our internal classes can use this.
@@ -53,6 +54,7 @@ class Remounter {
                 }
             }
             catch (Exception e) {
+                e.printStackTrace();
                 return false;
             }
             if (!foundMount) {
@@ -60,21 +62,22 @@ class Remounter {
                     file = (new File(file).getParent()).toString();
                 }
                 catch (Exception e) {
+                    e.printStackTrace();
                     return false;
                 }
             }
         }
         Mount mountPoint = findMountPointRecursive(file);
 
-        Log.i(InternalVariables.TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType);
-        final boolean isMountMode = mountPoint.flags.contains(mountType);
+        Log.i(InternalVariables.TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType.toLowerCase());
+        final boolean isMountMode = mountPoint.flags.contains(mountType.toLowerCase());
 
         if ( isMountMode ) {
         	//grab an instance of the internal class
             InternalMethods.instance().doExec(new String[] {
                     String.format(
                             "mount -o remount,%s %s %s",
-                            mountType,
+                            mountType.toLowerCase(),
                             mountPoint.device.getAbsolutePath(),
                             mountPoint.mountPoint.getAbsolutePath() )
                     }
@@ -82,9 +85,11 @@ class Remounter {
             mountPoint = findMountPointRecursive(file);
         }
 
-        if ( mountPoint.flags.contains(mountType) ) {
-            return false;
+        if ( mountPoint.flags.contains(mountType.toLowerCase()) ) {
+        	Log.i(InternalVariables.TAG, mountPoint.flags.toString());
+            return true;
         } else {
+        	Log.i(InternalVariables.TAG, mountPoint.flags.toString());
             return false;
         }
     }

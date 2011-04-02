@@ -1,15 +1,10 @@
 package com.stericson.RootTools;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -33,10 +28,28 @@ public class RootTools {
      *For examples of this being done, look at the remount functionality.
      */
 	
-    //--------------------
-    //# Public Variables #
-    //--------------------
-
+    //---------------------------
+    //# Public Variable Getters #
+    //---------------------------
+    
+    /**
+     * This will return the environment variable $PATH
+     * 
+     * @return Set<String> A Set of Strings representing the environment variable $PATH
+     * 
+     * @throws Exception if we cannot return the $PATH variable
+     */
+    public static Set<String> getPath() throws Exception {
+        if (InternalVariables.path.size() >= 1) {
+            return InternalVariables.path;	
+        } else {
+            if (InternalMethods.instance().returnPath()) {
+                return InternalVariables.path;	
+            } else {
+                throw new Exception();
+            }
+        }
+    }
 	
     //------------------
     //# Public Methods #
@@ -144,29 +157,12 @@ public class RootTools {
      */
     public static boolean isBusyboxAvailable() {
         Log.i(InternalVariables.TAG, "Checking for BusyBox");
-        File tmpDir = new File("/data/local/tmp");
-        if (!tmpDir.exists()) {
-            InternalMethods.instance().doExec(new String[]{"mkdir /data/local/tmp"});
-        }
-        Set<String> tmpSet = new HashSet<String>();
-        //Try to read from the file.
-        LineNumberReader lnr = null;
         try {
-            InternalMethods.instance().doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
-                    "chmod 0777 /data/local/tmp/init.rc"});
-            lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
-            String line;
-            while( (line = lnr.readLine()) != null ){
-                if (line.contains("export PATH")) {
-                    int tmp = line.indexOf("/");
-                    tmpSet = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
-                    for(String paths : tmpSet) {
-                        File file = new File(paths + "/busybox");
-                        if (file.exists()) {
-                            Log.i(InternalVariables.TAG, "Found BusyBox!");
-                            return true;
-                        }
-                    }
+            for(String paths : getPath()) {
+                File file = new File(paths + "/busybox");
+                if (file.exists()) {
+                    Log.i(InternalVariables.TAG, "Found BusyBox!");
+                    return true;
                 }
             }
         } catch (Exception e) {
@@ -407,6 +403,34 @@ public class RootTools {
         return sendShell(command, null);
     }
 
+    /**
+     * Get the space for a desired partition.
+     *
+     * @param path   The partition to find the space for.
+     *
+     * @return          the amount if space found within the desired partition.
+     *                  If the space was not found then the string is -1
+     *
+     */
+    public static String getSpace(String path) {
+		InternalVariables.getSpaceFor = path;
+		boolean found = false;
+		String[] commands = { "df" };
+		InternalMethods.instance().doExec(commands);
+		
+		for (String spaceSearch : InternalVariables.space) {
+			if (found) {
+				String space = spaceSearch.substring(0,
+						spaceSearch.length() - 1);
+				return space;
+			}
+			else if (spaceSearch.equals("used,")) {
+				found = true;
+			}
+		}
+		return "-1";
+	}
+	
     public static abstract class Result implements IResult {
         private Process         process = null;
         private Serializable    data    = null;

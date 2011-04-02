@@ -2,7 +2,10 @@ package com.stericson.RootTools;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,7 +60,7 @@ class InternalMethods {
                     for (String id : ID) {
                         if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
                             InternalVariables.accessGiven = true;
-                            Log.i(InternalVariables.TAG, "Access GInternalVariablesen");
+                            Log.i(InternalVariables.TAG, "Access Given");
                             break;
                         }
                     }
@@ -65,6 +68,9 @@ class InternalMethods {
                         Log.i(InternalVariables.TAG, "Access Denied?");
                     }
                 }
+				if (commands[0].equals("df") && line.contains(InternalVariables.getSpaceFor)) {
+					InternalVariables.space = line.split(" ");
+				}
                 line = reader.readLine();
             }
 
@@ -88,6 +94,35 @@ class InternalMethods {
                         "Error: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+    }
+
+    protected boolean returnPath() {
+        File tmpDir = new File("/data/local/tmp");
+        if (!tmpDir.exists()) {
+            doExec(new String[]{"mkdir /data/local/tmp"});
+        }
+        try {
+	        InternalVariables.path = new HashSet<String>();
+	        //Try to read from the file.
+	        LineNumberReader lnr = null;
+	        doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
+	                "chmod 0777 /data/local/tmp/init.rc"});
+	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
+	        String line;
+	        while( (line = lnr.readLine()) != null ){
+	            if (line.contains("export PATH")) {
+	                int tmp = line.indexOf("/");
+	                InternalVariables.path = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
+	                return true;
+	            }
+	        }
+	        return false;
+        } catch (Exception e) {
+            Log.d(InternalVariables.TAG,
+                    "Error: " + e.getMessage());
+            e.printStackTrace();
+        	return false;
         }
     }
 }
