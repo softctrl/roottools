@@ -41,7 +41,7 @@ public class RootTools {
      * @throws Exception if we cannot return the $PATH variable
      */
     public static Set<String> getPath() throws Exception {
-        if (InternalVariables.path.size() >= 1) {
+        if (InternalVariables.path != null) {
             return InternalVariables.path;	
         } else {
             if (InternalMethods.instance().returnPath()) {
@@ -67,7 +67,7 @@ public class RootTools {
      * @throws Exception if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        if (InternalVariables.mounts.size() >= 1) {
+        if (InternalVariables.mounts != null) {
             return InternalVariables.mounts;	
         } else {
         	InternalVariables.mounts = InternalMethods.instance().getMounts();
