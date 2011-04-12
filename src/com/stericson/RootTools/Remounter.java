@@ -72,7 +72,7 @@ class Remounter {
         Log.i(InternalVariables.TAG, "Remounting " + mountPoint.mountPoint.getAbsolutePath() + " as " + mountType.toLowerCase());
         final boolean isMountMode = mountPoint.flags.contains(mountType.toLowerCase());
 
-        if ( isMountMode ) {
+        if ( !isMountMode ) {
         	//grab an instance of the internal class
             InternalMethods.instance().doExec(new String[] {
                     String.format(
@@ -80,8 +80,14 @@ class Remounter {
                             mountType.toLowerCase(),
                             mountPoint.device.getAbsolutePath(),
                             mountPoint.mountPoint.getAbsolutePath() )
-                    }
-            );
+                    });
+            if (RootTools.debugMode) {
+            	Log.d(InternalVariables.TAG, String.format(
+                        "mount -o remount,%s %s %s",
+                        mountType.toLowerCase(),
+                        mountPoint.device.getAbsolutePath(),
+                        mountPoint.mountPoint.getAbsolutePath() ));
+            }
             mountPoint = findMountPointRecursive(file);
         }
 
