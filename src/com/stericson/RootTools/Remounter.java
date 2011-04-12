@@ -40,6 +40,11 @@ class Remounter {
         while (!foundMount) {
             try {
                 for (Mount mount : RootTools.getMounts()) {
+    	        	if (RootTools.debugMode) {
+    		            Log.d(InternalVariables.TAG,
+    		                    mount.mountPoint.toString());
+    	        	}
+    	        	
                     if (file.equals(mount.mountPoint.toString())) {
                         foundMount = true;
                         break;
@@ -47,7 +52,9 @@ class Remounter {
                 }
             }
             catch (Exception e) {
-                e.printStackTrace();
+            	if (RootTools.debugMode) {
+            		e.printStackTrace();
+            	}
                 return false;
             }
             if (!foundMount) {
@@ -78,11 +85,16 @@ class Remounter {
             mountPoint = findMountPointRecursive(file);
         }
 
+        Log.i(InternalVariables.TAG, mountPoint.flags + " AND " +  mountType.toLowerCase());
         if ( mountPoint.flags.contains(mountType.toLowerCase()) ) {
-        	Log.i(InternalVariables.TAG, mountPoint.flags.toString());
+        	if (RootTools.debugMode) {
+        		Log.i(InternalVariables.TAG, mountPoint.flags.toString());
+        	}
             return true;
         } else {
-        	Log.i(InternalVariables.TAG, mountPoint.flags.toString());
+        	if (RootTools.debugMode) {
+        		Log.i(InternalVariables.TAG, mountPoint.flags.toString());
+        	}
             return false;
         }
     }
@@ -102,8 +114,9 @@ class Remounter {
         catch (IOException e) {
             throw new RuntimeException( e );
         } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (RootTools.debugMode) {
+				e.printStackTrace();
+			}
 		}
         return null;
     }

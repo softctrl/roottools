@@ -61,7 +61,7 @@ class InternalMethods {
                 if (commands[0].equals("id")) {
                     Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
                     for (String id : ID) {
-                        if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
+                        if (id.toLowerCase().contains("uid=0")) {
                             InternalVariables.accessGiven = true;
                             Log.i(InternalVariables.TAG, "Access Given");
                             break;
@@ -75,14 +75,20 @@ class InternalMethods {
 					InternalVariables.space = line.split(" ");
 				}
                 line = reader.readLine();
+                
+                if (RootTools.debugMode) {
+                	Log.i(InternalVariables.TAG, line);
+                }
             }
 
             process.waitFor();
 
         } catch (Exception e) {
-            Log.d(InternalVariables.TAG,
-                    "Error: " + e.getMessage());
-            e.printStackTrace();
+        	if (RootTools.debugMode) {
+	            Log.d(InternalVariables.TAG,
+	                    "Error: " + e.getMessage());
+	            e.printStackTrace();
+        	}
         } finally {
             try {
                 if (os != null) {
@@ -93,9 +99,11 @@ class InternalMethods {
                 }
                 process.destroy();
             } catch (Exception e) {
-                Log.d(InternalVariables.TAG,
-                        "Error: " + e.getMessage());
-                e.printStackTrace();
+            	if (RootTools.debugMode) {
+    	            Log.d(InternalVariables.TAG,
+    	                    "Error: " + e.getMessage());
+    	            e.printStackTrace();
+            	}
             }
         }
     }
@@ -114,6 +122,10 @@ class InternalMethods {
 	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
 	        String line;
 	        while( (line = lnr.readLine()) != null ){
+	        	if (RootTools.debugMode) {
+		            Log.d(InternalVariables.TAG,
+		                    line);
+	        	}
 	            if (line.contains("export PATH")) {
 	                int tmp = line.indexOf("/");
 	                InternalVariables.path = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
@@ -122,9 +134,11 @@ class InternalMethods {
 	        }
 	        return false;
         } catch (Exception e) {
-            Log.d(InternalVariables.TAG,
-                    "Error: " + e.getMessage());
-            e.printStackTrace();
+        	if (RootTools.debugMode) {
+	            Log.d(InternalVariables.TAG,
+	                    "Error: " + e.getMessage());
+	            e.printStackTrace();
+        	}
         	return false;
         }
     }
@@ -136,6 +150,12 @@ class InternalMethods {
             String line;
             ArrayList<Mount> mounts = new ArrayList<Mount>();
             while( (line = lnr.readLine()) != null ){
+	        	
+            	if (RootTools.debugMode) {
+		            Log.d(InternalVariables.TAG,
+		                    line);
+	        	}
+	        	
                 String[] fields = line.split(" ");
                 mounts.add( new Mount(
                         new File(fields[0]), // device

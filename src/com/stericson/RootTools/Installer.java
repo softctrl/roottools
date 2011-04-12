@@ -55,7 +55,9 @@ class Installer {
                     fos = context.openFileOutput("bogus", Context.MODE_PRIVATE);
                     fos.write("justcreatedfilesdirectory".getBytes());
                 } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.toString());
+                	if (RootTools.debugMode) {
+                		Log.e(LOG_TAG, ex.toString());
+                	}
                     return false;
                 }
                 finally {
@@ -68,7 +70,9 @@ class Installer {
                 }
             }
             catch(IOException ex) {
-                Log.e(LOG_TAG, ex.toString());
+            	if (RootTools.debugMode) {
+            		Log.e(LOG_TAG, ex.toString());
+            	}
                 return false;
             }
 
@@ -84,11 +88,15 @@ class Installer {
                         oss.write(buffer, 0, len);
                     }
                 } catch (IOException ex) {
-                    Log.e(LOG_TAG, ex.toString());
+                	if (RootTools.debugMode) {
+                		Log.e(LOG_TAG, ex.toString());
+                	}
                     return false;
                 }
             } catch (FileNotFoundException ex) {
-                Log.e(LOG_TAG, ex.toString());
+            	if (RootTools.debugMode) {
+            		Log.e(LOG_TAG, ex.toString());
+            	}
                 return false;
             }
             finally {
@@ -101,7 +109,9 @@ class Installer {
             try {
                 iss.close();
             } catch (IOException ex) {
-                Log.e(LOG_TAG, ex.toString());
+            	if (RootTools.debugMode) {
+            		Log.e(LOG_TAG, ex.toString());
+            	}
                 return false;
             }
 

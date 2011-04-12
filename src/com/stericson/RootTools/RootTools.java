@@ -28,6 +28,12 @@ public class RootTools {
      *then that functionality should probably be moved to its own class and the call to it done here.
      *For examples of this being done, look at the remount functionality.
      */
+
+    //--------------------
+    //# Public Variables #
+    //--------------------
+	
+	public static boolean debugMode = false;
 	
     //---------------------------
     //# Public Variable Getters #
@@ -71,7 +77,7 @@ public class RootTools {
             return InternalVariables.mounts;	
         } else {
         	InternalVariables.mounts = InternalMethods.instance().getMounts();
-        	if (InternalVariables.mounts.size() >= 1) {
+        	if (InternalVariables.mounts != null) {
                 return InternalVariables.mounts;	
             } else {
                 throw new Exception();
@@ -159,12 +165,18 @@ public class RootTools {
      */
     public static boolean isRootAvailable() {
         Log.i(InternalVariables.TAG, "Checking for Root binary");
-        String[] places = { "/system/bin/", "/system/xbin/",
+        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
                 "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
         for (String where : places) {
             File file = new File(where + "su");
             if (file.exists()) {
+            	if (debugMode) {
+                    Log.i(InternalVariables.TAG, "Root was found here: " + where);
+                }
                 return true;
+            }
+            if (debugMode) {
+                Log.i(InternalVariables.TAG, "Root was NOT found here: " + where);
             }
         }
         return false;
@@ -189,13 +201,20 @@ public class RootTools {
             for(String paths : getPath()) {
                 File file = new File(paths + "/busybox");
                 if (file.exists()) {
-                    Log.i(InternalVariables.TAG, "Found BusyBox!");
+                    if (debugMode) {
+                    	Log.i(InternalVariables.TAG, "Found BusyBox here: " + paths);
+                    }
                     return true;
+                }
+                if (debugMode) {
+                	Log.i(InternalVariables.TAG, "BusyBox was NOT found here: " + paths);
                 }
             }
         } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "BusyBox was not found, some error happened!");
-            e.printStackTrace();
+            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+            if (debugMode) {
+            	e.printStackTrace();
+            }
             return false;
         }
         return false;
@@ -315,6 +334,9 @@ public class RootTools {
             installer = new Installer(context);
         }
         catch(IOException ex) {
+        	if (debugMode) {
+        		ex.printStackTrace();
+        	}
             return false;
         }
 
