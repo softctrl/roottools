@@ -74,19 +74,16 @@ class InternalMethods {
 				if (commands[0].equals("df") && line.contains(InternalVariables.getSpaceFor)) {
 					InternalVariables.space = line.split(" ");
 				}
+				RootTools.log(line);
+				
                 line = reader.readLine();
-                
-                if (RootTools.debugMode) {
-                	Log.i(InternalVariables.TAG, line);
-                }
             }
 
             process.waitFor();
 
         } catch (Exception e) {
         	if (RootTools.debugMode) {
-	            Log.d(InternalVariables.TAG,
-	                    "Error: " + e.getMessage());
+        		RootTools.log("Error: " + e.getMessage());
 	            e.printStackTrace();
         	}
         } finally {
@@ -100,8 +97,7 @@ class InternalMethods {
                 process.destroy();
             } catch (Exception e) {
             	if (RootTools.debugMode) {
-    	            Log.d(InternalVariables.TAG,
-    	                    "Error: " + e.getMessage());
+            		RootTools.log("Error: " + e.getMessage());
     	            e.printStackTrace();
             	}
             }
@@ -122,10 +118,7 @@ class InternalMethods {
 	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
 	        String line;
 	        while( (line = lnr.readLine()) != null ){
-	        	if (RootTools.debugMode) {
-		            Log.d(InternalVariables.TAG,
-		                    line);
-	        	}
+	        	RootTools.log(line);
 	            if (line.contains("export PATH")) {
 	                int tmp = line.indexOf("/");
 	                InternalVariables.path = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
@@ -135,8 +128,7 @@ class InternalMethods {
 	        return false;
         } catch (Exception e) {
         	if (RootTools.debugMode) {
-	            Log.d(InternalVariables.TAG,
-	                    "Error: " + e.getMessage());
+        		RootTools.log("Error: " + e.getMessage());
 	            e.printStackTrace();
         	}
         	return false;
@@ -151,10 +143,7 @@ class InternalMethods {
             ArrayList<Mount> mounts = new ArrayList<Mount>();
             while( (line = lnr.readLine()) != null ){
 	        	
-            	if (RootTools.debugMode) {
-		            Log.d(InternalVariables.TAG,
-		                    line);
-	        	}
+        		RootTools.log(line);
 	        	
                 String[] fields = line.split(" ");
                 mounts.add( new Mount(

@@ -170,14 +170,10 @@ public class RootTools {
         for (String where : places) {
             File file = new File(where + "su");
             if (file.exists()) {
-            	if (debugMode) {
-                    Log.i(InternalVariables.TAG, "Root was found here: " + where);
-                }
+                log("Root was found here: " + where);
                 return true;
             }
-            if (debugMode) {
-                Log.i(InternalVariables.TAG, "Root was NOT found here: " + where);
-            }
+            log("Root was NOT found here: " + where);
         }
         return false;
     }
@@ -201,14 +197,10 @@ public class RootTools {
             for(String paths : getPath()) {
                 File file = new File(paths + "/busybox");
                 if (file.exists()) {
-                    if (debugMode) {
-                    	Log.i(InternalVariables.TAG, "Found BusyBox here: " + paths);
-                    }
+                    log("Found BusyBox here: " + paths);
                     return true;
                 }
-                if (debugMode) {
-                	Log.i(InternalVariables.TAG, "BusyBox was NOT found here: " + paths);
-                }
+                log("BusyBox was NOT found here: " + paths);
             }
         } catch (Exception e) {
             Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
@@ -481,6 +473,36 @@ public class RootTools {
 		return -1;
 	}
 	
+    /**
+     * This method allows you to output debug messages only when debugging is on.
+     * This will allow you to add a debug option to your app, which by default can be
+     * left off for performance. However, when you need debugging information, a simple
+     * switch can enable it and provide you with detailed logging.
+     * 
+     * This method handles whether or not to log the information you pass it depending
+     * whether or not RootTools.debugMode is on. So you can use this and not have to
+     * worry about handling it yourself.
+     *
+     * @param TAG   Optional parameter to define the tag that the Log will use.
+     * 
+     * @param msg   The message to output.
+     *
+     *
+     */
+	public static void log(String msg) {
+		log(null, msg);
+	}
+
+    public static void log(String TAG, String msg) {
+		if (debugMode) {
+			if (TAG != null) { 
+				Log.d(TAG, msg);
+			} else {
+				Log.d(InternalVariables.TAG, msg);
+			}
+		}
+	}
+
     public static abstract class Result implements IResult {
         private Process         process = null;
         private Serializable    data    = null;

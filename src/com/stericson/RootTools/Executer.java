@@ -72,6 +72,7 @@ public class Executer {
                 } else {
                     result.process(line);
                 }
+                RootTools.log(line);
                 line = reader.readLine();
             }
         }

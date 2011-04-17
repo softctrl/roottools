@@ -40,10 +40,7 @@ class Remounter {
         while (!foundMount) {
             try {
                 for (Mount mount : RootTools.getMounts()) {
-    	        	if (RootTools.debugMode) {
-    		            Log.d(InternalVariables.TAG,
-    		                    mount.mountPoint.toString());
-    	        	}
+                	RootTools.log(mount.mountPoint.toString());
     	        	
                     if (file.equals(mount.mountPoint.toString())) {
                         foundMount = true;
@@ -81,26 +78,20 @@ class Remounter {
                             mountPoint.device.getAbsolutePath(),
                             mountPoint.mountPoint.getAbsolutePath() )
                     });
-            if (RootTools.debugMode) {
-            	Log.d(InternalVariables.TAG, String.format(
+            RootTools.log(String.format(
                         "mount -o remount,%s %s %s",
                         mountType.toLowerCase(),
                         mountPoint.device.getAbsolutePath(),
                         mountPoint.mountPoint.getAbsolutePath() ));
-            }
             mountPoint = findMountPointRecursive(file);
         }
 
         Log.i(InternalVariables.TAG, mountPoint.flags + " AND " +  mountType.toLowerCase());
         if ( mountPoint.flags.contains(mountType.toLowerCase()) ) {
-        	if (RootTools.debugMode) {
-        		Log.i(InternalVariables.TAG, mountPoint.flags.toString());
-        	}
+        	RootTools.log(mountPoint.flags.toString());
             return true;
         } else {
-        	if (RootTools.debugMode) {
-        		Log.i(InternalVariables.TAG, mountPoint.flags.toString());
-        	}
+        	RootTools.log(mountPoint.flags.toString());
             return false;
         }
     }
