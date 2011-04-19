@@ -73,15 +73,11 @@ public class RootTools {
      * @throws Exception if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        if (InternalVariables.mounts != null) {
+    	InternalVariables.mounts = InternalMethods.instance().getMounts();
+    	if (InternalVariables.mounts != null) {
             return InternalVariables.mounts;	
         } else {
-        	InternalVariables.mounts = InternalMethods.instance().getMounts();
-        	if (InternalVariables.mounts != null) {
-                return InternalVariables.mounts;	
-            } else {
-                throw new Exception();
-            }
+            throw new Exception();
         }
     }
 	
