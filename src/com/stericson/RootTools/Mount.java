@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-class Mount {
+public class Mount {
     final File device;
     final File mountPoint;
     final String type;

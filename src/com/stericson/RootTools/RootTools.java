@@ -371,6 +371,11 @@ public class RootTools {
      */
 	public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
+		if (debugMode) {
+			for (String c : commands) {
+				log("Shell command: " + c);
+			}
+		}
         return (new Executer().sendShell(commands, sleepTime, result));
     }
 
