@@ -12,11 +12,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
 import android.util.Log;
 
 //no modifier, this is package-private which means that no one but the library can access it.
 class InternalMethods {
-	
+
     //--------------------
     //# Internal methods #
     //--------------------
@@ -24,7 +25,7 @@ class InternalMethods {
     static private InternalMethods instance_;
 
     static protected InternalMethods instance() {
-        if(null == instance_) {
+        if (null == instance_) {
             instance_ = new InternalMethods();
         }
         return instance_;
@@ -71,31 +72,30 @@ class InternalMethods {
                         Log.i(InternalVariables.TAG, "Access Denied?");
                     }
                 }
-				if (commands[0].startsWith("df")) {
-					if (line.contains(commands[0].substring(2, commands[0].length()).trim()))
-					{
-						InternalVariables.space = line.split(" ");	
-					}
-				}
-				if (commands[0].equals("busybox")) {
-					if (line.startsWith("BusyBox")) {
-						String[] temp = line.split(" ");
-						InternalVariables.busyboxVersion = temp[1];
-					}
-				}
+                if (commands[0].startsWith("df")) {
+                    if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
+                        InternalVariables.space = line.split(" ");
+                    }
+                }
+                if (commands[0].equals("busybox")) {
+                    if (line.startsWith("BusyBox")) {
+                        String[] temp = line.split(" ");
+                        InternalVariables.busyboxVersion = temp[1];
+                    }
+                }
 
-				RootTools.log(line);
-				
+                RootTools.log(line);
+
                 line = reader.readLine();
             }
 
             process.waitFor();
 
         } catch (Exception e) {
-        	if (RootTools.debugMode) {
-        		RootTools.log("Error: " + e.getMessage());
-	            e.printStackTrace();
-        	}
+            if (RootTools.debugMode) {
+                RootTools.log("Error: " + e.getMessage());
+                e.printStackTrace();
+            }
         } finally {
             try {
                 if (os != null) {
@@ -106,10 +106,10 @@ class InternalMethods {
                 }
                 process.destroy();
             } catch (Exception e) {
-            	if (RootTools.debugMode) {
-            		RootTools.log("Error: " + e.getMessage());
-    	            e.printStackTrace();
-            	}
+                if (RootTools.debugMode) {
+                    RootTools.log("Error: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -120,53 +120,74 @@ class InternalMethods {
             doExec(new String[]{"mkdir /data/local/tmp"});
         }
         try {
-	        InternalVariables.path = new HashSet<String>();
-	        //Try to read from the file.
-	        LineNumberReader lnr = null;
-	        doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
-	                "chmod 0777 /data/local/tmp/init.rc"});
-	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
-	        String line;
-	        while( (line = lnr.readLine()) != null ){
-	        	RootTools.log(line);
-	            if (line.contains("export PATH")) {
-	                int tmp = line.indexOf("/");
-	                InternalVariables.path = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
-	                return true;
-	            }
-	        }
-	        return false;
+            InternalVariables.path = new HashSet<String>();
+            //Try to read from the file.
+            LineNumberReader lnr = null;
+            doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
+                    "chmod 0777 /data/local/tmp/init.rc"});
+            lnr = new LineNumberReader(new FileReader("/data/local/tmp/init.rc"));
+            String line;
+            while ((line = lnr.readLine()) != null) {
+                RootTools.log(line);
+                if (line.contains("export PATH")) {
+                    int tmp = line.indexOf("/");
+                    InternalVariables.path = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
+                    return true;
+                }
+            }
+            return false;
         } catch (Exception e) {
-        	if (RootTools.debugMode) {
-        		RootTools.log("Error: " + e.getMessage());
-	            e.printStackTrace();
-        	}
-        	return false;
+            if (RootTools.debugMode) {
+                RootTools.log("Error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            return false;
         }
     }
-    
+
     protected ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
         LineNumberReader lnr = null;
         try {
-            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
+            lnr = new LineNumberReader(new FileReader("/proc/mounts"));
             String line;
             ArrayList<Mount> mounts = new ArrayList<Mount>();
-            while( (line = lnr.readLine()) != null ){
-	        	
-        		RootTools.log(line);
-	        	
+            while ((line = lnr.readLine()) != null) {
+
+                RootTools.log(line);
+
                 String[] fields = line.split(" ");
-                mounts.add( new Mount(
+                mounts.add(new Mount(
                         new File(fields[0]), // device
                         new File(fields[1]), // mountPoint
                         fields[2], // fstype
                         fields[3] // flags
-                ) );
+                ));
             }
             return mounts;
-        }
-        finally {
+        } finally {
             //no need to do anything here.
         }
+    }
+
+    /*
+     * @return long Size, converted to kilobytes (from xxx or xxxm or xxxk etc.)
+     */
+    protected long getConvertedSpace(String spaceStr) {
+        double multiplier = 1.0;
+        char c;
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < spaceStr.length(); i++) {
+            c = spaceStr.charAt(i);
+            if (!Character.isDigit(c) && c != '.') {
+                if (c == 'm' || c == 'M') {
+                    multiplier = 1024.0;
+                } else if (c == 'g' || c == 'G') {
+                    multiplier = 1024.0 * 1024.0;
+                }
+                break;
+            }
+            sb.append(spaceStr.charAt(i));
+        }
+        return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
     }
 }

@@ -14,15 +14,13 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.util.List;
 
-public class TestRootTools extends Activity
-{
+public class SanityCheckRootTools extends Activity {
     private ScrollView mScrollView;
     private TextView mTextView;
     private ProgressDialog mPDialog;
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mTextView = new TextView(this);
@@ -37,11 +35,11 @@ public class TestRootTools extends Activity
             PackageInfo packageInfo =
                     this.getPackageManager().getPackageInfo(this.getPackageName(), 0);
             version = packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
         }
-        catch(PackageManager.NameNotFoundException e) {}
 
-        print("TestRootTools v " + version + "\n\n");
-        if(false == RootTools.isAccessGiven()) {
+        print("SanityCheckRootTools v " + version + "\n\n");
+        if (false == RootTools.isAccessGiven()) {
             print("ERROR: No root access to this device.\n");
             return;
         }
@@ -51,7 +49,7 @@ public class TestRootTools extends Activity
         mPDialog.setCancelable(false);
         mPDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
-        new TestThread(this, new TestHandler()).start();
+        new SanityCheckThread(this, new TestHandler()).start();
     }
 
     protected void print(CharSequence text) {
@@ -65,13 +63,13 @@ public class TestRootTools extends Activity
 
     // Run our long-running tests in their separate thread so as to
     // not interfere with proper rendering.
-    private class TestThread extends Thread {
-        private Context context;
-        private Handler handler;
+    private class SanityCheckThread extends Thread {
+        private Context mContext;
+        private Handler mHandler;
 
-        public TestThread(Context context, Handler handler) {
-            this.context = context;
-            this.handler = handler;
+        public SanityCheckThread(Context context, Handler handler) {
+            mContext = context;
+            mHandler = handler;
         }
 
         public void run() {
@@ -79,17 +77,24 @@ public class TestRootTools extends Activity
 
             // First test: Install a binary file for future use
             // if it wasn't already installed.
+            /*
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Installing binary if needed");
-            if(false == RootTools.installBinary(context, R.raw.nes, "nes_binary")) {
+            if(false == RootTools.installBinary(mContext, R.raw.nes, "nes_binary")) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: Failed to install binary. Please see log file.");
                 return;
             }
+            */
+
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing df");
+            long spaceValue = RootTools.getSpace("/data");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking /data partition size]\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, spaceValue + "k\n\n");
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ return array");
             try {
                 List<String> response = RootTools.sendShell("ls /");
                 visualUpdate(TestHandler.ACTION_DISPLAY, "[ Listing of / (passing a List)]\n");
-                for(String line:response) {
+                for (String line : response) {
                     visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
                 }
             } catch (IOException e) {
@@ -124,7 +129,7 @@ public class TestRootTools extends Activity
                     }
                 };
                 RootTools.sendShell("ls /", result);
-                if(0 != result.getError())
+                if (0 != result.getError())
                     return;
             } catch (IOException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
@@ -159,17 +164,17 @@ public class TestRootTools extends Activity
 
                 };
                 RootTools.sendShell(
-                    new String[] {
-                            "echo \"* PS:\"",
-                            "ps",
-                            "echo \"* LS:\"",
-                            "ls",
-                            "echo \"* DATE:\"",
-                            "date" },
-                    2000,
-                    result
+                        new String[]{
+                                "echo \"* PS:\"",
+                                "ps",
+                                "echo \"* LS:\"",
+                                "ls",
+                                "echo \"* DATE:\"",
+                                "date"},
+                        2000,
+                        result
                 );
-                if(0 != result.getError())
+                if (0 != result.getError())
                     return;
             } catch (IOException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
@@ -184,34 +189,34 @@ public class TestRootTools extends Activity
         }
 
         private void visualUpdate(int action, String text) {
-            Message msg = handler.obtainMessage();
+            Message msg = mHandler.obtainMessage();
             Bundle bundle = new Bundle();
             bundle.putInt(TestHandler.ACTION, action);
             bundle.putString(TestHandler.TEXT, text);
             msg.setData(bundle);
-            handler.sendMessage(msg);
+            mHandler.sendMessage(msg);
         }
     }
 
     private class TestHandler extends Handler {
         static final public String ACTION = "action";
-            static final public int ACTION_SHOW 	= 0x01;
-            static final public int ACTION_HIDE 	= 0x02;
-            static final public int ACTION_DISPLAY 	= 0x03;
-            static final public int ACTION_PDISPLAY	= 0x04;
-        static final public String TEXT   = "text";
+        static final public int ACTION_SHOW = 0x01;
+        static final public int ACTION_HIDE = 0x02;
+        static final public int ACTION_DISPLAY = 0x03;
+        static final public int ACTION_PDISPLAY = 0x04;
+        static final public String TEXT = "text";
 
         public void handleMessage(Message msg) {
             int action = msg.getData().getInt(ACTION);
-            String text   = msg.getData().getString(TEXT);
+            String text = msg.getData().getString(TEXT);
 
-            switch(action) {
+            switch (action) {
                 case ACTION_SHOW:
                     mPDialog.show();
                     mPDialog.setMessage("Running Root Library Tests...");
                     break;
                 case ACTION_HIDE:
-                    if(null != text)
+                    if (null != text)
                         print(text);
                     mPDialog.hide();
                     break;

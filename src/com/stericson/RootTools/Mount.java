@@ -6,20 +6,36 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Mount {
-    public final File device;
-    public final File mountPoint;
-    public final String type;
-    public final Set<String> flags;
+    protected final File mDevice;
+    protected final File mMountPoint;
+    protected final String mType;
+    protected final Set<String> mFlags;
 
     Mount(File device, File path, String type, String flagsStr) {
-        this.device = device;
-        this.mountPoint = path;
-        this.type = type;
-        this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
+        mDevice = device;
+        mMountPoint = path;
+        mType = type;
+        mFlags = new HashSet<String>(Arrays.asList(flagsStr.split(",")));
+    }
+
+    public File getDevice() {
+        return mDevice;
+    }
+
+    public File getMountPoint() {
+        return mMountPoint;
+    }
+
+    public String getType() {
+        return mType;
+    }
+
+    public Set<String> getFlags() {
+        return mFlags;
     }
 
     @Override
     public String toString() {
-        return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
+        return String.format("%s on %s type %s %s", mDevice, mMountPoint, mType, mFlags);
     }
 }
