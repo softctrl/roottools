@@ -161,16 +161,21 @@ public class RootTools {
      */
     public static boolean isRootAvailable() {
         Log.i(InternalVariables.TAG, "Checking for Root binary");
-        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
-        for (String where : places) {
-            File file = new File(where + "su");
-            if (file.exists()) {
-                log("Root was found here: " + where);
-                return true;
+        try {
+			for(String paths : getPath()) {
+				File file = new File(paths + "/su");
+			    if (file.exists()) {
+			        log("Root was found here: " + paths);
+			        return true;
+			    }
+			    log("Root was NOT found here: " + paths);
+			}
+		}  catch (Exception e) {
+            Log.i(InternalVariables.TAG, "Root was not found, more information MAY be available with Debugging on.");
+            if (debugMode) {
+            	e.printStackTrace();
             }
-            log("Root was NOT found here: " + where);
-        }
+		}
         return false;
     }
 
@@ -206,6 +211,23 @@ public class RootTools {
             return false;
         }
         return false;
+    }
+
+    /**
+     * @return  BusyBox version is found, null if not found.
+     */
+    public static String getBusyBoxVersion() {
+        Log.i(InternalVariables.TAG, "Getting BusyBox Version");
+        try {
+            InternalMethods.instance().doExec(new String[]{"busybox"});
+        } catch (Exception e) {
+            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+            if (debugMode) {
+            	e.printStackTrace();
+            }
+            return null;
+        }
+        return InternalVariables.busyboxVersion;
     }
 
     /**
@@ -452,28 +474,62 @@ public class RootTools {
      * @param path   The partition to find the space for.
      *
      * @return          the amount if space found within the desired partition.
-     *                  If the space was not found then the string is -1
+     *                  If the space was not found then the string is null
      *
      */
-    public static int getSpace(String path) {
+    public static String getSpace(String path) {
 		InternalVariables.getSpaceFor = path;
 		boolean found = false;
-		String[] commands = { "df" };
+		String[] commands = { "df " + path};
 		InternalMethods.instance().doExec(commands);
+
+		RootTools.log("Looking for Space");
 		
-		for (String spaceSearch : InternalVariables.space) {
-			if (found) {
-				String space = spaceSearch.substring(0,
-						spaceSearch.length() - 1);
-				return Integer.parseInt(space.trim());
+		if (InternalVariables.space != null)
+		{
+			RootTools.log("First Method");
+			
+			for (String spaceSearch : InternalVariables.space) {
+				
+				RootTools.log(spaceSearch);
+				
+				if (found) {
+					return spaceSearch;
+				}
+				else if (spaceSearch.equals("used,")) {
+					found = true;
+				}
 			}
-			else if (spaceSearch.equals("used,")) {
-				found = true;
+			
+			//Try this way
+			int count = 0,
+				targetCount = 3;
+			
+			RootTools.log("Second Method");
+			
+			if (!InternalVariables.space[0].startsWith(path))
+			{
+				targetCount = 2;
+			}
+			
+			for (String spaceSearch : InternalVariables.space) {
+				
+				RootTools.log(spaceSearch);
+				if (spaceSearch.length() > 0)
+				{
+					RootTools.log(spaceSearch + ("Valid"));
+					if (count == targetCount)
+					{
+						return spaceSearch;
+					}
+					count++;
+				}
 			}
 		}
-		return -1;
+		RootTools.log("Returning null, space could not be determined.");
+		return null;
 	}
-	
+    
     /**
      * This method allows you to output debug messages only when debugging is on.
      * This will allow you to add a debug option to your app, which by default can be

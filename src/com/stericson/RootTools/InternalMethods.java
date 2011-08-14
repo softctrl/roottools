@@ -71,9 +71,19 @@ class InternalMethods {
                         Log.i(InternalVariables.TAG, "Access Denied?");
                     }
                 }
-				if (commands[0].equals("df") && line.contains(InternalVariables.getSpaceFor)) {
-					InternalVariables.space = line.split(" ");
+				if (commands[0].startsWith("df")) {
+					if (line.contains(commands[0].substring(2, commands[0].length()).trim()))
+					{
+						InternalVariables.space = line.split(" ");	
+					}
 				}
+				if (commands[0].equals("busybox")) {
+					if (line.startsWith("BusyBox")) {
+						String[] temp = line.split(" ");
+						InternalVariables.busyboxVersion = temp[1];
+					}
+				}
+
 				RootTools.log(line);
 				
                 line = reader.readLine();
