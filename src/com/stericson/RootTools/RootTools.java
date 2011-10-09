@@ -349,6 +349,54 @@ public class RootTools {
     public static boolean installBinary(Context context, int sourceId, String destName) {
         return installBinary(context, sourceId, destName, "700");
     }
+    
+    /**
+     * This method can be used to kill a running process
+     * 
+     * @param processName name of process to kill
+     * @return <code>true</code> if process was found and killed successfully
+     */
+    public static boolean killProcess(String processName) {
+        Log.i(InternalVariables.TAG, "Killing process " + processName);
+        InternalVariables.pid = null;
+        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+
+        if (InternalVariables.pid != null) {
+            InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid});
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * This method can be used to to check if a process is running
+     * 
+     * @param processName name of process to check
+     * @return <code>true</code> if process was found
+     */
+    public static boolean isProcessRunning(String processName) {
+        Log.i(InternalVariables.TAG, "Checks if process is running: " + processName);
+        InternalVariables.pid = null;
+        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+
+        if (InternalVariables.pid != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * This restarts only Android OS without rebooting the whole device.
+     * This is done by killing the main init process named zygote. Zygote is restarted
+     * automatically by Android after killing it.
+     */
+    public static void restartAndroid() {
+        Log.i(InternalVariables.TAG, "Restart Android");
+        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
+    }
 
     /**
      * Sends several shell command as su (attempts to)

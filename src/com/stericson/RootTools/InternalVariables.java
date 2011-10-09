@@ -17,6 +17,7 @@ class InternalVariables {
     protected static String[] space;
     protected static String getSpaceFor;
     protected static String busyboxVersion;
+    protected static String pid;
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
 
