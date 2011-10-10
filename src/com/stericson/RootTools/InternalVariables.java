@@ -12,7 +12,7 @@ class InternalVariables {
     //----------------------
 
     //Version numbers should be maintained here.
-    protected static String TAG = "RootTools v1.1.0";
+    protected static String TAG = "RootTools v1.3";
     protected static boolean accessGiven = false;
     protected static String[] space;
     protected static String getSpaceFor;
