@@ -342,12 +342,26 @@ public class RootTools {
      *
      * @param context  the current activity's <code>Context</code>
      * @param sourceId resource id; typically <code>R.raw.id</code>
-     * @param destName destination file name; appended to /data/data/app.package/files/
+     * @param binaryName destination file name; appended to /data/data/app.package/files/
      * @return a <code>boolean</code> which indicates whether or not we were
      *         able to create the new file.
      */
-    public static boolean installBinary(Context context, int sourceId, String destName) {
-        return installBinary(context, sourceId, destName, "700");
+    public static boolean installBinary(Context context, int sourceId, String binaryName) {
+        return installBinary(context, sourceId, binaryName, "700");
+    }
+    
+    /**
+     * Executes binary in a separated process. Before using this method, the binary has to be installed
+     * in /data/data/app.package/files/ using the installBinary method.
+     * 
+     * @param context the current activity's <code>Context</code>
+     * @param binaryName name of installed binary
+     * @param parameter parameter to append to binary like "-vxf"
+     */
+    public static void runBinary(Context context, String binaryName, String parameter) {
+        // executes binary as separated thread
+        Runner runner = new Runner(context, binaryName, parameter);
+        runner.start();
     }
     
     /**
