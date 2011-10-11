@@ -150,30 +150,15 @@ public class RootTools {
     }
 
     /**
-     * @return <code>true</code> if su was found.
+     * @return  <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
-        Log.i(InternalVariables.TAG, "Checking for Root binary");
-        try {
-            for (String paths : getPath()) {
-                File file = new File(paths + "/su");
-                if (file.exists()) {
-                    log("Root was found here: " + paths);
-                    return true;
-                }
-                log("Root was NOT found here: " + paths);
-            }
-        } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "Root was not found, more information MAY be available with Debugging on.");
-            if (debugMode) {
-                e.printStackTrace();
-            }
-        }
-        return false;
+        return findBinary("su");
     }
 
     /**
      * @return <code>true</code> if BusyBox was found
+     * 
      * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
      */
     @Deprecated
@@ -182,27 +167,92 @@ public class RootTools {
     }
 
     /**
-     * @return <code>true</code> if BusyBox was found.
+     * @return  <code>true</code> if BusyBox was found.
      */
     public static boolean isBusyboxAvailable() {
-        Log.i(InternalVariables.TAG, "Checking for BusyBox");
-        try {
-            for (String paths : getPath()) {
-                File file = new File(paths + "/busybox");
+        return findBinary("busybox");
+    }
+
+    /**
+     * 
+     * @param binaryName String that represent the binary to find.
+     * 
+     * @return  <code>true</code> if the specified binary was found.
+     * 
+     */
+    public static boolean findBinary(String binaryName) {
+        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
+        try 
+        {
+            for(String paths : getPath()) {
+                File file = new File(paths + "/" + binaryName);
                 if (file.exists()) {
-                    log("Found BusyBox here: " + paths);
+                    log(binaryName + " was found here: " + paths);
                     return true;
                 }
-                log("BusyBox was NOT found here: " + paths);
+                log(binaryName + " was NOT found here: " + paths);
             }
-        } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+        }  catch (Exception e) {
+            Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
                 e.printStackTrace();
+        }
+    }
+        
+        Log.i(InternalVariables.TAG, "Trying second method");
+        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
+        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
+                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+        for (String where : places) {
+            File file = new File(where + binaryName);
+            if (file.exists()) {
+                log(binaryName + " was found here: " + where);
+                return true;
             }
-            return false;
+            log(binaryName + " was NOT found here: " + where);
         }
         return false;
+    }
+
+    
+    /**
+     * 
+     * @param file String that represent the file, including the full
+     * path to the file and its name.
+     * 
+     * @return An <code>int</code> detailing the permissions of the file
+     * or -1 if the file could not be found or permissions couldn't be determined.
+     * 
+     */
+    public static int getFilePermissions(String file) {
+        Log.i(InternalVariables.TAG, "Checking permissions for " + file);
+        File f = new File(file);
+        if (f.exists()) {
+            log(file + " was found." );
+            try 
+            {
+                for (String line : sendShell("stat -c %a " + file))
+                {
+                    int permissions = -1;
+                    try 
+                    {
+                            permissions = Integer.parseInt(line);
+                            return permissions;
+                    }
+                    catch (Exception e)
+                    {}
+                }                               
+            } catch (Exception e) {
+                log(e.getMessage());
+                return -1;
+            }
+            
+            return -1;
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     /**
