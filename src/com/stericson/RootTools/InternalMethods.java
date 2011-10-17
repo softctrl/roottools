@@ -84,7 +84,8 @@ class InternalMethods {
                     }
                 }
                 if (commands[0].startsWith("busybox pidof")) {
-                    if (!line.isEmpty()) {
+                    if (!line.equals("")) {
+                        RootTools.log("PID: " + line);
                         InternalVariables.pid = line;
                     }
                 }
