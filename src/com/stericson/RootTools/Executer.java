@@ -82,9 +82,11 @@ public class Executer {
             }
         }
         finally {
-            int diag = process.waitFor();
-            if(null != result) {
-                result.onComplete(diag);
+            if (process != null) {
+                int diag = process.waitFor();
+                if(null != result) {
+                    result.onComplete(diag);
+                }
             }
 
             try {
@@ -96,10 +98,11 @@ public class Executer {
                 }
                 process.destroy();
             } catch (Exception e) {
-                //return what we have
-                return response;
+                Log.e(InternalVariables.TAG, "Catched Exception in finally block!");
+                e.printStackTrace();
             }
-            return response;
         }
+        
+        return response;
     }
 }
