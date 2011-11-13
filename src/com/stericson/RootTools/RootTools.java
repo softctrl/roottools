@@ -80,6 +80,29 @@ public class RootTools {
         }
     }
 
+    /**
+     * This will return an ArrayList of the class Symlink.
+     * The class Symlink contains the following property's:
+     * path
+     * SymplinkPath
+     * <p/>
+     * These will provide you with any Symlinks in the given path.
+     * 
+     * @param The path to search for Symlinks.
+     *
+     * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
+     * @throws Exception if we cannot return the Symlinks.
+     */
+    public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
+    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
+        InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
+        if (InternalVariables.symlinks != null) {
+            return InternalVariables.symlinks;
+        } else {
+            throw new Exception();
+        }
+    }
+
     //------------------
     //# Public Methods #
     //------------------
@@ -273,6 +296,50 @@ public class RootTools {
     }
 
     /**
+     * This will return an List of Strings.
+     * Each string represents an applet available from BusyBox.
+     * <p/>
+     *
+     * @return <code>List<String></code> a List of strings representing the applets available from Busybox.
+     * @throws Exception if we cannot return the applets available.
+     */
+    public static List<String> getBusyBoxApplets() throws Exception {
+    	List<String> commands = sendShell("busybox --list");
+        if (commands != null) {
+            return commands;
+        } else {
+            throw new Exception();
+        }
+    }
+    
+    /**
+     * This will let you know if an applet is available from BusyBox
+     * <p/>
+     *
+     * @param <code>String</code> The applet to check for.
+     * 
+     * @return <code>true</code> if applet is available, false otherwise.
+     */
+    public static boolean isAppletAvailable(String Applet) {
+    	try
+    	{
+	    	for(String applet : getBusyBoxApplets())
+	    	{
+	    		if (applet.equals(Applet))
+	    		{
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+    	}
+    	catch (Exception e)
+    	{
+    		RootTools.log(e.toString());
+    		return false;
+    	}
+    }
+    
+    /**
      * @return <code>true</code> if your app has been given root access.
      * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()}
      */
@@ -454,6 +521,7 @@ public class RootTools {
     
     /**
      * This restarts only Android OS without rebooting the whole device.
+     * This does NOT work on all devices.
      * This is done by killing the main init process named zygote. Zygote is restarted
      * automatically by Android after killing it.
      */

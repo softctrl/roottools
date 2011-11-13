@@ -175,6 +175,28 @@ class InternalMethods {
         }
     }
 
+    protected ArrayList<Symlink> getSymLinks() throws FileNotFoundException, IOException {
+        LineNumberReader lnr = null;
+        try {
+            lnr = new LineNumberReader(new FileReader("/data/local/symlinks"));
+            String line;
+            ArrayList<Symlink> symlink = new ArrayList<Symlink>();
+            while ((line = lnr.readLine()) != null) {
+
+                RootTools.log(line);
+
+                String[] fields = line.split(" ");
+                symlink.add(new Symlink(
+                        new File(fields[fields.length - 2]), // file
+                        new File(fields[fields.length]) // SymlinkPath
+                ));
+            }
+            return symlink;
+        } finally {
+            //no need to do anything here.
+        }
+    }
+
     /*
      * @return long Size, converted to kilobytes (from xxx or xxxm or xxxk etc.)
      */

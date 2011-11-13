@@ -12,7 +12,7 @@ class InternalVariables {
     //----------------------
 
     //Version numbers should be maintained here.
-    protected static String TAG = "RootTools v1.3";
+    protected static String TAG = "RootTools v1.4";
     protected static boolean accessGiven = false;
     protected static String[] space;
     protected static String getSpaceFor;
@@ -20,5 +20,6 @@ class InternalVariables {
     protected static String pid;
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
+    protected static ArrayList<Symlink> symlinks;
 
 }
