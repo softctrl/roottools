@@ -35,6 +35,7 @@ public class RootTools {
     //--------------------
 
     public static boolean debugMode = false;
+    public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
 
     //---------------------------
     //# Public Variable Getters #
@@ -103,6 +104,38 @@ public class RootTools {
         }
     }
 
+    /**
+     * This will return a String that represent the symlink for a specified file.
+     * <p/>
+     * 
+     * @param The file to get the Symlink for. (must have absolute path)
+     *
+     * @return <code>String</code> a String that represent the symlink for a specified file or
+     * an empty string if no symlink exists.
+     */
+    public static String getSymlink(File file) {
+    	RootTools.log("Looking for Symlink for " + file.toString());
+    	if (file.exists())
+    	{
+    		RootTools.log("File exists");
+    		
+    		try 
+    		{
+				List<String> results = sendShell("ls -l " + file);
+				String[] symlink = results.get(0).split(" ");
+				if (symlink[symlink.length - 2].equals("->"))
+				{
+					RootTools.log("Symlink found.");
+					return symlink[symlink.length - 1];
+				}
+			}
+    		catch (Exception e) {}
+    	}
+
+    	RootTools.log("Symlink not found");
+    	return "";
+    }
+    
     //------------------
     //# Public Methods #
     //------------------
@@ -113,7 +146,7 @@ public class RootTools {
      * @param activity pass in your Activity
      */
     public static void offerBusyBox(Activity activity) {
-        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
+        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivity(i);
@@ -128,7 +161,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerBusyBox(Activity activity, int requestCode) {
-        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
+        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivityForResult(i, requestCode);
@@ -141,7 +174,7 @@ public class RootTools {
      * @param activity pass in your Activity
      */
     public static void offerSuperUser(Activity activity) {
-        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
+        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivity(i);
@@ -156,7 +189,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
-        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
+        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivityForResult(i, requestCode);
@@ -201,40 +234,62 @@ public class RootTools {
      * @param binaryName String that represent the binary to find.
      * 
      * @return  <code>true</code> if the specified binary was found.
+     * Also, the path the binary was found at can be retrieved via the 
+     * variable lastFoundBinaryPath, if the binary was found in more than
+     * one location this will contain all of these locations.
      * 
      */
     public static boolean findBinary(String binaryName) {
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
+    	
+    	boolean found = false;
+    	lastFoundBinaryPaths.clear();
+        
+    	RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
         try 
         {
             for(String paths : getPath()) {
                 File file = new File(paths + "/" + binaryName);
                 if (file.exists()) {
                     log(binaryName + " was found here: " + paths);
-                    return true;
+                    lastFoundBinaryPaths.add(paths);
+                    found = true;
                 }
-                log(binaryName + " was NOT found here: " + paths);
+                else
+                {
+                	log(binaryName + " was NOT found here: " + paths);
+                }
             }
-        }  catch (Exception e) {
-            Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
-            if (debugMode) {
+        } 
+        catch (Exception e)
+        {
+            RootTools.log(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
+            if (debugMode) 
+            {
                 e.printStackTrace();
-        }
-    }
-        
-        Log.i(InternalVariables.TAG, "Trying second method");
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
-        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
-        for (String where : places) {
-            File file = new File(where + binaryName);
-            if (file.exists()) {
-                log(binaryName + " was found here: " + where);
-                return true;
             }
-            log(binaryName + " was NOT found here: " + where);
         }
-        return false;
+        
+        if (!found)
+        {
+	        RootTools.log(InternalVariables.TAG, "Trying second method");
+	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
+	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+	        for (String where : places) {
+	            File file = new File(where + binaryName);
+	            if (file.exists()) {
+	                log(binaryName + " was found here: " + where);
+	                lastFoundBinaryPaths.add(where);
+	                found = true;
+	            }
+	            else
+	            {
+	            	log(binaryName + " was NOT found here: " + where);
+	            }
+	        }
+        }
+        
+        return found;
     }
 
     
@@ -248,7 +303,7 @@ public class RootTools {
      * 
      */
     public static int getFilePermissions(String file) {
-        Log.i(InternalVariables.TAG, "Checking permissions for " + file);
+        RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) {
             log(file + " was found." );
@@ -282,11 +337,11 @@ public class RootTools {
      * @return BusyBox version is found, null if not found.
      */
     public static String getBusyBoxVersion() {
-        Log.i(InternalVariables.TAG, "Getting BusyBox Version");
+        RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
         try {
             InternalMethods.instance().doExec(new String[]{"busybox"});
         } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+            RootTools.log(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
                 e.printStackTrace();
             }
@@ -352,7 +407,7 @@ public class RootTools {
      * @return <code>true</code> if your app has been given root access.
      */
     public static boolean isAccessGiven() {
-        Log.i(InternalVariables.TAG, "Checking for Root access");
+        RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
         InternalMethods.instance().doExec(new String[]{"id"});
 
@@ -388,7 +443,7 @@ public class RootTools {
      *         if the SDCard is not mounted as read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        Log.i(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
+        RootTools.log(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
         String status = Environment.getExternalStorageState();
         if (!status.equals(Environment.MEDIA_MOUNTED)) {
             return false;
@@ -488,7 +543,7 @@ public class RootTools {
      * @return <code>true</code> if process was found and killed successfully
      */
     public static boolean killProcess(String processName) {
-        Log.i(InternalVariables.TAG, "Killing process " + processName);
+        RootTools.log(InternalVariables.TAG, "Killing process " + processName);
         InternalVariables.pid = null;
         InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
 
@@ -508,7 +563,7 @@ public class RootTools {
      * @return <code>true</code> if process was found
      */
     public static boolean isProcessRunning(String processName) {
-        Log.i(InternalVariables.TAG, "Checks if process is running: " + processName);
+        RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
         InternalVariables.pid = null;
         InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
 
@@ -526,7 +581,7 @@ public class RootTools {
      * automatically by Android after killing it.
      */
     public static void restartAndroid() {
-        Log.i(InternalVariables.TAG, "Restart Android");
+        RootTools.log(InternalVariables.TAG, "Restart Android");
         InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
     }
 
