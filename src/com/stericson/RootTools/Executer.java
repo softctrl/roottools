@@ -103,6 +103,7 @@ public class Executer {
                 int diag = process.waitFor();
                 if(null != result) {
                     result.onComplete(diag);
+                    response.add(Integer.toString(diag));
                 }
             }
 
