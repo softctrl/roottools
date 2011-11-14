@@ -104,6 +104,7 @@ public class Executer {
                 if(null != result) {
                     result.onComplete(diag);
                     response.add(Integer.toString(diag));
+                    RootTools.lastExitCode = diag;
                 }
             }
 

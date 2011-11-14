@@ -36,6 +36,7 @@ public class RootTools {
 
     public static boolean debugMode = false;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
+    public static int lastExitCode;
 
     //---------------------------
     //# Public Variable Getters #
