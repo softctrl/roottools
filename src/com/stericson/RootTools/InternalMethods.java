@@ -99,37 +99,6 @@ class InternalMethods {
             }
 
             while (line_err != null) {
-                if (commands[0].equals("id")) {
-                    Set<String> ID = new HashSet<String>(Arrays.asList(line_err.split(" ")));
-                    for (String id : ID) {
-                        if (id.toLowerCase().contains("uid=0")) {
-                            InternalVariables.accessGiven = true;
-                            RootTools.log(InternalVariables.TAG, "Access Given");
-                            break;
-                        }
-                    }
-                    if (!InternalVariables.accessGiven) {
-                        RootTools.log(InternalVariables.TAG, "Access Denied?");
-                    }
-                }
-                if (commands[0].startsWith("df")) {
-                    if (line_err.contains(commands[0].substring(2, commands[0].length()).trim())) {
-                        InternalVariables.space = line_err.split(" ");
-                    }
-                }
-                if (commands[0].equals("busybox")) {
-                    if (line_err.startsWith("BusyBox")) {
-                        String[] temp = line_err.split(" ");
-                        InternalVariables.busyboxVersion = temp[1];
-                    }
-                }
-                if (commands[0].startsWith("busybox pidof")) {
-                    if (!line_err.equals("")) {
-                        RootTools.log("PID: " + line_err);
-                        InternalVariables.pid = line_err;
-                    }
-                }
-
                 RootTools.log(line_err);
 
                 line_err = reader_err.readLine();
