@@ -34,7 +34,7 @@ public class Executer {
      *
      * @throws IOException
      */
-    public List<String> sendShell(String[] commands, int sleepTime, IResult result)
+    public List<String> sendShell(String[] commands, int sleepTime, IResult result, boolean useRoot)
             throws IOException, InterruptedException, RootToolsException {
         RootTools.log(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
         List<String> response = null;
@@ -48,7 +48,8 @@ public class Executer {
         				  osErr = null;
 
         try {
-            process = Runtime.getRuntime().exec("su");
+            process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
+            RootTools.log(useRoot ? "Using Root" : "Using sh");
             if(null != result) {
                 result.setProcess(process);
             }

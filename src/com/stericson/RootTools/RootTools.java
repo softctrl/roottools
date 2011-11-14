@@ -602,12 +602,32 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
+    	return sendShell(commands, sleepTime, result, true);
+    }
+    
+    /**
+     * Sends several shell command as su (attempts to)
+     *
+     * @param commands  array of commands to send to the shell
+     * @param sleepTime time to sleep between each command, delay.
+     * @param result    injected result object that implements the Result class
+     * @param useRoot   whether to use root or not when issuing these commands.
+     * @return a <code>LinkedList</code> containing each line that was returned
+     *         by the shell after executing or while trying to execute the given commands.
+     *         You must iterate over this list, it does not allow random access,
+     *         so no specifying an index of an item you want,
+     *         not like you're going to know that anyways.
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot)
+            throws IOException, InterruptedException, RootToolsException {
         if (debugMode) {
             for (String c : commands) {
                 log("Shell command: " + c);
             }
         }
-        return (new Executer().sendShell(commands, sleepTime, result));
+        return (new Executer().sendShell(commands, sleepTime, result, useRoot));
     }
 
 
