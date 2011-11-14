@@ -127,6 +127,11 @@ public class SanityCheckRootTools extends Activity {
                     public void onComplete(int diag) {
                         visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
                     }
+
+					@Override
+					public void processError(String line) throws Exception {
+                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
+					}
                 };
                 RootTools.sendShell("ls /", result);
                 if (0 != result.getError())
@@ -161,6 +166,11 @@ public class SanityCheckRootTools extends Activity {
                     public void onComplete(int diag) {
                         visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
                     }
+
+					@Override
+					public void processError(String line) throws Exception {
+                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
+					}
 
                 };
                 RootTools.sendShell(

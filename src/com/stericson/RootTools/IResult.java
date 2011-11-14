@@ -10,6 +10,7 @@ import java.io.Serializable;
  */
 public interface IResult {
     public abstract void process(String line) throws Exception;
+    public abstract void processError(String line) throws Exception;
     public abstract void onFailure(Exception ex);
     public abstract void onComplete(int diag);
 

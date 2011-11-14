@@ -80,11 +80,12 @@ public class Executer {
                 RootTools.log(line);
                 line = reader.readLine();
             }
+            
             while (line_error != null) {
                 if(null == result) {
                     response.add(line_error);
                 } else {
-                    result.process(line_error);
+                    result.processError(line_error);
                 }
                 
                 RootTools.log(line_error);
