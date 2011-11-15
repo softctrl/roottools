@@ -212,21 +212,27 @@ class InternalMethods {
      * @return long Size, converted to kilobytes (from xxx or xxxm or xxxk etc.)
      */
     protected long getConvertedSpace(String spaceStr) {
-        double multiplier = 1.0;
-        char c;
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < spaceStr.length(); i++) {
-            c = spaceStr.charAt(i);
-            if (!Character.isDigit(c) && c != '.') {
-                if (c == 'm' || c == 'M') {
-                    multiplier = 1024.0;
-                } else if (c == 'g' || c == 'G') {
-                    multiplier = 1024.0 * 1024.0;
-                }
-                break;
-            }
-            sb.append(spaceStr.charAt(i));
-        }
-        return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
+    	try {
+	        double multiplier = 1.0;
+	        char c;
+	        StringBuffer sb = new StringBuffer();
+	        for (int i = 0; i < spaceStr.length(); i++) {
+	            c = spaceStr.charAt(i);
+	            if (!Character.isDigit(c) && c != '.') {
+	                if (c == 'm' || c == 'M') {
+	                    multiplier = 1024.0;
+	                } else if (c == 'g' || c == 'G') {
+	                    multiplier = 1024.0 * 1024.0;
+	                }
+	                break;
+	            }
+	            sb.append(spaceStr.charAt(i));
+	        }
+	        return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
+    	}
+    	catch (Exception e) 
+    	{
+    		return -1;
+    	}
     }
 }
