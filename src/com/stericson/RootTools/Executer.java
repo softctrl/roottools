@@ -102,10 +102,15 @@ public class Executer {
         finally {
             if (process != null) {
                 int diag = process.waitFor();
+                                
+                RootTools.lastExitCode = diag;
+                
                 if(null != result) {
                     result.onComplete(diag);
+                }
+                else
+                {
                     response.add(Integer.toString(diag));
-                    RootTools.lastExitCode = diag;
                 }
             }
 
