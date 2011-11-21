@@ -119,4 +119,14 @@ class Installer {
         }
         return true;
     }
+
+    protected boolean isBinaryInstalled(String destName) {
+        boolean installed = false;
+        File mf = new File(filesPath + File.separator + destName);
+        if(mf.exists()) {
+            installed = true;
+            // TODO: pass mode as argument and check it matches
+        }
+        return installed;
+    }
 }

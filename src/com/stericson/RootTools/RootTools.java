@@ -419,6 +419,29 @@ public class RootTools {
         }
     }
 
+    public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
+        RootTools.log(InternalVariables.TAG, "Preparing Native Tools");
+        InternalVariables.nativeToolsReady = false;
+
+        Installer installer;
+        try {
+            installer = new Installer(context);
+        } catch (IOException ex) {
+            if (debugMode) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
+
+        if(installer.isBinaryInstalled("nativetools")) {
+            InternalVariables.nativeToolsReady = true;
+        }
+        else {
+            InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId, "nativetools", "700");
+        }
+        return InternalVariables.nativeToolsReady;
+    }
+
     /**
      * Checks if there is enough Space on SDCard
      *
@@ -606,7 +629,8 @@ public class RootTools {
     }
     
     /**
-     * Sends several shell command as su (attempts to)
+     * Sends several shell command as su (attempts to) if useRoot is true;
+     * as the current user (app_xxx) otherwise.
      *
      * @param commands  array of commands to send to the shell
      * @param sleepTime time to sleep between each command, delay.

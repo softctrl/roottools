@@ -14,6 +14,7 @@ class InternalVariables {
     //Version numbers should be maintained here.
     protected static String TAG = "RootTools v1.4.1";
     protected static boolean accessGiven = false;
+    protected static boolean nativeToolsReady = false;
     protected static String[] space;
     protected static String getSpaceFor;
     protected static String busyboxVersion;
