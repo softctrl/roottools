@@ -189,7 +189,7 @@ class InternalMethods {
     protected ArrayList<Symlink> getSymLinks() throws FileNotFoundException, IOException {
         LineNumberReader lnr = null;
         try {
-            lnr = new LineNumberReader(new FileReader("/data/local/symlinks"));
+            lnr = new LineNumberReader(new FileReader("/data/local/symlinks.txt"));
             String line;
             ArrayList<Symlink> symlink = new ArrayList<Symlink>();
             while ((line = lnr.readLine()) != null) {
@@ -198,8 +198,8 @@ class InternalMethods {
 
                 String[] fields = line.split(" ");
                 symlink.add(new Symlink(
-                        new File(fields[fields.length - 2]), // file
-                        new File(fields[fields.length]) // SymlinkPath
+                        new File(fields[fields.length - 3]), // file
+                        new File(fields[fields.length - 1]) // SymlinkPath
                 ));
             }
             return symlink;
