@@ -215,7 +215,7 @@ class InternalMethods {
     	
     	Permissions permissions = new Permissions();
     	
-    	permissions.setType(rawPermissions.substring(0));
+    	permissions.setType(rawPermissions.substring(0, 1));
 
     	RootTools.log(permissions.getType());
 
