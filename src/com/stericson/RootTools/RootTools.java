@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -37,11 +36,134 @@ public class RootTools {
     public static boolean debugMode = false;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
+    public static String utilPath;
 
     //---------------------------
     //# Public Variable Getters #
     //---------------------------
 
+    //------------------
+    //# Public Methods #
+    //------------------
+
+    /**
+     * This will return to you a string to be used in your shell commands which will represent the valid
+     * working toolbox with correct permissions. For instance, if Busybox is available it will return
+     * "busybox", if busybox is not available but toolbox is then it will return "toolbox"
+     * 
+     *@return String that indicates the available toolbox to use for accessing applets.
+     */
+    protected static String getWorkingToolbox()
+    {
+    	if (RootTools.checkUtil("busybox"))
+    	{
+    		return "busybox";
+    	}
+    	else if (RootTools.checkUtil("toolbox"))
+    	{
+    		return "toolbox";
+    	}
+    	else
+    	{
+    		return "";
+    	}
+    }
+
+    /**
+     * This will check an array of binaries, determine if they exist and determine that it has
+     * either ther permissions 755, 775, or 777. If an applet is not setup correctly
+     * it will try and fix it. (This is for Busybox applets or Toolbox applets)
+     * 
+     *@param String Name of the utility to check.
+     *
+     *@throws Exception if the operation cannot be completed.
+     *
+     *@return boolean to indicate whether the operation completed. 
+     *Note that this is not indicative of whether the problem was fixed, just that the method did not
+     *encounter any exceptions.
+     */
+	public static boolean checkUtils(String[] utils) throws Exception {
+		
+		for (String util : utils)
+		{
+			if (!checkUtil(util))
+			{
+				if (checkUtil("busybox"))
+				{
+					fixUtil(util, utilPath);
+				}
+				else if (checkUtil("toolbox"))
+				{
+					fixUtil(util, utilPath);
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+
+    /**
+     * This will check a given binary, determine if it exists and determine that it has
+     * either the permissions 755, 775, or 777.
+     * 
+     *
+     *@param String Name of the utility to check.
+     *
+     *@return boolean to indicate whether the binary is installed and has appropriate permissions.
+     */
+	public static boolean checkUtil(String util)
+	{
+		if (RootTools.findBinary(util))
+		{
+			for (String path : RootTools.lastFoundBinaryPaths)
+			{
+				int permission = RootTools.getFilePermissions(path + "/" + util).getPermissions();
+				
+				if (permission == 755 || permission == 777 || permission == 775)
+				{
+					utilPath = path + "/" + util;
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
+
+    /**
+     * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets)
+     * By "fix", I mean it will try and symlink the binary from either toolbox or Busybox
+     * and fix the permissions if the permissions are not correct.
+     *
+     *@param String Name of the utility to fix.
+     *@param String path to the toolbox that provides ln, rm, and chmod.
+     *This can be a blank string, a path to a binary that will provide these, or you can use RootTools.getWorkingToolbox()
+     */
+	public static void fixUtil(String util, String utilPath)
+	{
+		try
+		{
+			RootTools.remount("/system", "rw");
+			
+			if (RootTools.findBinary(util))
+			{
+				for (String path : RootTools.lastFoundBinaryPaths)
+					RootTools.sendShell(utilPath + " rm " + path + "/" + util);
+				
+				RootTools.sendShell(new String[] {	utilPath + " ln -s " + utilPath + " /system/bin/" + util,
+													utilPath + " chmod 0755 /system/bin/" + util}, 10);
+			}
+			
+			RootTools.remount("/system", "ro");
+		}
+		catch (Exception e) {}
+	}	
+	
     /**
      * This will return the environment variable $PATH
      *
@@ -137,10 +259,6 @@ public class RootTools {
     	return "";
     }
     
-    //------------------
-    //# Public Methods #
-    //------------------
-
     /**
      * This will launch the Android market looking for BusyBox
      *
@@ -299,39 +417,54 @@ public class RootTools {
      * @param file String that represent the file, including the full
      * path to the file and its name.
      * 
-     * @return An <code>int</code> detailing the permissions of the file
-     * or -1 if the file could not be found or permissions couldn't be determined.
+     * @return An instance of the class permissions from which you can get the permissions of the file
+     * or if the file could not be found or permissions couldn't be determined then permissions will be null.
      * 
      */
-    public static int getFilePermissions(String file) {
+    public static Permissions getFilePermissions(String file) {
         RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
-        if (f.exists()) {
+        if (f.exists()) 
+        {
             log(file + " was found." );
             try 
-            {
-                for (String line : sendShell("stat -c %a " + file))
+            {            	
+                for (String line : sendShell("busybox ls -l " + file))
                 {
-                    int permissions = -1;
-                    try 
-                    {
-                            permissions = Integer.parseInt(line);
-                            return permissions;
-                    }
-                    catch (Exception e)
-                    {}
-                }                               
-            } catch (Exception e) {
+                	log("Line " + line);
+                	try
+                	{
+                		return InternalMethods.instance().getPermissions(line);
+                	}
+                	catch (Exception e) {}
+                }
+                for (String line : sendShell("toolbox ls -l " + file))
+                {
+                	log("Line " + line);
+                	try
+                	{
+                		return InternalMethods.instance().getPermissions(line);
+                	}
+                	catch (Exception e) {}
+                }
+                for (String line : sendShell("ls -l " + file))
+                {
+                	log("Line " + line);
+                	try
+                	{
+                		return InternalMethods.instance().getPermissions(line);
+                	}
+                	catch (Exception e) {}
+                }
+            } 
+            catch (Exception e) 
+            {
                 log(e.getMessage());
-                return -1;
-            }
-            
-            return -1;
+                return null;
+            }            
         }
-        else
-        {
-            return -1;
-        }
+        
+        return null;
     }
 
     /**

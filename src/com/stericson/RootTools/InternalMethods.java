@@ -13,8 +13,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import android.util.Log;
-
 //no modifier, this is package-private which means that no one but the library can access it.
 class InternalMethods {
 
@@ -34,7 +32,7 @@ class InternalMethods {
     private InternalMethods() {
         super();
     }
-
+    
     protected void doExec(String[] commands) {
         Process process = null;
         DataOutputStream os = null;
@@ -206,6 +204,72 @@ class InternalMethods {
         } finally {
             //no need to do anything here.
         }
+    }
+
+    protected Permissions getPermissions(String line) {
+
+    	String[] lineArray = line.split(" ");
+    	String rawPermissions = lineArray[0];
+    	
+    	RootTools.log(rawPermissions);
+    	
+    	Permissions permissions = new Permissions();
+    	
+    	permissions.setType(rawPermissions.substring(0));
+
+    	RootTools.log(permissions.getType());
+
+    	permissions.setUserPermissions(rawPermissions.substring(1, 4));
+    	
+    	RootTools.log(permissions.getUserPermissions());
+    	
+    	permissions.setGroupPermissions(rawPermissions.substring(4, 7));
+    	
+    	RootTools.log(permissions.getGroupPermissions());
+
+    	permissions.setOtherPermissions(rawPermissions.substring(7, 10));
+    	
+    	RootTools.log(permissions.getOtherPermissions());
+
+    	
+    	String finalPermissions;
+    	finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
+    	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
+    	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
+    	
+    	permissions.setPermissions(Integer.parseInt(finalPermissions));
+    	
+        return permissions;
+    }
+    
+    protected int parsePermissions(String permission)
+    {
+    	int tmp;
+    	if (permission.charAt(0) == 'r')
+    		tmp = 4;
+    	else
+    		tmp = 0;
+
+    	RootTools.log("permission " + tmp);
+    	RootTools.log("character " + permission.charAt(0));
+    	
+    	if (permission.charAt(1) == 'w')
+    		tmp = tmp + 2;
+    	else
+    		tmp = tmp + 0;
+
+    	RootTools.log("permission " + tmp);
+    	RootTools.log("character " + permission.charAt(1));
+
+    	if (permission.charAt(2) == 'x')
+    		tmp = tmp + 1;
+    	else
+    		tmp = tmp + 0;
+
+    	RootTools.log("permission " + tmp);
+    	RootTools.log("character " + permission.charAt(2));
+
+    	return tmp;
     }
 
     /*

@@ -78,7 +78,7 @@ public class Executer {
                     result.process(line);
                 }
 
-                RootTools.log(line);
+                RootTools.log("input stream" + line);
                 line = reader.readLine();
             }
             
@@ -89,7 +89,7 @@ public class Executer {
                     result.processError(line_error);
                 }
                 
-                RootTools.log(line_error);
+                RootTools.log("error stream: " + line_error);
                 line_error = reader_error.readLine();
             }
 

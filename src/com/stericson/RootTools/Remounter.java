@@ -30,6 +30,17 @@ class Remounter {
      */
 
     protected boolean remount(String file, String mountType) {
+    	String util = "";
+    	
+    	if (RootTools.checkUtil("busybox"))
+    	{
+    		util = RootTools.utilPath;
+    	}
+    	else if (RootTools.checkUtil("toolbox"))
+    	{
+    		util = RootTools.utilPath;    		
+    	}
+    	
         //if the path has a trailing slash get rid of it.
         if (file.endsWith("/")) {
             file = file.substring(0, file.lastIndexOf("/"));
@@ -70,13 +81,13 @@ class Remounter {
             //grab an instance of the internal class
             InternalMethods.instance().doExec(new String[]{
                     String.format(
-                            "mount -o remount,%s %s %s",
+                            util + " mount -o remount,%s %s %s",
                             mountType.toLowerCase(),
                             mountPoint.getDevice().getAbsolutePath(),
                             mountPoint.getMountPoint().getAbsolutePath())
             });
             RootTools.log(String.format(
-                    "mount -o remount,%s %s %s",
+                    util + " mount -o remount,%s %s %s",
                     mountType.toLowerCase(),
                     mountPoint.getDevice().getAbsolutePath(),
                     mountPoint.getMountPoint().getAbsolutePath()));
