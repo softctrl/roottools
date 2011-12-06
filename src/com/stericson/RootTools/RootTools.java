@@ -121,12 +121,17 @@ public class RootTools {
 		{
 			for (String path : RootTools.lastFoundBinaryPaths)
 			{
-				int permission = RootTools.getFilePermissions(path + "/" + util).getPermissions();
+				Permissions permissions = RootTools.getFilePermissions(path + "/" + util);
 				
-				if (permission == 755 || permission == 777 || permission == 775)
+				if (permissions != null)
 				{
-					utilPath = path + "/" + util;
-					return true;
+					int permission = permissions.getPermissions();
+					
+					if (permission == 755 || permission == 777 || permission == 775)
+					{
+						utilPath = path + "/" + util;
+						return true;
+					}
 				}
 			}
 		}
@@ -393,7 +398,7 @@ public class RootTools {
 	        RootTools.log(InternalVariables.TAG, "Trying second method");
 	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
 	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/" };
 	        for (String where : places) {
 	            File file = new File(where + binaryName);
 	            if (file.exists()) {

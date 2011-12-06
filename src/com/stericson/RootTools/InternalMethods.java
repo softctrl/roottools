@@ -237,7 +237,7 @@ class InternalMethods {
     	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
     	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
     	
-    	permissions.setPermissions(Integer.parseInt(finalPermissions));
+		permissions.setPermissions(Integer.parseInt(finalPermissions));
     	
         return permissions;
     }
