@@ -53,7 +53,7 @@ public class RootTools {
      * 
      *@return String that indicates the available toolbox to use for accessing applets.
      */
-    protected static String getWorkingToolbox()
+    public static String getWorkingToolbox()
     {
     	if (RootTools.checkUtil("busybox"))
     	{
@@ -398,7 +398,7 @@ public class RootTools {
 	        RootTools.log(InternalVariables.TAG, "Trying second method");
 	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
 	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/" };
+	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
 	        for (String where : places) {
 	            File file = new File(where + binaryName);
 	            if (file.exists()) {
@@ -435,6 +435,15 @@ public class RootTools {
             try 
             {            	
                 for (String line : sendShell("busybox ls -l " + file))
+                {
+                	log("Line " + line);
+                	try
+                	{
+                		return InternalMethods.instance().getPermissions(line);
+                	}
+                	catch (Exception e) {}
+                }
+                for (String line : sendShell("/system/bin/failsafe/toolbox ls -l " + file))
                 {
                 	log("Line " + line);
                 	try
