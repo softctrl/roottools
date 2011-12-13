@@ -486,6 +486,7 @@ public class RootTools {
      */
     public static String getBusyBoxVersion() {
         RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
+        InternalVariables.busyboxVersion = null;
         try {
             InternalMethods.instance().doExec(new String[]{"busybox"});
         } catch (Exception e) {
