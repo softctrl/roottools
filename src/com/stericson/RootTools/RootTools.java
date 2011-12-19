@@ -431,15 +431,29 @@ public class RootTools {
         File f = new File(file);
         if (f.exists()) 
         {
+        	Permissions permissions;
             log(file + " was found." );
             try 
-            {            	
+            {
+            	for (String line : sendShell("ls -l " + file))
+                {
+                	log("Line " + line);
+                	try
+                	{
+                		permissions = InternalMethods.instance().getPermissions(line);
+                		if (permissions != null)
+                			return InternalMethods.instance().getPermissions(line);
+                	}
+                	catch (Exception e) {}
+                }
                 for (String line : sendShell("busybox ls -l " + file))
                 {
                 	log("Line " + line);
                 	try
                 	{
-                		return InternalMethods.instance().getPermissions(line);
+                		permissions = InternalMethods.instance().getPermissions(line);
+                		if (permissions != null)
+                			return InternalMethods.instance().getPermissions(line);
                 	}
                 	catch (Exception e) {}
                 }
@@ -448,7 +462,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		return InternalMethods.instance().getPermissions(line);
+                		permissions = InternalMethods.instance().getPermissions(line);
+                		if (permissions != null)
+                			return InternalMethods.instance().getPermissions(line);
                 	}
                 	catch (Exception e) {}
                 }
@@ -457,16 +473,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		return InternalMethods.instance().getPermissions(line);
-                	}
-                	catch (Exception e) {}
-                }
-                for (String line : sendShell("ls -l " + file))
-                {
-                	log("Line " + line);
-                	try
-                	{
-                		return InternalMethods.instance().getPermissions(line);
+                		permissions = InternalMethods.instance().getPermissions(line);
+                		if (permissions != null)
+                			return InternalMethods.instance().getPermissions(line);
                 	}
                 	catch (Exception e) {}
                 }

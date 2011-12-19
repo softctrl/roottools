@@ -211,35 +211,42 @@ class InternalMethods {
     	String[] lineArray = line.split(" ");
     	String rawPermissions = lineArray[0];
     	
-    	RootTools.log(rawPermissions);
+    	if (rawPermissions.length() == 10 && (rawPermissions.charAt(0) == '-' || rawPermissions.charAt(0) == 'd'
+    			|| rawPermissions.charAt(0) == 'l') && (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r') 
+    			&& (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w'))
+    	{	
+	    	RootTools.log(rawPermissions);
+	    	
+	    	Permissions permissions = new Permissions();
+	    	
+	    	permissions.setType(rawPermissions.substring(0, 1));
+	
+	    	RootTools.log(permissions.getType());
+	
+	    	permissions.setUserPermissions(rawPermissions.substring(1, 4));
+	    	
+	    	RootTools.log(permissions.getUserPermissions());
+	    	
+	    	permissions.setGroupPermissions(rawPermissions.substring(4, 7));
+	    	
+	    	RootTools.log(permissions.getGroupPermissions());
+	
+	    	permissions.setOtherPermissions(rawPermissions.substring(7, 10));
+	    	
+	    	RootTools.log(permissions.getOtherPermissions());
+	
+	    	
+	    	String finalPermissions;
+	    	finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
+	    	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
+	    	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
+	    	
+			permissions.setPermissions(Integer.parseInt(finalPermissions));
+	    	
+	        return permissions;
+    	}
     	
-    	Permissions permissions = new Permissions();
-    	
-    	permissions.setType(rawPermissions.substring(0, 1));
-
-    	RootTools.log(permissions.getType());
-
-    	permissions.setUserPermissions(rawPermissions.substring(1, 4));
-    	
-    	RootTools.log(permissions.getUserPermissions());
-    	
-    	permissions.setGroupPermissions(rawPermissions.substring(4, 7));
-    	
-    	RootTools.log(permissions.getGroupPermissions());
-
-    	permissions.setOtherPermissions(rawPermissions.substring(7, 10));
-    	
-    	RootTools.log(permissions.getOtherPermissions());
-
-    	
-    	String finalPermissions;
-    	finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
-    	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
-    	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
-    	
-		permissions.setPermissions(Integer.parseInt(finalPermissions));
-    	
-        return permissions;
+    	return null;
     }
     
     protected int parsePermissions(String permission)
