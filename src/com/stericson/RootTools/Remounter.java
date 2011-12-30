@@ -3,6 +3,7 @@ package com.stericson.RootTools;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 import android.util.Log;
 
@@ -79,18 +80,25 @@ class Remounter {
 
         if (!isMountMode) {
             //grab an instance of the internal class
-            InternalMethods.instance().doExec(new String[]{
-                    String.format(
-                            util + " mount -o remount,%s %s %s",
-                            mountType.toLowerCase(),
-                            mountPoint.getDevice().getAbsolutePath(),
-                            mountPoint.getMountPoint().getAbsolutePath())
-            });
-            RootTools.log(String.format(
-                    util + " mount -o remount,%s %s %s",
-                    mountType.toLowerCase(),
-                    mountPoint.getDevice().getAbsolutePath(),
-                    mountPoint.getMountPoint().getAbsolutePath()));
+            try {
+				InternalMethods.instance().doExec(new String[]{
+				        String.format(
+				                util + " mount -o remount,%s %s %s",
+				                mountType.toLowerCase(),
+				                mountPoint.getDevice().getAbsolutePath(),
+				                mountPoint.getMountPoint().getAbsolutePath()),
+				        String.format(
+				        		"mount -o remount,%s %s %s",
+				                mountType.toLowerCase(),
+				                mountPoint.getDevice().getAbsolutePath(),
+				                mountPoint.getMountPoint().getAbsolutePath()),
+				        String.format(
+				        		"/system/bin/toolbox mount -o remount,%s %s %s",
+				                mountType.toLowerCase(),
+				                mountPoint.getDevice().getAbsolutePath(),
+				                mountPoint.getMountPoint().getAbsolutePath())
+				}, -1);
+			} catch (TimeoutException e) {}
             mountPoint = findMountPointRecursive(file);
         }
 

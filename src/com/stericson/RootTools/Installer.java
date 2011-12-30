@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.io.*;
+import java.util.concurrent.TimeoutException;
 
 class Installer {
 
@@ -115,7 +116,9 @@ class Installer {
                 return false;
             }
 
-            InternalMethods.instance().doExec(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName });
+            try {
+				InternalMethods.instance().doExec(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, -1);
+			} catch (TimeoutException e) {}
         }
         return true;
     }

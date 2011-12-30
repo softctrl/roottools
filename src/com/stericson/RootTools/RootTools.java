@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -158,10 +160,10 @@ public class RootTools {
 			if (RootTools.findBinary(util))
 			{
 				for (String path : RootTools.lastFoundBinaryPaths)
-					RootTools.sendShell(utilPath + " rm " + path + "/" + util);
+					RootTools.sendShell(utilPath + " rm " + path + "/" + util, InternalVariables.timeout);
 				
 				RootTools.sendShell(new String[] {	utilPath + " ln -s " + utilPath + " /system/bin/" + util,
-													utilPath + " chmod 0755 /system/bin/" + util}, 10);
+													utilPath + " chmod 0755 /system/bin/" + util}, 10, InternalVariables.timeout);
 			}
 			
 			RootTools.remount("/system", "ro");
@@ -223,7 +225,7 @@ public class RootTools {
      * @throws Exception if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
+    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"}, -1);
         InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
         if (InternalVariables.symlinks != null) {
             return InternalVariables.symlinks;
@@ -249,7 +251,7 @@ public class RootTools {
     		
     		try 
     		{
-				List<String> results = sendShell("ls -l " + file);
+				List<String> results = sendShell("ls -l " + file, InternalVariables.timeout);
 				String[] symlink = results.get(0).split(" ");
 				if (symlink[symlink.length - 2].equals("->"))
 				{
@@ -321,29 +323,10 @@ public class RootTools {
     }
 
     /**
-     * @return <code>true</code> if su was found
-     * @deprecated As of release 0.7, replaced by {@link #isRootAvailable()}
-     */
-    @Deprecated
-    public static boolean rootAvailable() {
-        return isRootAvailable();
-    }
-
-    /**
      * @return  <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
         return findBinary("su");
-    }
-
-    /**
-     * @return <code>true</code> if BusyBox was found
-     * 
-     * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
-     */
-    @Deprecated
-    public static boolean busyboxAvailable() {
-        return isBusyboxAvailable();
     }
 
     /**
@@ -435,7 +418,7 @@ public class RootTools {
             log(file + " was found." );
             try 
             {
-            	for (String line : sendShell("ls -l " + file))
+            	for (String line : sendShell("ls -l " + file, InternalVariables.timeout))
                 {
                 	log("Line " + line);
                 	try
@@ -444,9 +427,11 @@ public class RootTools {
                 		if (permissions != null)
                 			return InternalMethods.instance().getPermissions(line);
                 	}
-                	catch (Exception e) {}
+                	catch (Exception e) {
+                		break;
+                	}
                 }
-                for (String line : sendShell("busybox ls -l " + file))
+                for (String line : sendShell("busybox ls -l " + file, InternalVariables.timeout))
                 {
                 	log("Line " + line);
                 	try
@@ -455,9 +440,11 @@ public class RootTools {
                 		if (permissions != null)
                 			return InternalMethods.instance().getPermissions(line);
                 	}
-                	catch (Exception e) {}
+                	catch (Exception e) {
+                		break;
+                	}
                 }
-                for (String line : sendShell("/system/bin/failsafe/toolbox ls -l " + file))
+                for (String line : sendShell("/system/bin/failsafe/toolbox ls -l " + file, InternalVariables.timeout))
                 {
                 	log("Line " + line);
                 	try
@@ -466,9 +453,11 @@ public class RootTools {
                 		if (permissions != null)
                 			return InternalMethods.instance().getPermissions(line);
                 	}
-                	catch (Exception e) {}
+                	catch (Exception e) {
+                		break;
+                	}
                 }
-                for (String line : sendShell("toolbox ls -l " + file))
+                for (String line : sendShell("toolbox ls -l " + file, InternalVariables.timeout))
                 {
                 	log("Line " + line);
                 	try
@@ -477,7 +466,9 @@ public class RootTools {
                 		if (permissions != null)
                 			return InternalMethods.instance().getPermissions(line);
                 	}
-                	catch (Exception e) {}
+                	catch (Exception e) {
+                		break;
+                	}
                 }
             } 
             catch (Exception e) 
@@ -497,7 +488,7 @@ public class RootTools {
         RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
         InternalVariables.busyboxVersion = null;
         try {
-            InternalMethods.instance().doExec(new String[]{"busybox"});
+            InternalMethods.instance().doExec(new String[]{"busybox"}, InternalVariables.timeout);
         } catch (Exception e) {
             RootTools.log(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
@@ -517,7 +508,7 @@ public class RootTools {
      * @throws Exception if we cannot return the applets available.
      */
     public static List<String> getBusyBoxApplets() throws Exception {
-    	List<String> commands = sendShell("busybox --list");
+    	List<String> commands = sendShell("busybox --list", InternalVariables.timeout);
         if (commands != null) {
             return commands;
         } else {
@@ -551,23 +542,15 @@ public class RootTools {
     		return false;
     	}
     }
-    
-    /**
-     * @return <code>true</code> if your app has been given root access.
-     * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()}
-     */
-    @Deprecated
-    public static boolean accessGiven() {
-        return isAccessGiven();
-    }
 
     /**
      * @return <code>true</code> if your app has been given root access.
+     * @throws TimeoutException if this operation times out. (cannot determine if access is given)
      */
-    public static boolean isAccessGiven() {
+    public static boolean isAccessGiven() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
-        InternalMethods.instance().doExec(new String[]{"id"});
+        InternalMethods.instance().doExec(new String[]{"id"}, InternalVariables.timeout);
 
         if (InternalVariables.accessGiven) {
             return true;
@@ -597,21 +580,6 @@ public class RootTools {
             InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId, "nativetools", "700");
         }
         return InternalVariables.nativeToolsReady;
-    }
-
-    /**
-     * Checks if there is enough Space on SDCard
-     *
-     * @param updateSize size to Check (long)
-     * @return <code>true</code> if the Update will fit on SDCard,
-     *         <code>false</code> if not enough space on SDCard.
-     *         Will also return <code>false</code>,
-     *         if the SDCard is not mounted as read/write
-     * @deprecated As of release 0.7, replaced by {@link #hasEnoughSpaceOnSdCard(long)}
-     */
-    @Deprecated
-    public static boolean EnoughSpaceOnSdCard(long updateSize) {
-        return hasEnoughSpaceOnSdCard(updateSize);
     }
 
     /**
@@ -726,10 +694,18 @@ public class RootTools {
     public static boolean killProcess(String processName) {
         RootTools.log(InternalVariables.TAG, "Killing process " + processName);
         InternalVariables.pid = null;
-        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+        try {
+			InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
+		} catch (TimeoutException e) {
+			return false;
+		}
 
         if (InternalVariables.pid != null) {
-            InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid});
+            try {
+				InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid}, InternalVariables.timeout);
+			} catch (TimeoutException e) {
+				return false;
+			}
 
             return true;
         } else {
@@ -742,11 +718,12 @@ public class RootTools {
      * 
      * @param processName name of process to check
      * @return <code>true</code> if process was found
+     * @throws TimeoutException (Could not determine if the process is running)
      */
-    public static boolean isProcessRunning(String processName) {
+    public static boolean isProcessRunning(String processName) throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
         InternalVariables.pid = null;
-        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
 
         if (InternalVariables.pid != null) {
             return true;
@@ -760,10 +737,11 @@ public class RootTools {
      * This does NOT work on all devices.
      * This is done by killing the main init process named zygote. Zygote is restarted
      * automatically by Android after killing it.
+     * @throws TimeoutException 
      */
-    public static void restartAndroid() {
+    public static void restartAndroid() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Restart Android");
-        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
+        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"}, InternalVariables.timeout);
     }
 
     /**
@@ -772,6 +750,13 @@ public class RootTools {
      * @param commands  array of commands to send to the shell
      * @param sleepTime time to sleep between each command, delay.
      * @param result    injected result object that implements the Result class
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -779,10 +764,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result)
-            throws IOException, InterruptedException, RootToolsException {
-    	return sendShell(commands, sleepTime, result, true);
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+    	return sendShell(commands, sleepTime, result, true, timeout);
     }
     
     /**
@@ -793,6 +779,13 @@ public class RootTools {
      * @param sleepTime time to sleep between each command, delay.
      * @param result    injected result object that implements the Result class
      * @param useRoot   whether to use root or not when issuing these commands.
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -800,15 +793,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot)
-            throws IOException, InterruptedException, RootToolsException {
-        if (debugMode) {
-            for (String c : commands) {
-                log("Shell command: " + c);
-            }
-        }
-        return (new Executer().sendShell(commands, sleepTime, result, useRoot));
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return (new Executer().sendShell(commands, sleepTime, result, useRoot, timeout));
     }
 
 
@@ -817,17 +806,26 @@ public class RootTools {
      *
      * @param commands  array of commands to send to the shell
      * @param sleepTime time to sleep between each command, delay.
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     *
      * @return a LinkedList containing each line that was returned by the shell
      *         after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
      *         so no specifying an index of an item you want,
      *         not like you're going to know that anyways.
+
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(commands, sleepTime, null);
+    public static List<String> sendShell(String[] commands, int sleepTime, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(commands, sleepTime, null, timeout);
     }
 
     /**
@@ -835,24 +833,40 @@ public class RootTools {
      *
      * @param command command to send to the shell
      * @param result  injected result object that implements the Result class
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
      *         so no specifying an index of an item you want,
      *         not like you're going to know that anyways.
+     *
      * @throws InterruptedException
      * @throws IOException
      * @throws RootToolsException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String command, Result result)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(new String[]{command}, 0, result);
+    public static List<String> sendShell(String command, Result result, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(new String[]{command}, 0, result, timeout);
     }
 
     /**
      * Sends one shell command as su (attempts to)
      *
      * @param command command to send to the shell
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a LinkedList containing each line that was returned by the shell
      *         after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -860,10 +874,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String command)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(command, null);
+    public static List<String> sendShell(String command, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(command, null, timeout);
     }
 
     /**
@@ -872,12 +887,15 @@ public class RootTools {
      * @param path The partition to find the space for.
      * @return the amount if space found within the desired partition.
      *         If the space was not found then the value is -1
+     * @throws TimeoutException 
      */
     public static long getSpace(String path) {
         InternalVariables.getSpaceFor = path;
         boolean found = false;
         String[] commands = {"df " + path};
-        InternalMethods.instance().doExec(commands);
+        try {
+			InternalMethods.instance().doExec(commands, -1);
+		} catch (TimeoutException e) {}
 
         RootTools.log("Looking for Space");
 

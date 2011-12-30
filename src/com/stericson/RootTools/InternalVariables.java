@@ -22,5 +22,6 @@ class InternalVariables {
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
     protected static ArrayList<Symlink> symlinks;
+    protected static int timeout = 10000;
 
 }
