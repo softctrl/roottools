@@ -117,7 +117,7 @@ class Installer {
             }
 
             try {
-				InternalMethods.instance().doExec(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, -1);
+				new InternalMethods().doExec(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, -1);
 			} catch (TimeoutException e) {}
         }
         return true;

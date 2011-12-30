@@ -21,19 +21,6 @@ class InternalMethods {
     //# Internal methods #
     //--------------------
 
-    static private InternalMethods instance_;
-    
-    static protected InternalMethods instance() {
-        if (null == instance_) {
-            instance_ = new InternalMethods();
-        }
-        return instance_;
-    }
-
-    private InternalMethods() {
-        super();
-    }
-    
     protected void doExec(String[] commands, int timeout) throws TimeoutException {
 	
         Worker worker = new Worker(commands);
@@ -264,6 +251,7 @@ class InternalMethods {
 
 	            // Doing Stuff ;)
 	            for (String single : commands) {
+	            	RootTools.log("Shell command: " + single);
 	                os.writeBytes(single + "\n");
 	                os.flush();
 	            }

@@ -116,6 +116,7 @@ public class Executer {
 					
 					// Doing Stuff ;)
 					for (String single : commands) {
+						RootTools.log("Shell command: " + single);
 						os.writeBytes(single + "\n");
 						os.flush();
 						Thread.sleep(sleepTime);

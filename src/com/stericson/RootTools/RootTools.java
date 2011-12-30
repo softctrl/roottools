@@ -181,7 +181,7 @@ public class RootTools {
         if (InternalVariables.path != null) {
             return InternalVariables.path;
         } else {
-            if (InternalMethods.instance().returnPath()) {
+            if (new InternalMethods().returnPath()) {
                 return InternalVariables.path;
             } else {
                 throw new Exception();
@@ -203,7 +203,7 @@ public class RootTools {
      * @throws Exception if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        InternalVariables.mounts = InternalMethods.instance().getMounts();
+        InternalVariables.mounts = new InternalMethods().getMounts();
         if (InternalVariables.mounts != null) {
             return InternalVariables.mounts;
         } else {
@@ -225,8 +225,8 @@ public class RootTools {
      * @throws Exception if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"}, -1);
-        InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
+    	new InternalMethods().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"}, -1);
+        InternalVariables.symlinks = new InternalMethods().getSymLinks();
         if (InternalVariables.symlinks != null) {
             return InternalVariables.symlinks;
         } else {
@@ -367,13 +367,13 @@ public class RootTools {
                 }
             }
         } 
+        catch (TimeoutException ex)
+        {
+            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");        	
+        }
         catch (Exception e)
         {
             RootTools.log(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
-            if (debugMode) 
-            {
-                e.printStackTrace();
-            }
         }
         
         if (!found)
@@ -423,9 +423,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		permissions = InternalMethods.instance().getPermissions(line);
+                		permissions = new InternalMethods().getPermissions(line);
                 		if (permissions != null)
-                			return InternalMethods.instance().getPermissions(line);
+                			return new InternalMethods().getPermissions(line);
                 	}
                 	catch (Exception e) {
                 		break;
@@ -436,9 +436,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		permissions = InternalMethods.instance().getPermissions(line);
+                		permissions = new InternalMethods().getPermissions(line);
                 		if (permissions != null)
-                			return InternalMethods.instance().getPermissions(line);
+                			return new InternalMethods().getPermissions(line);
                 	}
                 	catch (Exception e) {
                 		break;
@@ -449,9 +449,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		permissions = InternalMethods.instance().getPermissions(line);
+                		permissions = new InternalMethods().getPermissions(line);
                 		if (permissions != null)
-                			return InternalMethods.instance().getPermissions(line);
+                			return new InternalMethods().getPermissions(line);
                 	}
                 	catch (Exception e) {
                 		break;
@@ -462,9 +462,9 @@ public class RootTools {
                 	log("Line " + line);
                 	try
                 	{
-                		permissions = InternalMethods.instance().getPermissions(line);
+                		permissions = new InternalMethods().getPermissions(line);
                 		if (permissions != null)
-                			return InternalMethods.instance().getPermissions(line);
+                			return new InternalMethods().getPermissions(line);
                 	}
                 	catch (Exception e) {
                 		break;
@@ -482,19 +482,18 @@ public class RootTools {
     }
 
     /**
-     * @return BusyBox version is found, null if not found.
+     * @return BusyBox version is found, "" if not found.
      */
     public static String getBusyBoxVersion() {
         RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
         InternalVariables.busyboxVersion = null;
         try {
-            InternalMethods.instance().doExec(new String[]{"busybox"}, InternalVariables.timeout);
+            new InternalMethods().doExec(new String[]{"busybox"}, InternalVariables.timeout);
+        } catch (TimeoutException ex) {
+            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");        	
         } catch (Exception e) {
             RootTools.log(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
-            if (debugMode) {
-                e.printStackTrace();
-            }
-            return null;
+            return "";
         }
         return InternalVariables.busyboxVersion;
     }
@@ -550,7 +549,7 @@ public class RootTools {
     public static boolean isAccessGiven() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
-        InternalMethods.instance().doExec(new String[]{"id"}, InternalVariables.timeout);
+        new InternalMethods().doExec(new String[]{"id"}, InternalVariables.timeout);
 
         if (InternalVariables.accessGiven) {
             return true;
@@ -695,14 +694,14 @@ public class RootTools {
         RootTools.log(InternalVariables.TAG, "Killing process " + processName);
         InternalVariables.pid = null;
         try {
-			InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
+			new InternalMethods().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
 		} catch (TimeoutException e) {
 			return false;
 		}
 
         if (InternalVariables.pid != null) {
             try {
-				InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid}, InternalVariables.timeout);
+				new InternalMethods().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid}, InternalVariables.timeout);
 			} catch (TimeoutException e) {
 				return false;
 			}
@@ -723,7 +722,7 @@ public class RootTools {
     public static boolean isProcessRunning(String processName) throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
         InternalVariables.pid = null;
-        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
+        new InternalMethods().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
 
         if (InternalVariables.pid != null) {
             return true;
@@ -741,7 +740,7 @@ public class RootTools {
      */
     public static void restartAndroid() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Restart Android");
-        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"}, InternalVariables.timeout);
+        new InternalMethods().doExec(new String[]{"busybox killall -9 zygote"}, InternalVariables.timeout);
     }
 
     /**
@@ -894,7 +893,7 @@ public class RootTools {
         boolean found = false;
         String[] commands = {"df " + path};
         try {
-			InternalMethods.instance().doExec(commands, -1);
+			new InternalMethods().doExec(commands, -1);
 		} catch (TimeoutException e) {}
 
         RootTools.log("Looking for Space");
@@ -907,7 +906,7 @@ public class RootTools {
                 RootTools.log(spaceSearch);
 
                 if (found) {
-                    return InternalMethods.instance().getConvertedSpace(spaceSearch);
+                    return new InternalMethods().getConvertedSpace(spaceSearch);
                 } else if (spaceSearch.equals("used,")) {
                     found = true;
                 }
@@ -929,7 +928,7 @@ public class RootTools {
                 if (spaceSearch.length() > 0) {
                     RootTools.log(spaceSearch + ("Valid"));
                     if (count == targetCount) {
-                        return InternalMethods.instance().getConvertedSpace(spaceSearch);
+                        return new InternalMethods().getConvertedSpace(spaceSearch);
                     }
                     count++;
                 }

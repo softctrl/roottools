@@ -33,7 +33,7 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-				InternalMethods.instance().doExec(
+            	new InternalMethods().doExec(
 				        new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, -1);
 			} catch (TimeoutException e) {}
         }

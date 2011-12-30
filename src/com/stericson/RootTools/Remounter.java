@@ -81,7 +81,7 @@ class Remounter {
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
-				InternalMethods.instance().doExec(new String[]{
+            	new InternalMethods().doExec(new String[]{
 				        String.format(
 				                util + " mount -o remount,%s %s %s",
 				                mountType.toLowerCase(),
