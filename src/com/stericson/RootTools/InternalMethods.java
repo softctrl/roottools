@@ -321,8 +321,11 @@ class InternalMethods {
 	            }
 	        } finally {
 
-                process.destroy();
-                process = null;
+	        	if (process != null)
+	        	{
+	        		process.destroy();
+	        		process = null;
+	        	}
                 
 	            try {
 	            	if (os != null) {

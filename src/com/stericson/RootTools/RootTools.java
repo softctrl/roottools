@@ -917,13 +917,15 @@ public class RootTools {
     }
 
     public static void log(String TAG, String msg) {
-        if (debugMode) {
-            if (TAG != null) {
-                Log.d(TAG, msg);
-            } else {
-                Log.d(InternalVariables.TAG, msg);
-            }
-        }
+	    if (msg != null && !msg.equals("")) {
+    		if (debugMode) {
+	            if (TAG != null) {
+	                Log.d(TAG, msg);
+	            } else {
+	                Log.d(InternalVariables.TAG, msg);
+	            }
+	        }
+    	}
     }
 
     public static abstract class Result implements IResult {
