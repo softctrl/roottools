@@ -418,9 +418,9 @@ public class RootTools {
             log(file + " was found." );
             try 
             {
-            	for (String line : sendShell("ls -l " + file, InternalVariables.timeout))
+            	for (String line : sendShell(new String[] {"ls -l " + file, "busybox ls -l " + file, "/system/bin/failsafe/toolbox ls -l " + file, "toolbox ls -l " + file}, 0, InternalVariables.timeout))
                 {
-                	log("Line " + line);
+                	RootTools.log("Line " + line);
                 	try
                 	{
                 		permissions = new InternalMethods().getPermissions(line);
@@ -428,52 +428,13 @@ public class RootTools {
                 			return new InternalMethods().getPermissions(line);
                 	}
                 	catch (Exception e) {
-                		break;
-                	}
-                }
-                for (String line : sendShell("busybox ls -l " + file, InternalVariables.timeout))
-                {
-                	log("Line " + line);
-                	try
-                	{
-                		permissions = new InternalMethods().getPermissions(line);
-                		if (permissions != null)
-                			return new InternalMethods().getPermissions(line);
-                	}
-                	catch (Exception e) {
-                		break;
-                	}
-                }
-                for (String line : sendShell("/system/bin/failsafe/toolbox ls -l " + file, InternalVariables.timeout))
-                {
-                	log("Line " + line);
-                	try
-                	{
-                		permissions = new InternalMethods().getPermissions(line);
-                		if (permissions != null)
-                			return new InternalMethods().getPermissions(line);
-                	}
-                	catch (Exception e) {
-                		break;
-                	}
-                }
-                for (String line : sendShell("toolbox ls -l " + file, InternalVariables.timeout))
-                {
-                	log("Line " + line);
-                	try
-                	{
-                		permissions = new InternalMethods().getPermissions(line);
-                		if (permissions != null)
-                			return new InternalMethods().getPermissions(line);
-                	}
-                	catch (Exception e) {
-                		break;
+                		RootTools.log(e.getMessage());
                 	}
                 }
             } 
             catch (Exception e) 
             {
-                log(e.getMessage());
+            	RootTools.log(e.getMessage());
                 return null;
             }            
         }

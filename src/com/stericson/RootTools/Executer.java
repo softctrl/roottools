@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-import android.util.Log;
 
 public class Executer {
 
@@ -94,6 +93,7 @@ public class Executer {
 			InputStreamReader osErr = null;
 		    try 
 		    { 
+		    	Runtime.getRuntime().gc();
 				process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
 				RootTools.log(useRoot ? "Using Root" : "Using sh");
 				if (null != result) {
@@ -169,19 +169,6 @@ public class Executer {
 							response.add(Integer.toString(exit));
 						}
 					}
-
-					try {
-						if (os != null) {
-							os.close();
-						}
-						if (osRes != null) {
-							osRes.close();
-						}
-					} catch (Exception e) {
-						Log.e(InternalVariables.TAG,
-								"Catched Exception in finally block!");
-						e.printStackTrace();
-					}
 				}
 		    }
 		    catch (InterruptedException ignore) 
@@ -193,15 +180,21 @@ public class Executer {
 	                RootTools.log("Error: " + e.getMessage());
 	            }
 	        } finally {
+	        	
+                process.destroy();
+                process = null;
+                
 	            try {
 	                if (os != null) {
+	                	os.flush();
 	                    os.close();
 	                }
 	                if (osRes != null) {
 	                    osRes.close();
 	                }
-	                //This was causing exceptions?
-	                process.destroy();
+	                if (osErr != null) {
+	                    osErr.close();
+	                }
 	            } catch (Exception e) {
 	                if (RootTools.debugMode) {
 	                    RootTools.log("Error: " + e.getMessage());

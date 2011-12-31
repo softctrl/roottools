@@ -242,6 +242,7 @@ class InternalMethods {
 			InputStreamReader osErr = null;
 		    try 
 		    { 
+		    	Runtime.getRuntime().gc();
 				process = Runtime.getRuntime().exec("su");
 				os = new DataOutputStream(process.getOutputStream());
 				osRes = new InputStreamReader(process.getInputStream());
@@ -320,15 +321,20 @@ class InternalMethods {
 	            }
 	        } finally {
 
+                process.destroy();
+                process = null;
+                
 	            try {
-	                if (os != null) {
+	            	if (os != null) {
+	                	os.flush();
 	                    os.close();
 	                }
 	                if (osRes != null) {
 	                    osRes.close();
 	                }
-	                //This was causing exceptions?
-	                process.destroy();
+	                if (osErr != null) {
+	                    osErr.close();
+	                }
 	            } catch (Exception e) {
 	                if (RootTools.debugMode) {
 	                    RootTools.log("Error: " + e.getMessage());
