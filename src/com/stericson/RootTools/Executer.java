@@ -183,7 +183,10 @@ public class Executer {
 
 	        	if (process != null)
 	        	{
-	        		process.destroy();
+	        		try {
+	        			//if this fails, ignore it and dont crash.
+	        			process.destroy();
+	        		} catch (Exception e) {}
 	        		process = null;
 	        	}
                 
