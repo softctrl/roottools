@@ -34,6 +34,10 @@ class InternalMethods {
         	}
         	
         	worker.join(timeout);
+        	
+        	//small pause, let things catch up
+			Thread.sleep(500);
+			
             if (worker.exit != -911)
               return;
             else
