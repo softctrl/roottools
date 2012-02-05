@@ -1,7 +1,7 @@
 /* 
  * This file is part of the RootTools Project: http://code.google.com/p/roottools/
  *  
- * Copyright (c) 2012 Stephen Ericson, Chris Ravenscroft, Dominik Schuermann, Adam Shanks
+ * Copyright (c) 2012 Stephen Erickson, Chris Ravenscroft, Dominik Schuermann, Adam Shanks
  *  
  * This code is dual-licensed under the terms of the Apache License Version 2.0 and
  * the terms of the General Public License (GPL) Version 2.
