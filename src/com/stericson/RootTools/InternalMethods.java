@@ -58,7 +58,7 @@ class InternalMethods {
         	worker.join(timeout);
         	
         	//small pause, let things catch up
-			Thread.sleep(500);
+			Thread.sleep(RootTools.shellDelay);
 			
             if (worker.exit != -911)
               return;

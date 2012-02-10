@@ -27,8 +27,15 @@ public class Permissions {
 	String user;
 	String group;
 	String other;
+	String symlink;
 	int permissions;
+	
 
+	public String getSymlink()
+	{
+		return this.symlink;
+	}
+	
 	public String getType()
 	{
 		return type;
@@ -52,6 +59,11 @@ public class Permissions {
     public String getOtherPermissions()
     {
     	return this.other;
+    }
+    
+    public void setSymlink(String symlink)
+    {
+    	this.symlink = symlink;
     }
     
     public void setType(String type)

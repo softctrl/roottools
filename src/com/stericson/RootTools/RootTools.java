@@ -61,6 +61,8 @@ public class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
+    //Change this to a lower/higher setting to speed up/slow down shell commands if things are taking too long or you are having constant crashes or timeout exceptions.
+    public static int shellDelay = 0;
 
     //---------------------------
     //# Public Variable Getters #
@@ -431,23 +433,46 @@ public class RootTools {
      * or if the file could not be found or permissions couldn't be determined then permissions will be null.
      * 
      */
-    public static Permissions getFilePermissions(String file) {
+    public static Permissions getFilePermissionsSymlinks(String file) {
         RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) 
         {
+        	String symlink_final = "";
         	Permissions permissions;
             log(file + " was found." );
             try 
             {
-            	for (String line : sendShell(new String[] {"ls -l " + file, "busybox ls -l " + file, "/system/bin/failsafe/toolbox ls -l " + file, "toolbox ls -l " + file}, 0, InternalVariables.timeout))
+            	List<String> results = sendShell(new String[] {"ls -l " + file, "busybox ls -l " + file, "/system/bin/failsafe/toolbox ls -l " + file, "toolbox ls -l " + file}, 0, InternalVariables.timeout); 
+            	for (String line : results )
                 {
+            		String[] lineArray = line.split(" ");
+            		if (lineArray[0].length() != 10)
+            		{
+            			break;
+            		}
+            		
                 	RootTools.log("Line " + line);
+                	
+            		try 
+            		{
+        				String[] symlink = line.split(" ");
+        				if (symlink[symlink.length - 2].equals("->"))
+        				{
+        					RootTools.log("Symlink found.");
+        					symlink_final = symlink[symlink.length - 1];
+        				}
+        			}
+            		catch (Exception e) {}
+            		
                 	try
                 	{
                 		permissions = new InternalMethods().getPermissions(line);
                 		if (permissions != null)
-                			return new InternalMethods().getPermissions(line);
+                		{
+                			permissions.setSymlink(symlink_final);
+                			return permissions;
+                		}
                 	}
                 	catch (Exception e) {
                 		RootTools.log(e.getMessage());
@@ -462,6 +487,20 @@ public class RootTools {
         }
         
         return null;
+    }
+
+    /**
+     * 
+     * @param file String that represent the file, including the full
+     * path to the file and its name.
+     * 
+     * @return An instance of the class permissions from which you can get the permissions of the file
+     * or if the file could not be found or permissions couldn't be determined then permissions will be null.
+     * 
+     * @deprecated
+     */
+    public static Permissions getFilePermissions(String file) {
+        return getFilePermissionsSymlinks(file);
     }
 
     /**
@@ -530,9 +569,11 @@ public class RootTools {
      * @throws TimeoutException if this operation times out. (cannot determine if access is given)
      */
     public static boolean isAccessGiven() throws TimeoutException {
+    	RootTools.shellDelay = 500;
         RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
         new InternalMethods().doExec(new String[]{"id"}, InternalVariables.timeout);
+    	RootTools.shellDelay = 0;
 
         if (InternalVariables.accessGiven) {
             return true;
