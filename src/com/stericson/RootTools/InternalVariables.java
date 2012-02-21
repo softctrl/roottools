@@ -24,6 +24,7 @@ package com.stericson.RootTools;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 //no modifier, this is package-private which means that no one but the library can access it.
 //If we need public variables just create the class for it.
@@ -40,10 +41,17 @@ class InternalVariables {
     protected static String[] space;
     protected static String getSpaceFor;
     protected static String busyboxVersion;
-    protected static String pid;
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
     protected static ArrayList<Symlink> symlinks;
     protected static int timeout = 10000;
+    
+    // regex to get pid out of ps line, example:
+    // root 2611 0.0 0.0 19408 2104 pts/2 S 13:41 0:00 bash
+    protected static final String PS_REGEX = "^\\S+\\s+([0-9]+).*$";
+    protected static Pattern psPattern;
+    static {
+        psPattern = Pattern.compile(PS_REGEX);
+    }
 
 }

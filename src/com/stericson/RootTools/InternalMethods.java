@@ -315,12 +315,6 @@ class InternalMethods {
 	                        InternalVariables.busyboxVersion = temp[1];
 	                    }
 	                }
-	                if (commands[0].startsWith("busybox pidof")) {
-	                    if (!line.equals("")) {
-	                        RootTools.log("PID: " + line);
-	                        InternalVariables.pid = line;
-	                    }
-	                }
 
 	                RootTools.log(line);
 
