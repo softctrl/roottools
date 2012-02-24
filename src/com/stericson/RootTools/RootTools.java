@@ -978,6 +978,50 @@ public class RootTools {
     }
 
     /**
+     * Opens a shell command in preperation for sending through shell commands.
+     * 
+     * (This function allows you to open a shell and keep it open as long as you need it.
+     * However, in doing this you are responsible for handling all errors that may occur.)
+     *
+     * @param useRoot   A boolean to indicate whether we are to use root when opening this shell or to use sh.
+     * 
+     * @param result   This is an interface that you must implement in order to be notified about the progress of
+     * 					the shell commands you are sending through as well as any errors that may occur.
+	 *
+     * @throws IOException
+     */
+    public void openShell(boolean useRoot, Result result) throws IOException
+    {
+    	InternalVariables.executer = new Executer();
+    	InternalVariables.executer.openShell(useRoot, result);
+    }
+    
+    /**
+     * Execute a shell command, you must have already opened a shell using the function openShell.
+     * 
+     *
+     * @param command The command to execute.
+     * 
+	 *
+     * @throws Exception
+     */
+    public void executeCommand(String command) throws Exception
+    {
+    	InternalVariables.executer.executeCommand(command);
+    }
+
+    /**
+     * Closes a shell and destroys everything related to having the shell open.
+     * Please call this as soon as you do not need the shell command anymore.
+	 *
+     */
+    public void closeShell()
+    {
+    	InternalVariables.executer.closeShell();
+    	InternalVariables.executer = null;
+    }
+    
+    /**
      * Get the space for a desired partition.
      * 
      * @param path
