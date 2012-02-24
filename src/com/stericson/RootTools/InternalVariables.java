@@ -35,7 +35,7 @@ class InternalVariables {
     //----------------------
 
     //Version numbers should be maintained here.
-    protected static String TAG = "RootTools v1.6.1";
+    protected static String TAG = "RootTools v1.7";
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;
     protected static String[] space;
