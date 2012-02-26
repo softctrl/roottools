@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 
 import com.stericson.RootTools.RootTools.Result;
 
-public class ShellManager {
+class ShellManager {
 
 	private Process process = null;
 	private DataOutputStream os = null;
