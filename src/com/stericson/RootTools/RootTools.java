@@ -1011,7 +1011,7 @@ public class RootTools {
 	 *
      * @throws IOException
      */
-    public void openShell(boolean useRoot, Result result) throws IOException
+    public static void openShell(boolean useRoot, Result result) throws IOException
     {
     	InternalVariables.shellManager = new ShellManager();
     	InternalVariables.shellManager.openShell(useRoot, result);
@@ -1026,7 +1026,7 @@ public class RootTools {
 	 *
      * @throws Exception
      */
-    public void executeCommand(String command) throws Exception
+    public static void executeCommand(String command) throws Exception
     {
     	InternalVariables.shellManager.executeCommand(command);
     }
@@ -1036,7 +1036,7 @@ public class RootTools {
      * Please call this as soon as you do not need the shell command anymore.
 	 *
      */
-    public void closeShell()
+    public static void closeShell()
     {
     	if (InternalVariables.shellManager != null)
     	{
