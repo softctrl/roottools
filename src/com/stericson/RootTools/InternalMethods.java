@@ -43,47 +43,18 @@ class InternalMethods {
     //# Internal methods #
     //--------------------
 
-    protected void doExec(String[] commands, int timeout) throws TimeoutException {
-	
-        Worker worker = new Worker(commands);
-        worker.start();
-        
-        try
-        {
-        	if (timeout == -1)
-        	{
-        		timeout = 300000;
-        	}
-        	
-        	worker.join(timeout);
-        	
-        	//small pause, let things catch up
-			Thread.sleep(RootTools.shellDelay);
-			
-            if (worker.exit != -911)
-              return;
-            else
-              throw new TimeoutException();
-        } 
-        catch(InterruptedException ex) 
-        {
-            worker.interrupt();
-            Thread.currentThread().interrupt();
-            throw new TimeoutException();
-        } 
-    }
-
     protected boolean returnPath() throws TimeoutException {
         File tmpDir = new File("/data/local/tmp");
-        if (!tmpDir.exists()) {
-            doExec(new String[]{"mkdir /data/local/tmp"}, InternalVariables.timeout);
-        }
         try {
+            if (!tmpDir.exists()) {
+                RootTools.sendShell(new String[]{"mkdir /data/local/tmp"}, 0, InternalVariables.timeout);
+            }
+            
             InternalVariables.path = new HashSet<String>();
             //Try to read from the file.
             LineNumberReader lnr = null;
-            doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
-                    "chmod 0777 /data/local/tmp/init.rc"}, InternalVariables.timeout);
+            RootTools.sendShell(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
+                    "chmod 0777 /data/local/tmp/init.rc"}, 0, InternalVariables.timeout);
             lnr = new LineNumberReader(new FileReader("/data/local/tmp/init.rc"));
             String line;
             while ((line = lnr.readLine()) != null) {
@@ -249,125 +220,5 @@ class InternalMethods {
     	{
     		return -1;
     	}
-    }
-    
-    private static class Worker extends Thread 
-    {
-    	private String[] commands;
-    	public int exit = -911;
-	  
-		private Worker(String[] commands) 
-		{
-			this.commands = commands;
-		}
-		public void run() 
-		{
-			Process process = null;
-			DataOutputStream os = null;
-			InputStreamReader osRes = null;
-			InputStreamReader osErr = null;
-		    try 
-		    { 
-		    	Runtime.getRuntime().gc();
-				process = Runtime.getRuntime().exec("su");
-				os = new DataOutputStream(process.getOutputStream());
-				osRes = new InputStreamReader(process.getInputStream());
-				osErr = new InputStreamReader(process.getErrorStream());
-				BufferedReader reader = new BufferedReader(osRes);
-			    BufferedReader reader_err = new BufferedReader(osErr);
-
-	            // Doing Stuff ;)
-	            for (String single : commands) {
-	            	RootTools.log("Shell command: " + single);
-	                os.writeBytes(single + "\n");
-	                os.flush();
-	            }
-
-
-	            os.writeBytes("exit \n");
-	            os.flush();
-
-	            String line = reader.readLine();
-	            String line_err = reader_err.readLine();
-
-	            while (line != null) {
-	                if (commands[0].equals("id")) {
-	                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-	                    for (String id : ID) {
-	                        if (id.toLowerCase().contains("uid=0")) {
-	                            InternalVariables.accessGiven = true;
-	                            RootTools.log(InternalVariables.TAG, "Access Given");
-	                            break;
-	                        }
-	                    }
-	                    if (!InternalVariables.accessGiven) {
-	                        RootTools.log(InternalVariables.TAG, "Access Denied?");
-	                    }
-	                }
-	                if (commands[0].startsWith("df")) {
-	                    if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
-	                        InternalVariables.space = line.split(" ");
-	                    }
-	                }
-	                if (commands[0].equals("busybox")) {
-	                    if (line.startsWith("BusyBox")) {
-	                        String[] temp = line.split(" ");
-	                        InternalVariables.busyboxVersion = temp[1];
-	                    }
-	                }
-
-	                RootTools.log(line);
-
-	                line = reader.readLine();
-	            }
-
-	            while (line_err != null) {
-
-	                RootTools.log(line_err);
-
-	                line_err = reader_err.readLine();
-	            }
-
-		    	exit = process.waitFor();
-		    }
-		    catch (InterruptedException ignore) 
-		    {
-		    	return;
-		    }
-		    catch (Exception e) {
-	            if (RootTools.debugMode) {
-	                RootTools.log("Error: " + e.getMessage());
-	                e.printStackTrace();
-	            }
-	        } finally {
-
-	        	if (process != null)
-	        	{
-	        		try {
-	        			//if this fails, ignore it and dont crash.
-	        			process.destroy();
-	        		} catch (Exception e) {}
-	        		process = null;
-	        	}
-                
-	            try {
-	            	if (os != null) {
-	                	os.flush();
-	                    os.close();
-	                }
-	                if (osRes != null) {
-	                    osRes.close();
-	                }
-	                if (osErr != null) {
-	                    osErr.close();
-	                }
-	            } catch (Exception e) {
-	                if (RootTools.debugMode) {
-	                    RootTools.log("Error: " + e.getMessage());
-	                    e.printStackTrace();
-	                }
-	            }
-	        }
-		}
     }
 }

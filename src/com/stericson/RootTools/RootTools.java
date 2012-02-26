@@ -41,7 +41,7 @@ import android.util.Log;
 
 public class RootTools {
 
-    /*
+    /**
      * This class is the gateway to every functionality within the RootTools library.The developer
      * should only have access to this class and this class only.This means that this class should
      * be the only one to be public.The rest of the classes within this library must not have the
@@ -62,10 +62,24 @@ public class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
-    // Change this to a lower/higher setting to speed up/slow down shell commands if things are
-    // taking too long or you are having constant crashes or timeout exceptions.
+    
+    /**
+     * Change this to a lower/higher setting to speed up/slow down shell commands if things are
+     * taking too long or you are having constant crashes or timeout exceptions.
+     */
     public static int shellDelay = 0;
 
+    /**
+     *By default, using sendshell does not keep the shell open after executing all of the commands.
+     *Instead, it closes it out and cleanes everything up automatically.
+     *If you know you are going to use the sendshell alot in a short period of time it may be beneficial
+     *for you to set this to true in order to have sendShell keep the shell open and
+     *use it for other commands forthcoming. This will keep the number of toasts superuser sends to a minimum.
+     *
+     *If you use this, make sure that you call closeShell() when you are done with the shell.
+     **/
+    public static boolean keepShell = false;
+    
     // ---------------------------
     // # Public Variable Getters #
     // ---------------------------
@@ -236,8 +250,8 @@ public class RootTools {
      *             if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-        new InternalMethods().doExec(new String[] { "find " + path
-                + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, -1);
+        sendShell(new String[] { "find " + path
+                + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, 0, -1);
         InternalVariables.symlinks = new InternalMethods().getSymLinks();
         if (InternalVariables.symlinks != null) {
             return InternalVariables.symlinks;
@@ -485,7 +499,7 @@ public class RootTools {
         RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
         InternalVariables.busyboxVersion = null;
         try {
-            new InternalMethods().doExec(new String[] { "busybox" }, InternalVariables.timeout);
+            sendShell(new String[] { "busybox" }, 0, InternalVariables.timeout);
         } catch (TimeoutException ex) {
             RootTools.log(InternalVariables.TAG, "TimeoutException!!!");
         } catch (Exception e) {
@@ -542,17 +556,24 @@ public class RootTools {
      *             if this operation times out. (cannot determine if access is given)
      */
     public static boolean isAccessGiven() throws TimeoutException {
-        RootTools.shellDelay = 500;
-        RootTools.log(InternalVariables.TAG, "Checking for Root access");
-        InternalVariables.accessGiven = false;
-        new InternalMethods().doExec(new String[] { "id" }, InternalVariables.timeout);
-        RootTools.shellDelay = 0;
+    	try {
+	        RootTools.shellDelay = 500;
+	        RootTools.log(InternalVariables.TAG, "Checking for Root access");
+	        InternalVariables.accessGiven = false;
+			sendShell(new String[] { "id" }, 0, InternalVariables.timeout);
 
-        if (InternalVariables.accessGiven) {
-            return true;
-        } else {
-            return false;
-        }
+	        if (InternalVariables.accessGiven) {
+				return true;
+	        } else {
+				return false;
+	        }
+	        
+		} catch (Exception e) {
+			return false;
+		}
+		finally {
+			RootTools.shellDelay = 0;
+		}
     }
 
     public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
@@ -992,8 +1013,8 @@ public class RootTools {
      */
     public void openShell(boolean useRoot, Result result) throws IOException
     {
-    	InternalVariables.executer = new Executer();
-    	InternalVariables.executer.openShell(useRoot, result);
+    	InternalVariables.shellManager = new ShellManager();
+    	InternalVariables.shellManager.openShell(useRoot, result);
     }
     
     /**
@@ -1007,7 +1028,7 @@ public class RootTools {
      */
     public void executeCommand(String command) throws Exception
     {
-    	InternalVariables.executer.executeCommand(command);
+    	InternalVariables.shellManager.executeCommand(command);
     }
 
     /**
@@ -1017,8 +1038,17 @@ public class RootTools {
      */
     public void closeShell()
     {
-    	InternalVariables.executer.closeShell();
-    	InternalVariables.executer = null;
+    	if (InternalVariables.shellManager != null)
+    	{
+	    	InternalVariables.shellManager.closeShell();
+	    	InternalVariables.shellManager = null;
+    	}
+    	
+    	if (InternalVariables.executer != null)
+    	{
+    		InternalVariables.executer.closeShell();
+    		InternalVariables.executer = null;
+    	}
     }
     
     /**
@@ -1035,9 +1065,8 @@ public class RootTools {
         boolean found = false;
         String[] commands = { "df " + path };
         try {
-            new InternalMethods().doExec(commands, -1);
-        } catch (TimeoutException e) {
-        }
+            sendShell(commands, 0, -1);
+        } catch (Exception e) {}
 
         RootTools.log("Looking for Space");
 

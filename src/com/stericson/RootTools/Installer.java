@@ -144,8 +144,8 @@ class Installer {
             }
 
             try {
-				new InternalMethods().doExec(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, -1);
-			} catch (TimeoutException e) {}
+				RootTools.sendShell(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, 0, -1);
+			} catch (Exception e) {}
         }
         return true;
     }

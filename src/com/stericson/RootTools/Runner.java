@@ -23,7 +23,6 @@
 package com.stericson.RootTools;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 import android.content.Context;
 import android.util.Log;
@@ -55,9 +54,8 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	new InternalMethods().doExec(
-				        new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, -1);
-			} catch (TimeoutException e) {}
+            	RootTools.sendShell(new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, 0, -1);
+			} catch (Exception e) {}
         }
     }
 

@@ -25,7 +25,6 @@ package com.stericson.RootTools;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.TimeoutException;
 
 import android.util.Log;
 
@@ -103,7 +102,7 @@ class Remounter {
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
-            	new InternalMethods().doExec(new String[]{
+            	RootTools.sendShell(new String[]{
 				        String.format(
 				                util + " mount -o remount,%s %s %s",
 				                mountType.toLowerCase(),
@@ -119,8 +118,9 @@ class Remounter {
 				                mountType.toLowerCase(),
 				                mountPoint.getDevice().getAbsolutePath(),
 				                mountPoint.getMountPoint().getAbsolutePath())
-				}, -1);
-			} catch (TimeoutException e) {}
+				}, 0, -1);
+			} catch (Exception e) {}
+			
             mountPoint = findMountPointRecursive(file);
         }
 

@@ -26,113 +26,32 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import com.stericson.RootTools.RootTools.Result;
 
 class Executer {
 
-	private Process process = null;
-	private DataOutputStream os = null;
-	private InputStreamReader osRes = null;
-	private InputStreamReader osErr = null;
-	private Result result = null;
-	
-	public void openShell(boolean useRoot, Result result) throws IOException
-	{
-    	Runtime.getRuntime().gc();
-		this.process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
-		RootTools.log(useRoot ? "Using Root" : "Using sh");
-
-		this.os = new DataOutputStream(process.getOutputStream());
-		this.osRes = new InputStreamReader(process.getInputStream());
-		this.osErr = new InputStreamReader(process.getErrorStream());
-		result.setProcess(process);
-	}
-	
-	public void executeCommand(String command) throws Exception
-	{
-		BufferedReader reader = new BufferedReader(osRes);
-		BufferedReader reader_error = new BufferedReader(osErr);
-
-		RootTools.log("Shell command: " + command);
-		os.writeBytes(command + "\n");
-		os.flush();
-
-		os.writeBytes("exit \n");
-		os.flush();
-
-		String line = reader.readLine();
-		String line_error = reader_error.readLine();
-
-		while (line != null) {
-			result.process(line);
-			
-			RootTools.log("input stream" + line);
-			line = reader.readLine();
-		}
-
-		while (line_error != null) {
-			result.processError(line);
-
-			RootTools.log("error stream: " + line_error);
-			line_error = reader_error.readLine();
-		}
-		
-        if (reader != null)
-        {
-        	reader.close();
-        	reader = null;
-        }
-        if (reader_error != null)
-        {
-        	reader_error.close();
-        	reader_error = null;
-        }
-	}
-	
-	public void closeShell()
-	{
-		if (this.process != null)
-    	{
-    		try {
-    			//if this fails, ignore it and dont crash.
-    			this.process.destroy();
-    		} catch (Exception e) {}
-    		this.process = null;
-    	}
-        
-        try {
-            if (this.os != null) {
-            	this.os.flush();
-                this.os.close();
-                this.os = null;
-            }
-            if (this.osRes != null) {
-                this.osRes.close();
-                this.osRes = null;
-            }
-            if (this.osErr != null) {
-                this.osErr.close();
-                this.osErr = null;
-            }
-            if (this.result != null)
-            {
-            	this.result = null;
-            }
-        } catch (Exception e) {
-            if (RootTools.debugMode) {
-                RootTools.log("Error: " + e.getMessage());
-            }
-        }
-	}
+	protected Process process = null;
+	protected DataOutputStream os = null;
+	protected InputStreamReader osRes = null;
+	protected InputStreamReader osErr = null;
+	protected Result result = null;
 	
 	// ------------
 	// # Executer #
 	// ------------
 
+	public Executer()
+	{
+		InternalVariables.executer = this;
+	}
+	
 	/**
 	 * Sends several shell command as su (attempts to)
 	 * 
@@ -157,13 +76,13 @@ class Executer {
 	 * @throws TimeoutException 
 	 */
 	List<String> sendShell(String[] commands, int sleepTime,
-			IResult result, boolean useRoot, int timeout) throws IOException,
+			Result result, boolean useRoot, int timeout) throws IOException,
 			RootToolsException, TimeoutException {
 
 		RootTools.log(InternalVariables.TAG, "Sending " + commands.length
 				+ " shell command" + (commands.length > 1 ? "s" : ""));
 
-        Worker worker = new Worker(commands, sleepTime, result, useRoot);
+        Worker worker = new Worker(this, commands, sleepTime, result, useRoot);
         worker.start();
         
         try
@@ -192,46 +111,49 @@ class Executer {
 
 	}
 
-    private static class Worker extends Thread 
+    protected static class Worker extends Thread 
     {
     	private String[] commands;
     	private int sleepTime;
-    	private IResult result;
     	private boolean useRoot;
     	public int exit = -911;
     	public List<String> finalResponse;
+    	private Executer executer;
+    	
 	  
-		private Worker(String[] commands, int sleepTime, IResult result, boolean useRoot) 
+		private Worker(Executer executer, String[] commands, int sleepTime, Result result, boolean useRoot) 
 		{
 			this.commands = commands;
 			this.sleepTime = sleepTime;
-			this.result = result;
+			executer.result = result;
 			this.useRoot = useRoot;
 		}
 		public void run() 
 		{
-			Process process = null;
-			DataOutputStream os = null;
-			InputStreamReader osRes = null;
-			InputStreamReader osErr = null;
 		    try 
-		    { 
-		    	Runtime.getRuntime().gc();
-				process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
-				RootTools.log(useRoot ? "Using Root" : "Using sh");
-				if (null != result) {
-					result.setProcess(process);
-				}
+		    {
+		    	if (executer.process == null && executer.os == null && executer.osErr == null && executer.osRes == null)
+		    	{
+			    	Runtime.getRuntime().gc();
+			    	executer.process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
+					RootTools.log(useRoot ? "Using Root" : "Using sh");
+					
+					if (null != executer.result) {
+						executer.result.setProcess(executer.process);
+					}
 
-				os = new DataOutputStream(process.getOutputStream());
-				osRes = new InputStreamReader(process.getInputStream());
-				osErr = new InputStreamReader(process.getErrorStream());
-				BufferedReader reader = new BufferedReader(osRes);
-				BufferedReader reader_error = new BufferedReader(osErr);
+					executer.os = new DataOutputStream(executer.process.getOutputStream());
+					executer.osRes = new InputStreamReader(executer.process.getInputStream());
+					executer.osErr = new InputStreamReader(executer.process.getErrorStream());
 
+		    	}
+		    	
+				BufferedReader reader = new BufferedReader(executer.osRes);
+				BufferedReader reader_error = new BufferedReader(executer.osErr);
+				
 				List<String> response = null;
 
-				if (null == result) {
+				if (null == executer.result) {
 					response = new LinkedList<String>();
 				}
 
@@ -240,33 +162,61 @@ class Executer {
 					// Doing Stuff ;)
 					for (String single : commands) {
 						RootTools.log("Shell command: " + single);
-						os.writeBytes(single + "\n");
-						os.flush();
+						executer.os.writeBytes(single + "\n");
+						executer.os.flush();
 						Thread.sleep(sleepTime);
 					}
 
-					os.writeBytes("exit \n");
-					os.flush();
-
+					if (!RootTools.keepShell)
+					{
+						executer.os.writeBytes("exit \n");
+						executer.os.flush();
+					}
+					
 					String line = reader.readLine();
 					String line_error = reader_error.readLine();
 
 					while (line != null) {
-						if (null == result) {
+						if (null == executer.result) {
 							response.add(line);
 						} else {
-							result.process(line);
+							executer.result.process(line);
 						}
 
+						if (commands[0].equals("id")) {
+		                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
+		                    for (String id : ID) {
+		                        if (id.toLowerCase().contains("uid=0")) {
+		                            InternalVariables.accessGiven = true;
+		                            RootTools.log(InternalVariables.TAG, "Access Given");
+		                            break;
+		                        }
+		                    }
+		                    if (!InternalVariables.accessGiven) {
+		                        RootTools.log(InternalVariables.TAG, "Access Denied?");
+		                    }
+		                }
+		                if (commands[0].equals("busybox")) {
+		                    if (line.startsWith("BusyBox")) {
+		                        String[] temp = line.split(" ");
+		                        InternalVariables.busyboxVersion = temp[1];
+		                    }
+		                }
+		                if (commands[0].startsWith("df")) {
+		                    if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
+		                        InternalVariables.space = line.split(" ");
+		                    }
+		                }
+		                
 						RootTools.log("input stream" + line);
 						line = reader.readLine();
 					}
 
 					while (line_error != null) {
-						if (null == result) {
+						if (null == executer.result) {
 							response.add(line_error);
 						} else {
-							result.processError(line_error);
+							executer.result.processError(line_error);
 						}
 
 						RootTools.log("error stream: " + line_error);
@@ -276,18 +226,18 @@ class Executer {
 				} 
 				catch (Exception ex) 
 				{
-					if (null != result) 
+					if (null != executer.result) 
 					{
-						result.onFailure(ex);
+						executer.result.onFailure(ex);
 					}
 				} finally {
-					if (process != null) {
+					if (executer.process != null) {
 						finalResponse = response;
-						exit = process.waitFor();
+						exit = executer.process.waitFor();
 						RootTools.lastExitCode = exit;
 						
-						if (null != result) {
-							result.onComplete(exit);
+						if (null != executer.result) {
+							executer.result.onComplete(exit);
 						} else {
 							response.add(Integer.toString(exit));
 						}
@@ -303,33 +253,50 @@ class Executer {
 	                RootTools.log("Error: " + e.getMessage());
 	            }
 	        } finally {
-
-	        	if (process != null)
+				if (!RootTools.keepShell)
 	        	{
-	        		try {
-	        			//if this fails, ignore it and dont crash.
-	        			process.destroy();
-	        		} catch (Exception e) {}
-	        		process = null;
+	        		executer.closeShell();
 	        	}
-                
-	            try {
-	                if (os != null) {
-	                	os.flush();
-	                    os.close();
-	                }
-	                if (osRes != null) {
-	                    osRes.close();
-	                }
-	                if (osErr != null) {
-	                    osErr.close();
-	                }
-	            } catch (Exception e) {
-	                if (RootTools.debugMode) {
-	                    RootTools.log("Error: " + e.getMessage());
-	                }
-	            }
 	        }
 		}
     }
+    
+	public void closeShell()
+	{
+		if (this.process != null)
+    	{
+    		try {
+    			//if this fails, ignore it and dont crash.
+    			this.process.destroy();
+    		} catch (Exception e) {}
+    		this.process = null;
+    	}
+        
+        try {
+            if (this.os != null) {
+            	this.os.writeBytes("exit \n");
+    			this.os.flush();
+    			this.os.close();
+                this.os = null;
+            }
+            if (this.osRes != null) {
+                this.osRes.close();
+                this.osRes = null;
+            }
+            if (this.osErr != null) {
+                this.osErr.close();
+                this.osErr = null;
+            }
+            if (this.result != null)
+            {
+            	this.result = null;
+            }
+        } catch (Exception e) {
+            if (RootTools.debugMode) {
+                RootTools.log("Error: " + e.getMessage());
+            }
+        }
+        
+		InternalVariables.executer = null;
+	}
 }
