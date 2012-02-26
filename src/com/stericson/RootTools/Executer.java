@@ -38,19 +38,11 @@ import com.stericson.RootTools.RootTools.Result;
 class Executer {
 
 	protected Process process = null;
-	protected DataOutputStream os = null;
-	protected InputStreamReader osRes = null;
-	protected InputStreamReader osErr = null;
 	protected Result result = null;
 	
 	// ------------
 	// # Executer #
 	// ------------
-
-	public Executer()
-	{
-		InternalVariables.executer = this;
-	}
 	
 	/**
 	 * Sends several shell command as su (attempts to)
@@ -131,26 +123,28 @@ class Executer {
 		}
 		public void run() 
 		{
+			DataOutputStream os = null;
+			InputStreamReader osRes = null;
+			InputStreamReader osErr = null;
+			
 		    try 
 		    {
-		    	if (executer.process == null && executer.os == null && executer.osErr == null && executer.osRes == null)
+		    	if (executer.process == null)
 		    	{
 			    	Runtime.getRuntime().gc();
 			    	executer.process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
-					RootTools.log(useRoot ? "Using Root" : "Using sh");
+			    	RootTools.log(useRoot ? "Using Root" : "Using sh");
 					
 					if (null != executer.result) {
 						executer.result.setProcess(executer.process);
 					}
-
-					executer.os = new DataOutputStream(executer.process.getOutputStream());
-					executer.osRes = new InputStreamReader(executer.process.getInputStream());
-					executer.osErr = new InputStreamReader(executer.process.getErrorStream());
-
 		    	}
 		    	
-				BufferedReader reader = new BufferedReader(executer.osRes);
-				BufferedReader reader_error = new BufferedReader(executer.osErr);
+		    	os = new DataOutputStream(executer.process.getOutputStream());
+		    	osRes = new InputStreamReader(executer.process.getInputStream());
+		    	osErr = new InputStreamReader(executer.process.getErrorStream());
+				BufferedReader reader = new BufferedReader(osRes);
+				BufferedReader reader_error = new BufferedReader(osErr);
 				
 				List<String> response = null;
 
@@ -163,16 +157,13 @@ class Executer {
 					// Doing Stuff ;)
 					for (String single : commands) {
 						RootTools.log("Shell command: " + single);
-						executer.os.writeBytes(single + "\n");
-						executer.os.flush();
+						os.writeBytes(single + "\n");
+						os.flush();
 						Thread.sleep(sleepTime);
 					}
-
-					if (!RootTools.keepShell)
-					{
-						executer.os.writeBytes("exit \n");
-						executer.os.flush();
-					}
+					
+					os.writeBytes("exit \n");
+	    			os.flush();	
 					
 					String line = reader.readLine();
 					String line_error = reader_error.readLine();
@@ -195,7 +186,7 @@ class Executer {
 		                    }
 		                    if (!InternalVariables.accessGiven) {
 		                        RootTools.log(InternalVariables.TAG, "Access Denied?");
-		                    }
+		                    }		                    
 		                }
 		                if (commands[0].equals("busybox")) {
 		                    if (line.startsWith("BusyBox")) {
@@ -210,9 +201,12 @@ class Executer {
 		                }
 		                
 						RootTools.log("input stream" + line);
+						
 						line = reader.readLine();
 					}
 
+					RootTools.log("Done reading input stream");
+					
 					while (line_error != null) {
 						if (null == executer.result) {
 							response.add(line_error);
@@ -223,18 +217,29 @@ class Executer {
 						RootTools.log("error stream: " + line_error);
 						line_error = reader_error.readLine();
 					}
+					
+					RootTools.log("Done reading error stream");
 
 				} 
 				catch (Exception ex) 
 				{
+		            if (RootTools.debugMode) {
+		                RootTools.log("Error: " + ex.getMessage());
+		            }
+		            
 					if (null != executer.result) 
 					{
 						executer.result.onFailure(ex);
 					}
 				} finally {
+					RootTools.log("In finally block");
+
 					if (executer.process != null) {
+						RootTools.log("Getting Exit");
 						finalResponse = response;
+						exit = -1;
 						exit = executer.process.waitFor();
+						RootTools.log("Exit done...");
 						RootTools.lastExitCode = exit;
 						
 						if (null != executer.result) {
@@ -251,13 +256,32 @@ class Executer {
 		    }
 		    catch (Exception e) {
 	            if (RootTools.debugMode) {
+	                e.printStackTrace();
 	                RootTools.log("Error: " + e.getMessage());
 	            }
 	        } finally {
-				if (!RootTools.keepShell)
-	        	{
-	        		executer.closeShell();
-	        	}
+	        	
+				try {
+					
+		            if (os != null) {
+		            	os.writeBytes("exit \n");
+		    			os.flush();
+		    			os.close();
+		                os = null;
+		            }
+		            if (osRes != null) {
+		                osRes.close();
+		                osRes = null;
+		            }
+		            if (osErr != null) {
+		                osErr.close();
+		                osErr = null;
+		            }
+				} catch (Exception ignore) {}
+
+			
+        		executer.closeShell();
+				
 	        }
 		}
     }
@@ -272,32 +296,10 @@ class Executer {
     		} catch (Exception e) {}
     		this.process = null;
     	}
-        
-        try {
-            if (this.os != null) {
-            	this.os.writeBytes("exit \n");
-    			this.os.flush();
-    			this.os.close();
-                this.os = null;
-            }
-            if (this.osRes != null) {
-                this.osRes.close();
-                this.osRes = null;
-            }
-            if (this.osErr != null) {
-                this.osErr.close();
-                this.osErr = null;
-            }
-            if (this.result != null)
-            {
-            	this.result = null;
-            }
-        } catch (Exception e) {
-            if (RootTools.debugMode) {
-                RootTools.log("Error: " + e.getMessage());
-            }
-        }
-        
-		InternalVariables.executer = null;
+
+        if (this.result != null)
+        {
+        	this.result = null;
+        }        
 	}
 }

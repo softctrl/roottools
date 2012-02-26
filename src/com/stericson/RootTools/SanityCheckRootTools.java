@@ -67,7 +67,7 @@ public class SanityCheckRootTools extends Activity {
 			    print("ERROR: No root access to this device.\n");
 			    return;
 			}
-		} catch (TimeoutException e) {
+		} catch (Exception e) {
 		    print("ERROR: could not determine root access to this device.\n");
 		    return;
 		}

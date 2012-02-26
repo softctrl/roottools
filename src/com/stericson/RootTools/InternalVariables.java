@@ -45,8 +45,6 @@ class InternalVariables {
     protected static ArrayList<Mount> mounts;
     protected static ArrayList<Symlink> symlinks;
     protected static int timeout = 10000;
-    protected static ShellManager shellManager;
-    protected static Executer executer;
 
     // regex to get pid out of ps line, example:
     // root 2611 0.0 0.0 19408 2104 pts/2 S 13:41 0:00 bash

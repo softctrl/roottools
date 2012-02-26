@@ -68,17 +68,19 @@ public class RootTools {
      * taking too long or you are having constant crashes or timeout exceptions.
      */
     public static int shellDelay = 0;
-
+    
     /**
-     *By default, using sendshell does not keep the shell open after executing all of the commands.
-     *Instead, it closes it out and cleanes everything up automatically.
-     *If you know you are going to use the sendshell alot in a short period of time it may be beneficial
-     *for you to set this to true in order to have sendShell keep the shell open and
-     *use it for other commands forthcoming. This will keep the number of toasts superuser sends to a minimum.
-     *
-     *If you use this, make sure that you call closeShell() when you are done with the shell.
-     **/
-    public static boolean keepShell = false;
+     * Many Functions here use root by default, but there may be times that you do not want them to use root.
+     * This can be useful when running a lot of commands at once.
+     * By default, if all of these functions are requesting root access then superuser will notify the user
+     * everytime that root is requested...this can lead to a flood of toast messages from superuser notifying the user
+     * that root access is being requested.
+     * 
+     * Setting this to false will cause sendShell to not use root by default. So any commands sent to the shell will not
+     * have root access unless specifically directed to obtain root access by you. Some commands will not work properly
+     * without root access, so use this with care.
+     */
+    public static boolean useRoot = true;
     
     // ---------------------------
     // # Public Variable Getters #
@@ -555,7 +557,7 @@ public class RootTools {
      * @throws TimeoutException
      *             if this operation times out. (cannot determine if access is given)
      */
-    public static boolean isAccessGiven() throws TimeoutException {
+    public static boolean isAccessGiven() {
     	try {
 	        RootTools.shellDelay = 500;
 	        RootTools.log(InternalVariables.TAG, "Checking for Root access");
@@ -569,6 +571,7 @@ public class RootTools {
 	        }
 	        
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 		finally {
@@ -877,7 +880,7 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result,
             int timeout) throws IOException, RootToolsException, TimeoutException {
-        return sendShell(commands, sleepTime, result, true, timeout);
+        return sendShell(commands, sleepTime, result, useRoot, timeout);
     }
 
     /**
@@ -910,11 +913,11 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result,
             boolean useRoot, int timeout) throws IOException, RootToolsException, TimeoutException {
-        return (new Executer().sendShell(commands, sleepTime, result, useRoot, timeout));
+        return new Executer().sendShell(commands, sleepTime, result, useRoot, timeout);
     }
 
     /**
-     * Sends several shell command as su (attempts to)
+     * Sends several shell command as su, unless useRoot is set to false
      * 
      * @param commands
      *            array of commands to send to the shell
@@ -943,7 +946,7 @@ public class RootTools {
     }
 
     /**
-     * Sends one shell command as su (attempts to)
+     * Sends one shell command as su, unless useRoot is set to false
      * 
      * @param command
      *            command to send to the shell
@@ -973,7 +976,7 @@ public class RootTools {
     }
 
     /**
-     * Sends one shell command as su (attempts to)
+     * Sends one shell command as su, unless useRoot is set to false
      * 
      * @param command
      *            command to send to the shell
@@ -998,59 +1001,6 @@ public class RootTools {
         return sendShell(command, null, timeout);
     }
 
-    /**
-     * Opens a shell command in preperation for sending through shell commands.
-     * 
-     * (This function allows you to open a shell and keep it open as long as you need it.
-     * However, in doing this you are responsible for handling all errors that may occur.)
-     *
-     * @param useRoot   A boolean to indicate whether we are to use root when opening this shell or to use sh.
-     * 
-     * @param result   This is an interface that you must implement in order to be notified about the progress of
-     * 					the shell commands you are sending through as well as any errors that may occur.
-	 *
-     * @throws IOException
-     */
-    public static void openShell(boolean useRoot, Result result) throws IOException
-    {
-    	InternalVariables.shellManager = new ShellManager();
-    	InternalVariables.shellManager.openShell(useRoot, result);
-    }
-    
-    /**
-     * Execute a shell command, you must have already opened a shell using the function openShell.
-     * 
-     *
-     * @param command The command to execute.
-     * 
-	 *
-     * @throws Exception
-     */
-    public static void executeCommand(String command) throws Exception
-    {
-    	InternalVariables.shellManager.executeCommand(command);
-    }
-
-    /**
-     * Closes a shell and destroys everything related to having the shell open.
-     * Please call this as soon as you do not need the shell command anymore.
-	 *
-     */
-    public static void closeShell()
-    {
-    	if (InternalVariables.shellManager != null)
-    	{
-	    	InternalVariables.shellManager.closeShell();
-	    	InternalVariables.shellManager = null;
-    	}
-    	
-    	if (InternalVariables.executer != null)
-    	{
-    		InternalVariables.executer.closeShell();
-    		InternalVariables.executer = null;
-    	}
-    }
-    
     /**
      * Get the space for a desired partition.
      * 
