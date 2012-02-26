@@ -22,18 +22,14 @@
 
 package com.stericson.RootTools;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 //no modifier, this is package-private which means that no one but the library can access it.
