@@ -125,7 +125,8 @@ class Executer {
 		{
 			this.commands = commands;
 			this.sleepTime = sleepTime;
-			executer.result = result;
+			this.executer = executer;
+			this.executer.result = result;
 			this.useRoot = useRoot;
 		}
 		public void run() 
