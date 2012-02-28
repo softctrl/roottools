@@ -108,7 +108,7 @@ public class RootTools {
     }
 
     /**
-     * Checks weather the toolbox or busybox binary contains a specific util
+     * Checks whether the toolbox or busybox binary contains a specific util
      * 
      * @param util
      * @param box
