@@ -230,7 +230,7 @@ public class RootTools {
     public static boolean checkUtil(String util) {
         if (RootTools.findBinary(util)) {
             for (String path : RootTools.lastFoundBinaryPaths) {
-                Permissions permissions = RootTools.getFilePermissions(path + "/" + util);
+                Permissions permissions = RootTools.getFilePermissionsSymlinks(path + "/" + util);
 
                 if (permissions != null) {
                     int permission = permissions.getPermissions();
@@ -330,6 +330,12 @@ public class RootTools {
      *             if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
+
+        // this command needs find
+        if (!findBinary("find")) {
+            throw new Exception();
+        }
+
         sendShell(new String[] { "find " + path
                 + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, 0, -1);
         InternalVariables.symlinks = new InternalMethods().getSymLinks();
@@ -368,6 +374,49 @@ public class RootTools {
 
         RootTools.log("Symlink not found");
         return "";
+    }
+
+    /**
+     * Copys a file to a destination. Because cp is not available on all android devices, we have a
+     * fallback on the dd command
+     * 
+     * @param sourcePath
+     * @param destinationPath
+     * @return true if it was successfully copied
+     */
+    public static boolean copyFile(String sourcePath, String destinationPath) {
+        // check if busybox or toolbox binary cp is available and linked
+        try {
+            if (checkUtils(new String[] { "cp" })) {
+                log("cp command is available!");
+                sendShell("cp -f " + sourcePath + " " + destinationPath, InternalVariables.timeout);
+                return true;
+            } else {
+                // if cp is not available use dd
+                if (checkUtils(new String[] { "dd" })) {
+                    log("cp is not available, use dd!");
+
+                    // get old permissions before overwriting
+                    Permissions permissions = getFilePermissionsSymlinks(destinationPath);
+                    int filePermission = permissions.permissions;
+
+                    // copy with dd
+                    sendShell("dd if=" + sourcePath + " of=" + destinationPath,
+                            InternalVariables.timeout);
+
+                    // set back old permission
+                    sendShell("chmod " + filePermission + " " + destinationPath,
+                            InternalVariables.timeout);
+
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
