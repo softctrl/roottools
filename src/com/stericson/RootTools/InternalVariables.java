@@ -30,11 +30,11 @@ import java.util.regex.Pattern;
 //If we need public variables just create the class for it.
 class InternalVariables {
 
-    //----------------------
-    //# Internal Variables #
-    //----------------------
+    // ----------------------
+    // # Internal Variables #
+    // ----------------------
 
-    //Version numbers should be maintained here.
+    // Version numbers should be maintained here.
     protected static String TAG = "RootTools v1.7";
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;

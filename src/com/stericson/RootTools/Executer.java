@@ -200,7 +200,7 @@ class Executer {
 		                    }
 		                }
 		                
-						RootTools.log("input stream" + line);
+						RootTools.log("input stream: " + line);
 						
 						line = reader.readLine();
 					}
