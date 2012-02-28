@@ -185,7 +185,7 @@ public class RootTools {
 
     /**
      * This will check an array of binaries, determine if they exist and determine that it has
-     * either ther permissions 755, 775, or 777. If an applet is not setup correctly it will try and
+     * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
      * fix it. (This is for Busybox applets or Toolbox applets)
      * 
      * @param String
@@ -206,12 +206,14 @@ public class RootTools {
                     if (hasUtil(util, "busybox")) {
                         fixUtil(util, utilPath);
                     }
-                } else if (checkUtil("toolbox")) {
-                    if (hasUtil(util, "toolbox")) {
-                        fixUtil(util, utilPath);
-                    }
                 } else {
-                    return false;
+                    if (checkUtil("toolbox")) {
+                        if (hasUtil(util, "toolbox")) {
+                            fixUtil(util, utilPath);
+                        }
+                    } else {
+                        return false;
+                    }
                 }
             }
         }
