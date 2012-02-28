@@ -126,6 +126,8 @@ public class RootTools {
             Result result = new Result() {
                 @Override
                 public void process(String line) throws Exception {
+                    // TODO: blocking shell commands like "toolbox watchprops" makes this stuck
+                    // possible fix could be terminating the running process after one line output
                     if (box.equals("toolbox")) {
                         if (line.contains("no such tool")) {
                             setError(1);
