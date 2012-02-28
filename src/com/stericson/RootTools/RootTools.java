@@ -115,36 +115,70 @@ public class RootTools {
      *            Should contain "toolbox" or "busybox"
      * @return true if it contains this util
      */
-    public static boolean hasUtil(String util, String box) {
+    public static boolean hasUtil(final String util, final String box) {
+
+        // only for busybox and toolbox
+        if (!(box.equals("toolbox") || box.equals("busybox"))) {
+            return false;
+        }
+
         try {
-            if (box.equals("toolbox")) {
-                // send as non-root, this will not execute commands like "toolbox reboot"
-                List<String> result = RootTools.sendShell(new String[] { "toolbox " + util }, 0,
-                        null, false, InternalVariables.timeout);
-
-                if (result.get(0).contains("no such tool")) {
-                    RootTools.log("Toolbox does not contain " + util + " util!");
-                    return false;
+            Result result = new Result() {
+                @Override
+                public void process(String line) throws Exception {
+                    if (box.equals("toolbox")) {
+                        if (line.contains("no such tool")) {
+                            setError(1);
+                        }
+                    } else if (box.equals("busybox")) {
+                        // go through all lines of busybox --list
+                        if (line.contains(util)) {
+                            log("Found util!");
+                            setData(1);
+                        }
+                    }
                 }
-            } else if (box.equals("busybox")) {
-                List<String> result = RootTools.sendShell(new String[] { "busybox " + util }, 0,
-                        null, false, InternalVariables.timeout);
 
-                if (result.get(0).contains("applet not found")) {
-                    RootTools.log("Busybox does not contain " + util + " util!");
+                @Override
+                public void onFailure(Exception ex) {
+                    setError(2);
+                }
+
+                @Override
+                public void onComplete(int diag) {
+                }
+
+                @Override
+                public void processError(String arg0) throws Exception {
+                    getProcess().destroy();
+                }
+
+            };
+            if (box.equals("toolbox")) {
+                sendShell(new String[] { "toolbox " + util }, 0, result, false,
+                        InternalVariables.timeout);
+            } else if (box.equals("busybox")) {
+                sendShell(new String[] { "busybox --list" }, 0, result, false,
+                        InternalVariables.timeout);
+            }
+
+            if (result.getError() == 0) {
+                // if data has been set process is running
+                if (result.getData() != null) {
+                    RootTools.log("Box contains " + util + " util!");
+                    return true;
+                } else {
+                    RootTools.log("Box does not contain " + util + " util!");
                     return false;
                 }
             } else {
+                RootTools.log("Box does not contain " + util + " util!");
                 return false;
             }
         } catch (Exception e) {
             RootTools.log(e.getMessage());
             return false;
         }
-
-        RootTools.log("Box contains " + util + " util!");
-
-        return true;
     }
 
     /**
