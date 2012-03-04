@@ -197,8 +197,29 @@ public class RootTools {
      * @return boolean to indicate whether the operation completed. Note that this is not indicative
      *         of whether the problem was fixed, just that the method did not encounter any
      *         exceptions.
+     * @deprecated
      */
     public static boolean checkUtils(String[] utils) throws Exception {
+        // checkUtils was a bad naming decision, fixUtils fits better!
+        return fixUtils(utils);
+    }
+
+    /**
+     * This will check an array of binaries, determine if they exist and determine that it has
+     * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
+     * fix it. (This is for Busybox applets or Toolbox applets)
+     * 
+     * @param String
+     *            Name of the utility to check.
+     * 
+     * @throws Exception
+     *             if the operation cannot be completed.
+     * 
+     * @return boolean to indicate whether the operation completed. Note that this is not indicative
+     *         of whether the problem was fixed, just that the method did not encounter any
+     *         exceptions.
+     */
+    public static boolean fixUtils(String[] utils) throws Exception {
 
         for (String util : utils) {
             if (!checkUtil(util)) {
@@ -336,7 +357,7 @@ public class RootTools {
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
 
         // this command needs find
-        if (!findBinary("find")) {
+        if (!checkUtil("find")) {
             throw new Exception();
         }
 
@@ -391,21 +412,33 @@ public class RootTools {
     public static boolean copyFile(String sourcePath, String destinationPath) {
         // check if busybox or toolbox binary cp is available and linked
         try {
-            if (checkUtils(new String[] { "cp" })) {
+            // try to find and fix cp binary
+            if (!fixUtils(new String[] { "cp" })) {
+                return false;
+            }
+
+            // if cp is available and has appropriate permissions
+            if (checkUtil("cp")) {
                 log("cp command is available!");
                 sendShell("cp -f " + sourcePath + " " + destinationPath, InternalVariables.timeout);
                 return true;
-            } else {
-                // if cp is not available use dd
-                if (checkUtils(new String[] { "dd" })) {
-                    log("cp is not available, use dd!");
+            } else { // if cp is not available use cat
+
+                // try to find and fix cat binary
+                if (!fixUtils(new String[] { "cat" })) {
+                    return false;
+                }
+
+                // if cat is available and has appropriate permissions
+                if (checkUtil("cat")) {
+                    log("cp is not available, use cat!");
 
                     // get old permissions before overwriting
                     Permissions permissions = getFilePermissionsSymlinks(destinationPath);
                     int filePermission = permissions.permissions;
 
-                    // copy with dd
-                    sendShell("dd if=" + sourcePath + " of=" + destinationPath,
+                    // copy with cat
+                    sendShell("cat " + sourcePath + " > " + destinationPath,
                             InternalVariables.timeout);
 
                     // set back old permission
