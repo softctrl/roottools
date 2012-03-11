@@ -132,9 +132,18 @@ class Executer {
 		    	if (executer.process == null)
 		    	{
 			    	Runtime.getRuntime().gc();
-			    	executer.process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
-			    	RootTools.log(useRoot ? "Using Root" : "Using sh");
-					
+			    	
+			    	if (RootTools.customShell.equals(""))
+			    	{
+			    		executer.process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
+				    	RootTools.log(useRoot ? "Using Root" : "Using sh");
+			    	}
+			    	else
+			    	{
+			    		executer.process = Runtime.getRuntime().exec(RootTools.customShell);
+				    	RootTools.log("Using custom shell: " + RootTools.customShell);
+			    	}
+			    	
 					if (null != executer.result) {
 						executer.result.setProcess(executer.process);
 					}

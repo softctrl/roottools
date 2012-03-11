@@ -62,6 +62,11 @@ public class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
+    
+    /**
+     * You can use this to force sendshell to use a shell other than the deafult.
+     */
+    public static String customShell = "";
 
     /**
      * Change this to a lower/higher setting to speed up/slow down shell commands if things are
