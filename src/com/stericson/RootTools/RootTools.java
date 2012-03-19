@@ -408,7 +408,7 @@ public class RootTools {
 
     /**
      * Copys a file to a destination. Because cp is not available on all android devices, we have a
-     * fallback on the dd command
+     * fallback on the cat command
      * 
      * @param sourcePath
      * @param destinationPath
