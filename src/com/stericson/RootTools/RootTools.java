@@ -425,7 +425,7 @@ public class RootTools {
             // if cp is available and has appropriate permissions
             if (checkUtil("cp")) {
                 log("cp command is available!");
-                sendShell("cp -f " + sourcePath + " " + destinationPath, InternalVariables.timeout);
+                sendShell("cp -fp " + sourcePath + " " + destinationPath, InternalVariables.timeout);
                 return true;
             } else { // if cp is not available use cat
 
