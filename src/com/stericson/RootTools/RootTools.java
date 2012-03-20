@@ -62,7 +62,7 @@ public class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
-    
+
     /**
      * You can use this to force sendshell to use a shell other than the deafult.
      */
@@ -410,55 +410,63 @@ public class RootTools {
      * Copys a file to a destination. Because cp is not available on all android devices, we have a
      * fallback on the cat command
      * 
-     * @param sourcePath
-     * @param destinationPath
+     * @param source
+     *            example: /data/data/org.adaway/files/hosts
+     * @param destination
+     *            example: /system/etc/hosts
+     * @param mountDestinationAsRw
+     *            mounts the destination as read/write before writing to it
      * @return true if it was successfully copied
      */
-    public static boolean copyFile(String sourcePath, String destinationPath) {
-        // check if busybox or toolbox binary cp is available and linked
+    public static boolean copyFile(String source, String destination, boolean mountDestinationAsRw) {
+        boolean result = true;
+
         try {
-            // try to find and fix cp binary
-            if (!fixUtils(new String[] { "cp" })) {
-                return false;
+            // mount destination as rw before writing to it
+            if (mountDestinationAsRw) {
+                remount(destination, "RW");
             }
 
             // if cp is available and has appropriate permissions
             if (checkUtil("cp")) {
                 log("cp command is available!");
-                sendShell("cp -fp " + sourcePath + " " + destinationPath, InternalVariables.timeout);
-                return true;
-            } else { // if cp is not available use cat
-
-                // try to find and fix cat binary
-                if (!fixUtils(new String[] { "cat" })) {
-                    return false;
-                }
-
-                // if cat is available and has appropriate permissions
-                if (checkUtil("cat")) {
-                    log("cp is not available, use cat!");
-
-                    // get old permissions before overwriting
-                    Permissions permissions = getFilePermissionsSymlinks(destinationPath);
-                    int filePermission = permissions.permissions;
-
-                    // copy with cat
-                    sendShell("cat " + sourcePath + " > " + destinationPath,
+                sendShell("cp -fp " + source + " " + destination, InternalVariables.timeout);
+            } else {
+                if (checkUtil("busybox") && hasUtil("cp", "busybox")) {
+                    log("busybox cp command is available!");
+                    sendShell("busybox cp -fp " + source + " " + destination,
                             InternalVariables.timeout);
+                } else { // if cp is not available use cat
+                    // if cat is available and has appropriate permissions
+                    if (checkUtil("cat")) {
+                        log("cp is not available, use cat!");
 
-                    // set back old permission
-                    sendShell("chmod " + filePermission + " " + destinationPath,
-                            InternalVariables.timeout);
+                        // get old permissions before overwriting
+                        Permissions permissions = getFilePermissionsSymlinks(destination);
+                        int filePermission = permissions.permissions;
 
-                    return true;
-                } else {
-                    return false;
+                        // copy with cat
+                        sendShell("cat " + source + " > " + destination, InternalVariables.timeout);
+
+                        // set back old permission
+                        sendShell("chmod " + filePermission + " " + destination,
+                                InternalVariables.timeout);
+                    } else {
+                        result = false;
+                    }
                 }
+            }
+
+            // mount destination back to ro
+            if (mountDestinationAsRw) {
+                remount(destination, "RO");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            result = false;
         }
+
+        return result;
     }
 
     /**
