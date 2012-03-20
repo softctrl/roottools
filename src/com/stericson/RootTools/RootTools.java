@@ -414,43 +414,63 @@ public class RootTools {
      *            example: /data/data/org.adaway/files/hosts
      * @param destination
      *            example: /system/etc/hosts
-     * @param mountDestinationAsRw
-     *            mounts the destination as read/write before writing to it
+     * @param remountAsRw
+     *            remounts the destination as read/write before writing to it
+     * @param preserveFileAttributes
+     *            tries to copy file attributes from source to destination, if only cat is available
+     *            only permissions are preserved
      * @return true if it was successfully copied
      */
-    public static boolean copyFile(String source, String destination, boolean mountDestinationAsRw) {
+    public static boolean copyFile(String source, String destination, boolean remountAsRw,
+            boolean preserveFileAttributes) {
         boolean result = true;
 
         try {
             // mount destination as rw before writing to it
-            if (mountDestinationAsRw) {
+            if (remountAsRw) {
                 remount(destination, "RW");
             }
 
             // if cp is available and has appropriate permissions
             if (checkUtil("cp")) {
                 log("cp command is available!");
-                sendShell("cp -fp " + source + " " + destination, InternalVariables.timeout);
+
+                if (preserveFileAttributes) {
+                    sendShell("cp -fp " + source + " " + destination, InternalVariables.timeout);
+                } else {
+                    sendShell("cp -f " + source + " " + destination, InternalVariables.timeout);
+                }
             } else {
                 if (checkUtil("busybox") && hasUtil("cp", "busybox")) {
                     log("busybox cp command is available!");
-                    sendShell("busybox cp -fp " + source + " " + destination,
-                            InternalVariables.timeout);
+
+                    if (preserveFileAttributes) {
+                        sendShell("busybox cp -fp " + source + " " + destination,
+                                InternalVariables.timeout);
+                    } else {
+                        sendShell("busybox cp -f " + source + " " + destination,
+                                InternalVariables.timeout);
+                    }
                 } else { // if cp is not available use cat
                     // if cat is available and has appropriate permissions
                     if (checkUtil("cat")) {
                         log("cp is not available, use cat!");
 
-                        // get old permissions before overwriting
-                        Permissions permissions = getFilePermissionsSymlinks(destination);
-                        int filePermission = permissions.permissions;
+                        int filePermission = -1;
+                        if (preserveFileAttributes) {
+                            // get permissions of source before overwriting
+                            Permissions permissions = getFilePermissionsSymlinks(source);
+                            filePermission = permissions.permissions;
+                        }
 
                         // copy with cat
                         sendShell("cat " + source + " > " + destination, InternalVariables.timeout);
 
-                        // set back old permission
-                        sendShell("chmod " + filePermission + " " + destination,
-                                InternalVariables.timeout);
+                        if (preserveFileAttributes) {
+                            // set premissions of source to destination
+                            sendShell("chmod " + filePermission + " " + destination,
+                                    InternalVariables.timeout);
+                        }
                     } else {
                         result = false;
                     }
@@ -458,7 +478,7 @@ public class RootTools {
             }
 
             // mount destination back to ro
-            if (mountDestinationAsRw) {
+            if (remountAsRw) {
                 remount(destination, "RO");
             }
         } catch (Exception e) {
