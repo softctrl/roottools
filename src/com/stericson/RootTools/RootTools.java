@@ -1236,7 +1236,7 @@ public class RootTools {
 
             RootTools.log("Second Method");
 
-            if (!InternalVariables.space[0].startsWith(path)) {
+            if (InternalVariables.space[0].length() <= 5 ) {
                 targetCount = 2;
             }
 
