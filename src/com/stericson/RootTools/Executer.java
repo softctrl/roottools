@@ -187,6 +187,8 @@ class Executer {
 						if (commands[0].equals("id")) {
 		                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
 		                    for (String id : ID) {
+	                            RootTools.log(InternalVariables.TAG, id);
+
 		                        if (id.toLowerCase().contains("uid=0")) {
 		                            InternalVariables.accessGiven = true;
 		                            RootTools.log(InternalVariables.TAG, "Access Given");
@@ -302,7 +304,7 @@ class Executer {
     		try {
     			//if this fails, ignore it and dont crash.
     			this.process.destroy();
-    		} catch (Exception e) {}
+    		} catch (Exception ignore) {}
     		this.process = null;
     	}
 

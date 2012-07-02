@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -259,7 +260,11 @@ public class RootTools {
      */
     public static boolean checkUtil(String util) {
         if (RootTools.findBinary(util)) {
-            for (String path : RootTools.lastFoundBinaryPaths) {
+
+        	List<String> binaryPaths = new ArrayList<String>();
+        	binaryPaths.addAll(RootTools.lastFoundBinaryPaths);
+        	
+            for (String path : binaryPaths) {
                 Permissions permissions = RootTools.getFilePermissionsSymlinks(path + "/" + util);
 
                 if (permissions != null) {
@@ -328,6 +333,35 @@ public class RootTools {
     }
 
     /**
+     * This will tell you how the specified mount is mounted. rw, ro, etc...
+     * <p/>
+     * @param The mount you want to check
+     * 
+     * @return <code>String</code> What the mount is mounted as.
+     * @throws Exception
+     *             if we cannot determine how the mount is mounted.
+     */
+    public static String getMountedAs(String path) throws Exception {
+        InternalVariables.mounts = new InternalMethods().getMounts();
+        if (InternalVariables.mounts != null) {
+        	for (Mount mount : InternalVariables.mounts)
+        	{
+        		if (path.contains(mount.getMountPoint().getAbsolutePath()))
+        		{
+        			log((String) mount.getFlags().toArray()[0]);
+        			return (String) mount.getFlags().toArray()[0];
+        		}
+        	}
+        	
+        	throw new Exception();
+        } 
+        else 
+        {
+            throw new Exception();
+        }
+    }
+
+    /**
      * This will return an ArrayList of the class Mount. The class mount contains the following
      * property's: device mountPoint type flags
      * <p/>
@@ -392,13 +426,37 @@ public class RootTools {
             RootTools.log("File exists");
 
             try {
-                List<String> results = sendShell("ls -l " + file, InternalVariables.timeout);
+                List<String> results = sendShell("ls -l " + file.getAbsolutePath(), InternalVariables.timeout);
                 String[] symlink = results.get(0).split(" ");
                 if (symlink[symlink.length - 2].equals("->")) {
                     RootTools.log("Symlink found.");
-                    return symlink[symlink.length - 1];
+                    
+                    String final_symlink = "";
+                    if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
+                    {
+                    	//We assume that we need to get the path for this symlink as it is probably not absolute.
+                    	findBinary(symlink[symlink.length - 1]);
+                    	if (RootTools.lastFoundBinaryPaths.size() > 0)
+                    	{
+                    		//We return the first found location.
+                    		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
+                    	}
+                    	else
+                    	{
+                        	//we couldnt find a path, return the symlink by itself.
+                        	final_symlink = symlink[symlink.length - 1];
+                    	}
+                    }
+                    else
+                    {
+                    	final_symlink = symlink[symlink.length - 1];
+                    }
+
+                    return final_symlink;
                 }
             } catch (Exception e) {
+            	if (RootTools.debugMode)
+            		e.printStackTrace();
             }
         }
 
@@ -582,16 +640,20 @@ public class RootTools {
 
         RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
         try {
-            for (String paths : getPath()) {
-                File file = new File(paths + "/" + binaryName);
-                if (file.exists()) {
-                    log(binaryName + " was found here: " + paths);
-                    lastFoundBinaryPaths.add(paths);
-                    found = true;
-                } else {
-                    log(binaryName + " was NOT found here: " + paths);
-                }
-            }
+        	Set<String> paths = getPath();
+        	if (paths.size() > 0)
+        	{
+	            for (String path : paths) {
+	                File file = new File(path + "/" + binaryName);
+	                if (file.exists()) {
+	                    log(binaryName + " was found here: " + path);
+	                    lastFoundBinaryPaths.add(path);
+	                    found = true;
+	                } else {
+	                    log(binaryName + " was NOT found here: " + path);
+	                }
+	            }
+        	}
         } catch (TimeoutException ex) {
             RootTools.log(InternalVariables.TAG, "TimeoutException!!!");
         } catch (Exception e) {
@@ -616,6 +678,16 @@ public class RootTools {
             }
         }
 
+        if (RootTools.debugMode)
+        {
+        	for (String path : RootTools.lastFoundBinaryPaths)
+        	{
+            	log("Paths: " + path);	
+        	}        	
+        }
+        
+        Collections.reverse(RootTools.lastFoundBinaryPaths);
+        
         return found;
     }
 
