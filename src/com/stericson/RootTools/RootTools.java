@@ -97,158 +97,6 @@ public class RootTools {
     // ------------------
 
     /**
-     * This will return to you a string to be used in your shell commands which will represent the
-     * valid working toolbox with correct permissions. For instance, if Busybox is available it will
-     * return "busybox", if busybox is not available but toolbox is then it will return "toolbox"
-     * 
-     * @return String that indicates the available toolbox to use for accessing applets.
-     */
-    public static String getWorkingToolbox() {
-        if (RootTools.checkUtil("busybox")) {
-            return "busybox";
-        } else if (RootTools.checkUtil("toolbox")) {
-            return "toolbox";
-        } else {
-            return "";
-        }
-    }
-
-    /**
-     * Checks whether the toolbox or busybox binary contains a specific util
-     * 
-     * @param util
-     * @param box
-     *            Should contain "toolbox" or "busybox"
-     * @return true if it contains this util
-     */
-    public static boolean hasUtil(final String util, final String box) {
-
-        // only for busybox and toolbox
-        if (!(box.equals("toolbox") || box.equals("busybox"))) {
-            return false;
-        }
-
-        try {
-            Result result = new Result() {
-                @Override
-                public void process(String line) throws Exception {
-                    // TODO: blocking shell commands like "toolbox watchprops" makes this stuck
-                    // possible fix could be terminating the running process after one line output
-                    if (box.equals("toolbox")) {
-                        if (line.contains("no such tool")) {
-                            setError(1);
-                        }
-                    } else if (box.equals("busybox")) {
-                        // go through all lines of busybox --list
-                        if (line.contains(util)) {
-                            log("Found util!");
-                            setData(1);
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(2);
-                }
-
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                    getProcess().destroy();
-                }
-
-            };
-            if (box.equals("toolbox")) {
-                sendShell(new String[] { "toolbox " + util }, 0, result, false,
-                        InternalVariables.timeout);
-            } else if (box.equals("busybox")) {
-                sendShell(new String[] { "busybox --list" }, 0, result, false,
-                        InternalVariables.timeout);
-            }
-
-            if (result.getError() == 0) {
-                // if data has been set process is running
-                if (result.getData() != null) {
-                    RootTools.log("Box contains " + util + " util!");
-                    return true;
-                } else {
-                    RootTools.log("Box does not contain " + util + " util!");
-                    return false;
-                }
-            } else {
-                RootTools.log("Box does not contain " + util + " util!");
-                return false;
-            }
-        } catch (Exception e) {
-            RootTools.log(e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * This will check an array of binaries, determine if they exist and determine that it has
-     * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
-     * fix it. (This is for Busybox applets or Toolbox applets)
-     * 
-     * @param String
-     *            Name of the utility to check.
-     * 
-     * @throws Exception
-     *             if the operation cannot be completed.
-     * 
-     * @return boolean to indicate whether the operation completed. Note that this is not indicative
-     *         of whether the problem was fixed, just that the method did not encounter any
-     *         exceptions.
-     * @deprecated
-     */
-    public static boolean checkUtils(String[] utils) throws Exception {
-        // checkUtils was a bad naming decision, fixUtils fits better!
-        return fixUtils(utils);
-    }
-
-    /**
-     * This will check an array of binaries, determine if they exist and determine that it has
-     * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
-     * fix it. (This is for Busybox applets or Toolbox applets)
-     * 
-     * @param String
-     *            Name of the utility to check.
-     * 
-     * @throws Exception
-     *             if the operation cannot be completed.
-     * 
-     * @return boolean to indicate whether the operation completed. Note that this is not indicative
-     *         of whether the problem was fixed, just that the method did not encounter any
-     *         exceptions.
-     */
-    public static boolean fixUtils(String[] utils) throws Exception {
-
-        for (String util : utils) {
-            if (!checkUtil(util)) {
-                if (checkUtil("busybox")) {
-                    if (hasUtil(util, "busybox")) {
-                        fixUtil(util, utilPath);
-                    }
-                } else {
-                    if (checkUtil("toolbox")) {
-                        if (hasUtil(util, "toolbox")) {
-                            fixUtil(util, utilPath);
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * This will check a given binary, determine if it exists and determine that it has either the
      * permissions 755, 775, or 777.
      * 
@@ -282,188 +130,33 @@ public class RootTools {
     }
 
     /**
-     * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets) By
-     * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
-     * permissions if the permissions are not correct.
+     * This will close all open shells.
      * 
-     * @param String
-     *            Name of the utility to fix.
-     * @param String
-     *            path to the toolbox that provides ln, rm, and chmod. This can be a blank string, a
-     *            path to a binary that will provide these, or you can use
-     *            RootTools.getWorkingToolbox()
+     * @throws IOException 
+     *  
      */
-    public static void fixUtil(String util, String utilPath) {
-        try {
-            RootTools.remount("/system", "rw");
-
-            if (RootTools.findBinary(util)) {
-                for (String path : RootTools.lastFoundBinaryPaths)
-                    RootTools.sendShell(utilPath + " rm " + path + "/" + util,
-                            InternalVariables.timeout);
-
-                RootTools.sendShell(new String[] {
-                        utilPath + " ln -s " + utilPath + " /system/bin/" + util,
-                        utilPath + " chmod 0755 /system/bin/" + util }, 10,
-                        InternalVariables.timeout);
-            }
-
-            RootTools.remount("/system", "ro");
-        } catch (Exception e) {
-        }
+    public static void closeAllShells() throws IOException
+    {
+    	Shell.closeAll();
     }
-
+    
     /**
-     * This will return the environment variable $PATH
+     * This will close either the root shell or the standard shell depending on what you specify.
      * 
-     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
-     * @throws Exception
-     *             if we cannot return the $PATH variable
+     * @param root
+     * 			a <code>boolean</code> to specify whether to close the root shell or the standard shell.
+     * 
+     * @throws IOException 
+     *  
      */
-    public static Set<String> getPath() throws Exception {
-        if (InternalVariables.path != null) {
-            return InternalVariables.path;
-        } else {
-            if (new InternalMethods().returnPath()) {
-                return InternalVariables.path;
-            } else {
-                throw new Exception();
-            }
-        }
+    public static void closeShell(boolean root) throws IOException
+    {
+    	if (root)
+    		Shell.closeRootShell();
+    	else
+    		Shell.closeShell();
     }
-
-    /**
-     * This will tell you how the specified mount is mounted. rw, ro, etc...
-     * <p/>
-     * @param The mount you want to check
-     * 
-     * @return <code>String</code> What the mount is mounted as.
-     * @throws Exception
-     *             if we cannot determine how the mount is mounted.
-     */
-    public static String getMountedAs(String path) throws Exception {
-        InternalVariables.mounts = new InternalMethods().getMounts();
-        if (InternalVariables.mounts != null) {
-        	for (Mount mount : InternalVariables.mounts)
-        	{
-        		if (path.contains(mount.getMountPoint().getAbsolutePath()))
-        		{
-        			log((String) mount.getFlags().toArray()[0]);
-        			return (String) mount.getFlags().toArray()[0];
-        		}
-        	}
-        	
-        	throw new Exception();
-        } 
-        else 
-        {
-            throw new Exception();
-        }
-    }
-
-    /**
-     * This will return an ArrayList of the class Mount. The class mount contains the following
-     * property's: device mountPoint type flags
-     * <p/>
-     * These will provide you with any information you need to work with the mount points.
-     * 
-     * @return <code>ArrayList<Mount></code> an ArrayList of the class Mount.
-     * @throws Exception
-     *             if we cannot return the mount points.
-     */
-    public static ArrayList<Mount> getMounts() throws Exception {
-        InternalVariables.mounts = new InternalMethods().getMounts();
-        if (InternalVariables.mounts != null) {
-            return InternalVariables.mounts;
-        } else {
-            throw new Exception();
-        }
-    }
-
-    /**
-     * This will return an ArrayList of the class Symlink. The class Symlink contains the following
-     * property's: path SymplinkPath
-     * <p/>
-     * These will provide you with any Symlinks in the given path.
-     * 
-     * @param The
-     *            path to search for Symlinks.
-     * 
-     * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
-     * @throws Exception
-     *             if we cannot return the Symlinks.
-     */
-    public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-
-        // this command needs find
-        if (!checkUtil("find")) {
-            throw new Exception();
-        }
-
-        sendShell(new String[] { "find " + path
-                + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, 0, -1);
-        InternalVariables.symlinks = new InternalMethods().getSymLinks();
-        if (InternalVariables.symlinks != null) {
-            return InternalVariables.symlinks;
-        } else {
-            throw new Exception();
-        }
-    }
-
-    /**
-     * This will return a String that represent the symlink for a specified file.
-     * <p/>
-     * 
-     * @param The
-     *            file to get the Symlink for. (must have absolute path)
-     * 
-     * @return <code>String</code> a String that represent the symlink for a specified file or an
-     *         empty string if no symlink exists.
-     */
-    public static String getSymlink(File file) {
-        RootTools.log("Looking for Symlink for " + file.toString());
-        if (file.exists()) {
-            RootTools.log("File exists");
-
-            try {
-                List<String> results = sendShell("ls -l " + file.getAbsolutePath(), InternalVariables.timeout);
-                String[] symlink = results.get(0).split(" ");
-                if (symlink[symlink.length - 2].equals("->")) {
-                    RootTools.log("Symlink found.");
-                    
-                    String final_symlink = "";
-                    if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
-                    {
-                    	//We assume that we need to get the path for this symlink as it is probably not absolute.
-                    	findBinary(symlink[symlink.length - 1]);
-                    	if (RootTools.lastFoundBinaryPaths.size() > 0)
-                    	{
-                    		//We return the first found location.
-                    		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
-                    	}
-                    	else
-                    	{
-                        	//we couldnt find a path, return the symlink by itself.
-                        	final_symlink = symlink[symlink.length - 1];
-                    	}
-                    }
-                    else
-                    {
-                    	final_symlink = symlink[symlink.length - 1];
-                    }
-
-                    return final_symlink;
-                }
-            } catch (Exception e) {
-            	if (RootTools.debugMode)
-            		e.printStackTrace();
-            }
-        }
-
-        RootTools.log("Symlink not found");
-        return "";
-    }
-
+    
     /**
      * Copys a file to a destination. Because cp is not available on all android devices, we have a
      * fallback on the cat command
@@ -546,83 +239,103 @@ public class RootTools {
 
         return result;
     }
-
+    
     /**
-     * This will launch the Android market looking for BusyBox
+     * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets) By
+     * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
+     * permissions if the permissions are not correct.
      * 
-     * @param activity
-     *            pass in your Activity
+     * @param String
+     *            Name of the utility to fix.
+     * @param String
+     *            path to the toolbox that provides ln, rm, and chmod. This can be a blank string, a
+     *            path to a binary that will provide these, or you can use
+     *            RootTools.getWorkingToolbox()
      */
-    public static void offerBusyBox(Activity activity) {
-        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=stericson.busybox"));
-        activity.startActivity(i);
-    }
+    public static void fixUtil(String util, String utilPath) {
+        try {
+            RootTools.remount("/system", "rw");
 
+            if (RootTools.findBinary(util)) {
+                for (String path : RootTools.lastFoundBinaryPaths)
+                    RootTools.sendShell(utilPath + " rm " + path + "/" + util,
+                            InternalVariables.timeout);
+
+                RootTools.sendShell(new String[] {
+                        utilPath + " ln -s " + utilPath + " /system/bin/" + util,
+                        utilPath + " chmod 0755 /system/bin/" + util }, 10,
+                        InternalVariables.timeout);
+            }
+
+            RootTools.remount("/system", "ro");
+        } catch (Exception e) {}
+    }
+    
     /**
-     * This will launch the Android market looking for BusyBox, but will return the intent fired and
-     * starts the activity with startActivityForResult
+     * This will check an array of binaries, determine if they exist and determine that it has
+     * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
+     * fix it. (This is for Busybox applets or Toolbox applets)
      * 
-     * @param activity
-     *            pass in your Activity
-     * @param requestCode
-     *            pass in the request code
-     * @return intent fired
-     */
-    public static Intent offerBusyBox(Activity activity, int requestCode) {
-        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=stericson.busybox"));
-        activity.startActivityForResult(i, requestCode);
-        return i;
-    }
-
-    /**
-     * This will launch the Android market looking for SuperUser
+     * @param String
+     *            Name of the utility to check.
      * 
-     * @param activity
-     *            pass in your Activity
-     */
-    public static void offerSuperUser(Activity activity) {
-        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=com.noshufou.android.su"));
-        activity.startActivity(i);
-    }
-
-    /**
-     * This will launch the Android market looking for SuperUser, but will return the intent fired
-     * and starts the activity with startActivityForResult
+     * @throws Exception
+     *             if the operation cannot be completed.
      * 
-     * @param activity
-     *            pass in your Activity
-     * @param requestCode
-     *            pass in the request code
-     * @return intent fired
+     * @return boolean to indicate whether the operation completed. Note that this is not indicative
+     *         of whether the problem was fixed, just that the method did not encounter any
+     *         exceptions.
      */
-    public static Intent offerSuperUser(Activity activity, int requestCode) {
-        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=com.noshufou.android.su"));
-        activity.startActivityForResult(i, requestCode);
-        return i;
-    }
+    public static boolean fixUtils(String[] utils) throws Exception {
 
+        for (String util : utils) {
+            if (!checkUtil(util)) {
+                if (checkUtil("busybox")) {
+                    if (hasUtil(util, "busybox")) {
+                        fixUtil(util, utilPath);
+                    }
+                } else {
+                    if (checkUtil("toolbox")) {
+                        if (hasUtil(util, "toolbox")) {
+                            fixUtil(util, utilPath);
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+    
     /**
-     * @return <code>true</code> if su was found.
+     * This method will return the inode number of a file. This method is dependent on having a version of
+     * ls that supports the -i parameter. 
+     * 
+     *  @param String path to the file that you wish to return the inode number
+     *  
+     *  @return String The inode number for this file or "" if the inode number could not be found.
      */
-    public static boolean isRootAvailable() {
-        return findBinary("su");
+    public static String getInode(String file)
+    {
+    	try
+    	{
+	    	for (String line : RootTools.sendShell("/data/local/ls -i " + file, -1))
+	    	{
+	    		if (Character.isDigit((char) line.trim().substring(0, 1).toCharArray()[0]))
+	    		{
+	    			return line.trim().split(" ")[0].toString();
+	    		}
+	    	}
+	    	return "";
+    	}
+    	catch (Exception ignore)
+    	{
+    		return "";
+    	}
     }
-
-    /**
-     * @return <code>true</code> if BusyBox was found.
-     */
-    public static boolean isBusyboxAvailable() {
-        return findBinary("busybox");
-    }
-
+    
     /**
      * 
      * @param binaryName
@@ -638,7 +351,9 @@ public class RootTools {
         boolean found = false;
         lastFoundBinaryPaths.clear();
 
-        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+    	List<String> list = new ArrayList<String>();
+
+        RootTools.log("Checking for " + binaryName);
         try {
         	Set<String> paths = getPath();
         	if (paths.size() > 0)
@@ -647,7 +362,7 @@ public class RootTools {
 	                File file = new File(path + "/" + binaryName);
 	                if (file.exists()) {
 	                    log(binaryName + " was found here: " + path);
-	                    lastFoundBinaryPaths.add(path);
+	                    list.add(path);
 	                    found = true;
 	                } else {
 	                    log(binaryName + " was NOT found here: " + path);
@@ -655,22 +370,21 @@ public class RootTools {
 	            }
         	}
         } catch (TimeoutException ex) {
-            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");
+            RootTools.log("TimeoutException!!!");
         } catch (Exception e) {
-            RootTools.log(InternalVariables.TAG, binaryName
-                    + " was not found, more information MAY be available with Debugging on.");
+            RootTools.log(binaryName + " was not found, more information MAY be available with Debugging on.");
         }
 
         if (!found) {
-            RootTools.log(InternalVariables.TAG, "Trying second method");
-            RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+            RootTools.log("Trying second method");
+            RootTools.log("Checking for " + binaryName);
             String[] places = { "/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
                     "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
             for (String where : places) {
                 File file = new File(where + binaryName);
                 if (file.exists()) {
                     log(binaryName + " was found here: " + where);
-                    lastFoundBinaryPaths.add(where);
+                    list.add(where);
                     found = true;
                 } else {
                     log(binaryName + " was NOT found here: " + where);
@@ -679,18 +393,55 @@ public class RootTools {
         }
 
         if (RootTools.debugMode)
-        {
-        	for (String path : RootTools.lastFoundBinaryPaths)
+        {        	
+        	for (String path : list)
         	{
             	log("Paths: " + path);	
         	}        	
         }
         
-        Collections.reverse(RootTools.lastFoundBinaryPaths);
+        Collections.reverse(list);
+        
+        RootTools.lastFoundBinaryPaths.addAll(list);
         
         return found;
     }
+    
+    /**
+     * @return BusyBox version is found, "" if not found.
+     */
+    public static String getBusyBoxVersion() {
+        RootTools.log("Getting BusyBox Version");
+        InternalVariables.busyboxVersion = null;
+        try {
+            sendShell(new String[] { "busybox" }, 0, InternalVariables.timeout);
+        } catch (TimeoutException ex) {
+            RootTools.log("TimeoutException!!!");
+        } catch (Exception e) {
+            RootTools.log("BusyBox was not found, more information MAY be available with Debugging on.");
+            return "";
+        }
+        return InternalVariables.busyboxVersion;
+    }
 
+    /**
+     * This will return an List of Strings. Each string represents an applet available from BusyBox.
+     * <p/>
+     * 
+     * @return <code>List<String></code> a List of strings representing the applets available from
+     *         Busybox.
+     * @throws Exception
+     *             if we cannot return the applets available.
+     */
+    public static List<String> getBusyBoxApplets() throws Exception {
+        List<String> commands = sendShell("busybox --list", InternalVariables.timeout);
+        if (commands != null) {
+            return commands;
+        } else {
+            throw new Exception();
+        }
+    }
+    
     /**
      * 
      * @param file
@@ -702,7 +453,7 @@ public class RootTools {
      * 
      */
     public static Permissions getFilePermissionsSymlinks(String file) {
-        RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
+        RootTools.log("Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) {
             String symlink_final = "";
@@ -747,129 +498,234 @@ public class RootTools {
 
         return null;
     }
-
+    
     /**
-     * 
-     * @param file
-     *            String that represent the file, including the full path to the file and its name.
-     * 
-     * @return An instance of the class permissions from which you can get the permissions of the
-     *         file or if the file could not be found or permissions couldn't be determined then
-     *         permissions will be null.
-     * 
-     * @deprecated
-     */
-    public static Permissions getFilePermissions(String file) {
-        return getFilePermissionsSymlinks(file);
-    }
-
-    /**
-     * @return BusyBox version is found, "" if not found.
-     */
-    public static String getBusyBoxVersion() {
-        RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
-        InternalVariables.busyboxVersion = null;
-        try {
-            sendShell(new String[] { "busybox" }, 0, InternalVariables.timeout);
-        } catch (TimeoutException ex) {
-            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");
-        } catch (Exception e) {
-            RootTools.log(InternalVariables.TAG,
-                    "BusyBox was not found, more information MAY be available with Debugging on.");
-            return "";
-        }
-        return InternalVariables.busyboxVersion;
-    }
-
-    /**
-     * This will return an List of Strings. Each string represents an applet available from BusyBox.
+     * This will return an ArrayList of the class Mount. The class mount contains the following
+     * property's: device mountPoint type flags
      * <p/>
+     * These will provide you with any information you need to work with the mount points.
      * 
-     * @return <code>List<String></code> a List of strings representing the applets available from
-     *         Busybox.
+     * @return <code>ArrayList<Mount></code> an ArrayList of the class Mount.
      * @throws Exception
-     *             if we cannot return the applets available.
+     *             if we cannot return the mount points.
      */
-    public static List<String> getBusyBoxApplets() throws Exception {
-        List<String> commands = sendShell("busybox --list", InternalVariables.timeout);
-        if (commands != null) {
-            return commands;
+    public static ArrayList<Mount> getMounts() throws Exception {
+        InternalVariables.mounts = new InternalMethods().getMounts();
+        if (InternalVariables.mounts != null) {
+            return InternalVariables.mounts;
         } else {
             throw new Exception();
         }
     }
-
+    
     /**
-     * This will let you know if an applet is available from BusyBox
+     * This will tell you how the specified mount is mounted. rw, ro, etc...
      * <p/>
+     * @param The mount you want to check
      * 
-     * @param <code>String</code> The applet to check for.
-     * 
-     * @return <code>true</code> if applet is available, false otherwise.
+     * @return <code>String</code> What the mount is mounted as.
+     * @throws Exception
+     *             if we cannot determine how the mount is mounted.
      */
-    public static boolean isAppletAvailable(String Applet) {
+    public static String getMountedAs(String path) throws Exception {
+        InternalVariables.mounts = new InternalMethods().getMounts();
+        if (InternalVariables.mounts != null) {
+        	for (Mount mount : InternalVariables.mounts)
+        	{
+        		if (path.contains(mount.getMountPoint().getAbsolutePath()))
+        		{
+        			log((String) mount.getFlags().toArray()[0]);
+        			return (String) mount.getFlags().toArray()[0];
+        		}
+        	}
+        	
+        	throw new Exception();
+        } 
+        else 
+        {
+            throw new Exception();
+        }
+    }
+    
+    /**
+     * This will return the environment variable $PATH
+     * 
+     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
+     * @throws Exception
+     *             if we cannot return the $PATH variable
+     */
+    public static Set<String> getPath() throws Exception {
+        if (InternalVariables.path != null) {
+            return InternalVariables.path;
+        } else {
+            if (new InternalMethods().returnPath()) {
+                return InternalVariables.path;
+            } else {
+                throw new Exception();
+            }
+        }
+    }
+    
+    /**
+     * Get the space for a desired partition.
+     * 
+     * @param path
+     *            The partition to find the space for.
+     * @return the amount if space found within the desired partition. If the space was not found
+     *         then the value is -1
+     * @throws TimeoutException
+     */
+    public static long getSpace(String path) {
+        InternalVariables.getSpaceFor = path;
+        boolean found = false;
+        String[] commands = { "df " + path };
         try {
-            for (String applet : getBusyBoxApplets()) {
-                if (applet.equals(Applet)) {
-                    return true;
+            sendShell(commands, 0, -1);
+        } catch (Exception e) {
+        }
+
+        RootTools.log("Looking for Space");
+
+        if (InternalVariables.space != null) {
+            RootTools.log("First Method");
+
+            for (String spaceSearch : InternalVariables.space) {
+
+                RootTools.log(spaceSearch);
+
+                if (found) {
+                    return new InternalMethods().getConvertedSpace(spaceSearch);
+                } else if (spaceSearch.equals("used,")) {
+                    found = true;
                 }
             }
-            return false;
-        } catch (Exception e) {
-            RootTools.log(e.toString());
-            return false;
+
+            // Try this way
+            int count = 0, targetCount = 3;
+
+            RootTools.log("Second Method");
+
+            if (InternalVariables.space[0].length() <= 5 ) {
+                targetCount = 2;
+            }
+
+            for (String spaceSearch : InternalVariables.space) {
+
+                RootTools.log(spaceSearch);
+                if (spaceSearch.length() > 0) {
+                    RootTools.log(spaceSearch + ("Valid"));
+                    if (count == targetCount) {
+                        return new InternalMethods().getConvertedSpace(spaceSearch);
+                    }
+                    count++;
+                }
+            }
         }
+        RootTools.log("Returning -1, space could not be determined.");
+        return -1;
     }
 
     /**
-     * @return <code>true</code> if your app has been given root access.
-     * @throws TimeoutException
-     *             if this operation times out. (cannot determine if access is given)
+     * This will return a String that represent the symlink for a specified file.
+     * <p/>
+     * 
+     * @param The
+     *            file to get the Symlink for. (must have absolute path)
+     * 
+     * @return <code>String</code> a String that represent the symlink for a specified file or an
+     *         empty string if no symlink exists.
      */
-    public static boolean isAccessGiven() {
-        try {
-            RootTools.shellDelay = 500;
-            RootTools.log(InternalVariables.TAG, "Checking for Root access");
-            InternalVariables.accessGiven = false;
-            sendShell(new String[] { "id" }, 0, InternalVariables.timeout);
+    public static String getSymlink(File file) {
+        RootTools.log("Looking for Symlink for " + file.toString());
+        if (file.exists()) {
+            RootTools.log("File exists");
 
-            if (InternalVariables.accessGiven) {
-                return true;
-            } else {
-                return false;
+            try {
+                List<String> results = sendShell("ls -l " + file.getAbsolutePath(), InternalVariables.timeout);
+                String[] symlink = results.get(0).split(" ");
+                if (symlink[symlink.length - 2].equals("->")) {
+                    RootTools.log("Symlink found.");
+                    
+                    String final_symlink = "";
+                    if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
+                    {
+                    	//We assume that we need to get the path for this symlink as it is probably not absolute.
+                    	findBinary(symlink[symlink.length - 1]);
+                    	if (RootTools.lastFoundBinaryPaths.size() > 0)
+                    	{
+                    		//We return the first found location.
+                    		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
+                    	}
+                    	else
+                    	{
+                        	//we couldnt find a path, return the symlink by itself.
+                        	final_symlink = symlink[symlink.length - 1];
+                    	}
+                    }
+                    else
+                    {
+                    	final_symlink = symlink[symlink.length - 1];
+                    }
+
+                    return final_symlink;
+                }
+            } catch (Exception e) {
+            	if (RootTools.debugMode)
+            		e.printStackTrace();
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            RootTools.shellDelay = 0;
         }
+
+        RootTools.log("Symlink not found");
+        return "";
     }
+    
+    /**
+     * This will return an ArrayList of the class Symlink. The class Symlink contains the following
+     * property's: path SymplinkPath
+     * <p/>
+     * These will provide you with any Symlinks in the given path.
+     * 
+     * @param The
+     *            path to search for Symlinks.
+     * 
+     * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
+     * @throws Exception
+     *             if we cannot return the Symlinks.
+     */
+    public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
 
-    public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
-        RootTools.log(InternalVariables.TAG, "Preparing Native Tools");
-        InternalVariables.nativeToolsReady = false;
-
-        Installer installer;
-        try {
-            installer = new Installer(context);
-        } catch (IOException ex) {
-            if (debugMode) {
-                ex.printStackTrace();
-            }
-            return false;
+        // this command needs find
+        if (!checkUtil("find")) {
+            throw new Exception();
         }
 
-        if (installer.isBinaryInstalled("nativetools")) {
-            InternalVariables.nativeToolsReady = true;
+        sendShell(new String[] { "find " + path
+                + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, 0, -1);
+        InternalVariables.symlinks = new InternalMethods().getSymLinks();
+        if (InternalVariables.symlinks != null) {
+            return InternalVariables.symlinks;
         } else {
-            InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId,
-                    "nativetools", "700");
+            throw new Exception();
         }
-        return InternalVariables.nativeToolsReady;
     }
-
+    
+    /**
+     * This will return to you a string to be used in your shell commands which will represent the
+     * valid working toolbox with correct permissions. For instance, if Busybox is available it will
+     * return "busybox", if busybox is not available but toolbox is then it will return "toolbox"
+     * 
+     * @return String that indicates the available toolbox to use for accessing applets.
+     */
+    public static String getWorkingToolbox() {
+        if (RootTools.checkUtil("busybox")) {
+            return "busybox";
+        } else if (RootTools.checkUtil("toolbox")) {
+            return "toolbox";
+        } else {
+            return "";
+        }
+    }
+    
     /**
      * Checks if there is enough Space on SDCard
      * 
@@ -880,7 +736,7 @@ public class RootTools {
      *         read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        RootTools.log(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
+        RootTools.log("Checking SDcard size and that it is mounted as RW");
         String status = Environment.getExternalStorageState();
         if (!status.equals(Environment.MEDIA_MOUNTED)) {
             return false;
@@ -893,27 +749,79 @@ public class RootTools {
     }
 
     /**
-     * This will take a path, which can contain the file name as well, and attempt to remount the
-     * underlying partition.
-     * <p/>
-     * For example, passing in the following string:
-     * "/system/bin/some/directory/that/really/would/never/exist" will result in /system ultimately
-     * being remounted. However, keep in mind that the longer the path you supply, the more work
-     * this has to do, and the slower it will run.
+     * Checks whether the toolbox or busybox binary contains a specific util
      * 
-     * @param file
-     *            file path
-     * @param mountType
-     *            mount type: pass in RO (Read only) or RW (Read Write)
-     * @return a <code>boolean</code> which indicates whether or not the partition has been
-     *         remounted as specified.
+     * @param util
+     * @param box
+     *            Should contain "toolbox" or "busybox"
+     * @return true if it contains this util
      */
+    public static boolean hasUtil(final String util, final String box) {
 
-    public static boolean remount(String file, String mountType) {
-        // Recieved a request, get an instance of Remounter
-        Remounter remounter = new Remounter();
-        // send the request.
-        return (remounter.remount(file, mountType));
+        // only for busybox and toolbox
+        if (!(box.equals("toolbox") || box.equals("busybox"))) {
+            return false;
+        }
+
+        try {
+            Result result = new Result() {
+                @Override
+                public void process(String line) throws Exception {
+                    // TODO: blocking shell commands like "toolbox watchprops" makes this stuck
+                    // possible fix could be terminating the running process after one line output
+                    if (box.equals("toolbox")) {
+                        if (line.contains("no such tool")) {
+                            setError(1);
+                        }
+                    } else if (box.equals("busybox")) {
+                        // go through all lines of busybox --list
+                        if (line.contains(util)) {
+                            log("Found util!");
+                            setData(1);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception ex) {
+                    setError(2);
+                }
+
+                @Override
+                public void onComplete(int diag) {
+                }
+
+                @Override
+                public void processError(String arg0) throws Exception {
+                    getProcess().destroy();
+                }
+
+            };
+            if (box.equals("toolbox")) {
+                sendShell(new String[] { "toolbox " + util }, 0, result, false,
+                        InternalVariables.timeout);
+            } else if (box.equals("busybox")) {
+                sendShell(new String[] { "busybox --list" }, 0, result, false,
+                        InternalVariables.timeout);
+            }
+
+            if (result.getError() == 0) {
+                // if data has been set process is running
+                if (result.getData() != null) {
+                    RootTools.log("Box contains " + util + " util!");
+                    return true;
+                } else {
+                    RootTools.log("Box does not contain " + util + " util!");
+                    return false;
+                }
+            } else {
+                RootTools.log("Box does not contain " + util + " util!");
+                return false;
+            }
+        } catch (Exception e) {
+            RootTools.log(e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -964,24 +872,143 @@ public class RootTools {
     public static boolean installBinary(Context context, int sourceId, String binaryName) {
         return installBinary(context, sourceId, binaryName, "700");
     }
-
+    
     /**
-     * Executes binary in a separated process. Before using this method, the binary has to be
-     * installed in /data/data/app.package/files/ using the installBinary method.
+     * This will let you know if an applet is available from BusyBox
+     * <p/>
      * 
-     * @param context
-     *            the current activity's <code>Context</code>
-     * @param binaryName
-     *            name of installed binary
-     * @param parameter
-     *            parameter to append to binary like "-vxf"
+     * @param <code>String</code> The applet to check for.
+     * 
+     * @return <code>true</code> if applet is available, false otherwise.
      */
-    public static void runBinary(Context context, String binaryName, String parameter) {
-        // executes binary as separated thread
-        Runner runner = new Runner(context, binaryName, parameter);
-        runner.start();
+    public static boolean isAppletAvailable(String Applet) {
+        try {
+            for (String applet : getBusyBoxApplets()) {
+                if (applet.equals(Applet)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            RootTools.log(e.toString());
+            return false;
+        }
     }
 
+    /**
+     * @return <code>true</code> if your app has been given root access.
+     * @throws TimeoutException
+     *             if this operation times out. (cannot determine if access is given)
+     */
+    public static boolean isAccessGiven() {
+        try {
+            RootTools.shellDelay = 500;
+            RootTools.log("Checking for Root access");
+            InternalVariables.accessGiven = false;
+            sendShell(new String[] { "id" }, 0, InternalVariables.timeout);
+
+            if (InternalVariables.accessGiven) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            RootTools.shellDelay = 0;
+        }
+    }
+
+    /**
+     * @return <code>true</code> if BusyBox was found.
+     */
+    public static boolean isBusyboxAvailable() {
+        return findBinary("busybox");
+    }
+    
+    public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
+        RootTools.log("Preparing Native Tools");
+        InternalVariables.nativeToolsReady = false;
+
+        Installer installer;
+        try {
+            installer = new Installer(context);
+        } catch (IOException ex) {
+            if (debugMode) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
+
+        if (installer.isBinaryInstalled("nativetools")) {
+            InternalVariables.nativeToolsReady = true;
+        } else {
+            InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId,
+                    "nativetools", "700");
+        }
+        return InternalVariables.nativeToolsReady;
+    }
+    
+    /**
+     * This method can be used to to check if a process is running
+     * 
+     * @param processName
+     *            name of process to check
+     * @return <code>true</code> if process was found
+     * @throws TimeoutException
+     *             (Could not determine if the process is running)
+     */
+    public static boolean isProcessRunning(final String processName) {
+        RootTools.log("Checks if process is running: " + processName);
+
+        boolean processRunning = false;
+        try {
+            Result result = new Result() {
+                @Override
+                public void process(String line) throws Exception {
+                    if (line.contains(processName)) {
+                        setData(1);
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception ex) {
+                    setError(1);
+                }
+
+                @Override
+                public void onComplete(int diag) {
+                }
+
+                @Override
+                public void processError(String arg0) throws Exception {
+                }
+
+            };
+            sendShell(new String[] { "ps" }, 1, result, -1);
+
+            if (result.getError() == 0) {
+                // if data has been set process is running
+                if (result.getData() != null) {
+                    processRunning = true;
+                }
+            }
+        } catch (Exception e) {
+            RootTools.log(e.getMessage());
+        }
+
+        return processRunning;
+    }
+    
+    /**
+     * @return <code>true</code> if su was found.
+     */
+    public static boolean isRootAvailable() {
+        return findBinary("su");
+    }
+    
     /**
      * This method can be used to kill a running process
      * 
@@ -990,7 +1017,7 @@ public class RootTools {
      * @return <code>true</code> if process was found and killed successfully
      */
     public static boolean killProcess(final String processName) {
-        RootTools.log(InternalVariables.TAG, "Killing process " + processName);
+        RootTools.log("Killing process " + processName);
 
         boolean processKilled = false;
         try {
@@ -1057,56 +1084,108 @@ public class RootTools {
 
         return processKilled;
     }
+    
+    /**
+     * This will launch the Android market looking for BusyBox
+     * 
+     * @param activity
+     *            pass in your Activity
+     */
+    public static void offerBusyBox(Activity activity) {
+        RootTools.log("Launching Market for BusyBox");
+        Intent i = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=stericson.busybox"));
+        activity.startActivity(i);
+    }
 
     /**
-     * This method can be used to to check if a process is running
+     * This will launch the Android market looking for BusyBox, but will return the intent fired and
+     * starts the activity with startActivityForResult
      * 
-     * @param processName
-     *            name of process to check
-     * @return <code>true</code> if process was found
-     * @throws TimeoutException
-     *             (Could not determine if the process is running)
+     * @param activity
+     *            pass in your Activity
+     * @param requestCode
+     *            pass in the request code
+     * @return intent fired
      */
-    public static boolean isProcessRunning(final String processName) {
-        RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
+    public static Intent offerBusyBox(Activity activity, int requestCode) {
+        RootTools.log("Launching Market for BusyBox");
+        Intent i = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=stericson.busybox"));
+        activity.startActivityForResult(i, requestCode);
+        return i;
+    }
 
-        boolean processRunning = false;
-        try {
-            Result result = new Result() {
-                @Override
-                public void process(String line) throws Exception {
-                    if (line.contains(processName)) {
-                        setData(1);
-                    }
-                }
+    /**
+     * This will launch the Android market looking for SuperUser
+     * 
+     * @param activity
+     *            pass in your Activity
+     */
+    public static void offerSuperUser(Activity activity) {
+        RootTools.log("Launching Market for SuperUser");
+        Intent i = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=com.noshufou.android.su"));
+        activity.startActivity(i);
+    }
 
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(1);
-                }
+    /**
+     * This will launch the Android market looking for SuperUser, but will return the intent fired
+     * and starts the activity with startActivityForResult
+     * 
+     * @param activity
+     *            pass in your Activity
+     * @param requestCode
+     *            pass in the request code
+     * @return intent fired
+     */
+    public static Intent offerSuperUser(Activity activity, int requestCode) {
+        RootTools.log("Launching Market for SuperUser");
+        Intent i = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=com.noshufou.android.su"));
+        activity.startActivityForResult(i, requestCode);
+        return i;
+    }
 
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                }
-
-            };
-            sendShell(new String[] { "ps" }, 1, result, -1);
-
-            if (result.getError() == 0) {
-                // if data has been set process is running
-                if (result.getData() != null) {
-                    processRunning = true;
-                }
-            }
-        } catch (Exception e) {
-            RootTools.log(e.getMessage());
-        }
-
-        return processRunning;
+    /**
+     * This will open a shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	root
+     * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
+     * 
+     * @throws	IOException 
+     *  
+     */
+    public static Shell openShell(boolean root) throws IOException
+    {
+    	if (root)
+    		return Shell.startRootShell();
+    	else
+    		return Shell.startShell();
+    }
+    
+    /**
+     * This will take a path, which can contain the file name as well, and attempt to remount the
+     * underlying partition.
+     * <p/>
+     * For example, passing in the following string:
+     * "/system/bin/some/directory/that/really/would/never/exist" will result in /system ultimately
+     * being remounted. However, keep in mind that the longer the path you supply, the more work
+     * this has to do, and the slower it will run.
+     * 
+     * @param file
+     *            file path
+     * @param mountType
+     *            mount type: pass in RO (Read only) or RW (Read Write)
+     * @return a <code>boolean</code> which indicates whether or not the partition has been
+     *         remounted as specified.
+     */
+    public static boolean remount(String file, String mountType) {
+        // Recieved a request, get an instance of Remounter
+        Remounter remounter = new Remounter();
+        // send the request.
+        return (remounter.remount(file, mountType));
     }
 
     /**
@@ -1117,10 +1196,45 @@ public class RootTools {
      * @throws TimeoutException
      */
     public static void restartAndroid() {
-        RootTools.log(InternalVariables.TAG, "Restart Android");
+        RootTools.log("Restart Android");
         killProcess("zygote");
     }
 
+    /**
+     * Executes binary in a separated process. Before using this method, the binary has to be
+     * installed in /data/data/app.package/files/ using the installBinary method.
+     * 
+     * @param context
+     *            the current activity's <code>Context</code>
+     * @param binaryName
+     *            name of installed binary
+     * @param parameter
+     *            parameter to append to binary like "-vxf"
+     */
+    public static void runBinary(Context context, String binaryName, String parameter) {
+        // executes binary as separated thread
+        Runner runner = new Runner(context, binaryName, parameter);
+        runner.start();
+    }
+
+    /**
+     * Executes a given command with root access or without depending on the value of the boolean passed.
+     * This will also start a root shell or a standard shell without you having to open it specifically.
+     * 
+     * You will still need to close the shell after you are done using the shell.
+     * 
+     * @param shell
+     *        	The shell to execute the command on, this can be a root shell or a standard shell.
+     *            
+     * @param command
+     *            The command to execute in the shell
+     *            
+     * @throws IOException
+     */
+	public static void runShellCommand(Shell shell, Command command) throws IOException {
+		shell.add(command);
+	}
+	
     /**
      * Sends several shell command as su (attempts to)
      * 
@@ -1269,96 +1383,6 @@ public class RootTools {
         return sendShell(command, null, timeout);
     }
 
-    /**
-     * Get the space for a desired partition.
-     * 
-     * @param path
-     *            The partition to find the space for.
-     * @return the amount if space found within the desired partition. If the space was not found
-     *         then the value is -1
-     * @throws TimeoutException
-     */
-    public static long getSpace(String path) {
-        InternalVariables.getSpaceFor = path;
-        boolean found = false;
-        String[] commands = { "df " + path };
-        try {
-            sendShell(commands, 0, -1);
-        } catch (Exception e) {
-        }
-
-        RootTools.log("Looking for Space");
-
-        if (InternalVariables.space != null) {
-            RootTools.log("First Method");
-
-            for (String spaceSearch : InternalVariables.space) {
-
-                RootTools.log(spaceSearch);
-
-                if (found) {
-                    return new InternalMethods().getConvertedSpace(spaceSearch);
-                } else if (spaceSearch.equals("used,")) {
-                    found = true;
-                }
-            }
-
-            // Try this way
-            int count = 0, targetCount = 3;
-
-            RootTools.log("Second Method");
-
-            if (InternalVariables.space[0].length() <= 5 ) {
-                targetCount = 2;
-            }
-
-            for (String spaceSearch : InternalVariables.space) {
-
-                RootTools.log(spaceSearch);
-                if (spaceSearch.length() > 0) {
-                    RootTools.log(spaceSearch + ("Valid"));
-                    if (count == targetCount) {
-                        return new InternalMethods().getConvertedSpace(spaceSearch);
-                    }
-                    count++;
-                }
-            }
-        }
-        RootTools.log("Returning -1, space could not be determined.");
-        return -1;
-    }
-
-    /**
-     * This method allows you to output debug messages only when debugging is on. This will allow
-     * you to add a debug option to your app, which by default can be left off for performance.
-     * However, when you need debugging information, a simple switch can enable it and provide you
-     * with detailed logging.
-     * <p/>
-     * This method handles whether or not to log the information you pass it depending whether or
-     * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
-     * yourself.
-     * 
-     * @param TAG
-     *            Optional parameter to define the tag that the Log will use.
-     * @param msg
-     *            The message to output.
-     */
-    public static void log(String msg) {
-        log(null, msg);
-    }
-
-    public static void log(String TAG, String msg) {
-        if (msg != null && !msg.equals("")) {
-            if (debugMode) {
-                if (TAG != null) {
-                    Log.d(TAG, msg);
-                } else {
-                    Log.d(InternalVariables.TAG, msg);
-                }
-            }
-        }
-    }
-
     public static abstract class Result implements IResult {
         private Process process = null;
         private Serializable data = null;
@@ -1397,6 +1421,63 @@ public class RootTools {
 
         public int getError() {
             return error;
+        }
+    }
+    
+    
+    /**
+     * This method allows you to output debug messages only when debugging is on. This will allow
+     * you to add a debug option to your app, which by default can be left off for performance.
+     * However, when you need debugging information, a simple switch can enable it and provide you
+     * with detailed logging.
+     * <p/>
+     * This method handles whether or not to log the information you pass it depending whether or
+     * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
+     * yourself.
+     * 
+     * @param TAG
+     *            Optional parameter to define the tag that the Log will use.
+     * @param msg
+     *            The message to output.
+     *            
+     * @param type
+     * 			  The type of log, 1 for verbose, 2 for error, 3 for debug
+     * 
+     * @param exception
+     * 			  The exception that was thrown (Needed for errors)
+     */
+    public static void log(String msg) {
+        log(null, msg, 1, null);
+    }
+    
+    public static void log(String TAG, String msg) {
+        log(TAG, msg, 1, null);
+    }
+
+    public static void log(String msg, int type, Exception e) {
+        log(null, msg, type, e);
+    }
+
+    public static void log(String TAG, String msg, int type, Exception e) {
+        if (msg != null && !msg.equals("")) {
+            if (debugMode) {
+                if (TAG == null) {
+                	TAG = InternalVariables.TAG;
+                }
+                
+            	switch (type)
+            	{
+            	case 1:
+                    Log.v(TAG, msg);
+                    break;
+            	case 2:
+                    Log.e(TAG, msg, e);
+                    break;
+            	case 3:
+                    Log.d(TAG, msg);
+                    break;
+            	}
+            }
         }
     }
 }

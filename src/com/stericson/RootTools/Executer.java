@@ -67,12 +67,11 @@ class Executer {
 	 * @throws IOException
 	 * @throws TimeoutException 
 	 */
-	List<String> sendShell(String[] commands, int sleepTime,
+	synchronized List<String> sendShell(String[] commands, int sleepTime,
 			Result result, boolean useRoot, int timeout) throws IOException,
 			RootToolsException, TimeoutException {
 
-		RootTools.log(InternalVariables.TAG, "Sending " + commands.length
-				+ " shell command" + (commands.length > 1 ? "s" : ""));
+		RootTools.log("Sending " + commands.length + " shell command" + (commands.length > 1 ? "s" : ""));
 
         Worker worker = new Worker(this, commands, sleepTime, result, useRoot);
         worker.start();
@@ -187,16 +186,16 @@ class Executer {
 						if (commands[0].equals("id")) {
 		                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
 		                    for (String id : ID) {
-	                            RootTools.log(InternalVariables.TAG, id);
+	                            RootTools.log(id);
 
 		                        if (id.toLowerCase().contains("uid=0")) {
 		                            InternalVariables.accessGiven = true;
-		                            RootTools.log(InternalVariables.TAG, "Access Given");
+		                            RootTools.log("Access Given");
 		                            break;
 		                        }
 		                    }
 		                    if (!InternalVariables.accessGiven) {
-		                        RootTools.log(InternalVariables.TAG, "Access Denied?");
+		                        RootTools.log("Access Denied?");
 		                    }		                    
 		                }
 		                if (commands[0].equals("busybox")) {
