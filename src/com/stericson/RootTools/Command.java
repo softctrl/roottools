@@ -35,29 +35,31 @@ public abstract class Command {
 	final String command[];
 	boolean finished = false;
 	int exitCode;
+	int id;
 
-	public Command(String... command) {
+	public Command(int id, String... command) {
 		this.command = command;
+		this.id = id;
 	}
 
 	public void writeCommand(OutputStream out) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < command.length; i++) {
 			sb.append(command[i]);
-			if (i + 1 == command.length)
-				sb.append('\n');
-			else
-				sb.append(' ');
+			sb.append('\n');
 		}
+		RootTools.log("Sending command(s): " + sb.toString());
 		out.write(sb.toString().getBytes());
 	}
 
-	public abstract void output(String line);
+	public abstract void output(int id, String line);
+	public abstract void commandFinished(int id);
 
 	public void exitCode(int code) {
 		synchronized (this) {
 			exitCode = code;
 			finished = true;
+			commandFinished(id);
 			this.notifyAll();
 		}
 	}
@@ -70,5 +72,14 @@ public abstract class Command {
 			}
 		}
 		return exitCode;
+	}
+	
+	// waits for this command to finish and returns the exit code
+	public void waitForFinish() throws InterruptedException {
+		synchronized (this) {
+			while (!finished) {
+				this.wait();
+			}
+		}
 	}
 }

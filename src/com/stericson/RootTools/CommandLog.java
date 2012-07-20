@@ -31,12 +31,19 @@ package com.stericson.RootTools;
 
 public class CommandLog extends Command {
 
-	public CommandLog(String... command) {
-		super(command);
+	public CommandLog(int id, String... command) {
+		super(id, command);
 	}
 
 	@Override
-	public void output(String line) {
+	public void output(int id, String line) {
 		RootTools.log("Command", line);
+	}
+
+	@Override
+	public void commandFinished(int id)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

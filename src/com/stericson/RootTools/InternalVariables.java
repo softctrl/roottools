@@ -34,8 +34,12 @@ class InternalVariables {
     // # Internal Variables #
     // ----------------------
 
+	//Constants
     // Version numbers should be maintained here.
     protected static String TAG = "RootTools v1.7.1";
+    protected static int timeout = 10000;
+    protected static int FPS = 1;
+    
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;
     protected static String[] space;
@@ -44,7 +48,7 @@ class InternalVariables {
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
     protected static ArrayList<Symlink> symlinks;
-    protected static int timeout = 10000;
+
 
     // regex to get pid out of ps line, example:
     // root 2611 0.0 0.0 19408 2104 pts/2 S 13:41 0:00 bash

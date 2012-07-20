@@ -110,7 +110,35 @@ public class SanityCheckRootTools extends Activity {
                 return;
             }
             */
+            
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing Remount");
+            boolean remountResult = RootTools.remount("/system", "rw");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Remounting System as RW ]\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, remountResult + " k\n\n");
 
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing CheckUtil");
+            boolean checkresult = RootTools.checkUtil("busybox");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox is setup ]\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, checkresult + " k\n\n");
+
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getFilePermissionsSymlinks");
+            Permissions permissions = RootTools.getFilePermissionsSymlinks("/system/bin/busybox");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox permissions and symlink ]\n");
+            
+            if (permissions != null)
+            {
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Symlink: " + permissions.getSymlink() + " k\n\n");
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Group Permissions: " + permissions.getGroupPermissions() + " k\n\n");
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Owner Permissions: " + permissions.getOtherPermissions() + " k\n\n");
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Permissions: " + permissions.getPermissions() + " k\n\n");
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Type: " + permissions.getType() + " k\n\n");
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "User Permissions: " + permissions.getUserPermissions() + " k\n\n");
+            }
+            else
+            {
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "Permissions == null k\n\n");
+            }
+            
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing df");
             long spaceValue = RootTools.getSpace("/data");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking /data partition size]\n");

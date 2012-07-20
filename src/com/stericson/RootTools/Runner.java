@@ -27,6 +27,8 @@ import java.io.IOException;
 import android.content.Context;
 import android.util.Log;
 
+import com.stericson.RootTools.InternalMethods.InternalCommand;
+
 class Runner extends Thread {
 
     private static final String LOG_TAG = "RootTools::Runner";
@@ -44,7 +46,6 @@ class Runner extends Thread {
     public void run() {
         String privateFilesPath = null;
         try {
-            // /data/data/app.package/files/
             privateFilesPath = context.getFilesDir().getCanonicalPath();
         } catch (IOException e) {
             if (RootTools.debugMode) {
@@ -54,7 +55,9 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	RootTools.sendShell(new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, 0, -1);
+            	InternalCommand command = new InternalMethods.InternalCommand(0, privateFilesPath + "/" + binaryName + " " + parameter);
+            	Shell.startRootShell().add(command);
+            	command.waitForFinish();
 			} catch (Exception e) {}
         }
     }

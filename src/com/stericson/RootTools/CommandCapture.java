@@ -31,17 +31,24 @@ package com.stericson.RootTools;
 public class CommandCapture extends Command {
 	private StringBuilder sb = new StringBuilder();
 
-	public CommandCapture(String... command) {
-		super(command);
+	public CommandCapture(int id, String... command) {
+		super(id, command);
 	}
 
 	@Override
-	public void output(String line) {
+	public void output(int id, String line) {
 		sb.append(line).append('\n');
 	}
 
 	@Override
 	public String toString() {
 		return sb.toString();
+	}
+
+	@Override
+	public void commandFinished(int id)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

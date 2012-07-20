@@ -107,26 +107,8 @@ public class RootTools {
      * @return boolean to indicate whether the binary is installed and has appropriate permissions.
      */
     public static boolean checkUtil(String util) {
-        if (RootTools.findBinary(util)) {
-
-        	List<String> binaryPaths = new ArrayList<String>();
-        	binaryPaths.addAll(RootTools.lastFoundBinaryPaths);
-        	
-            for (String path : binaryPaths) {
-                Permissions permissions = RootTools.getFilePermissionsSymlinks(path + "/" + util);
-
-                if (permissions != null) {
-                    int permission = permissions.getPermissions();
-
-                    if (permission == 755 || permission == 777 || permission == 775) {
-                        utilPath = path + "/" + util;
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+    	
+		return InternalMethods.checkUtil(util);
     }
 
     /**
@@ -347,13 +329,14 @@ public class RootTools {
      * 
      */
     public static boolean findBinary(String binaryName) {
-
+    	
         boolean found = false;
         lastFoundBinaryPaths.clear();
 
     	List<String> list = new ArrayList<String>();
 
         RootTools.log("Checking for " + binaryName);
+        
         try {
         	Set<String> paths = getPath();
         	if (paths.size() > 0)
@@ -453,50 +436,8 @@ public class RootTools {
      * 
      */
     public static Permissions getFilePermissionsSymlinks(String file) {
-        RootTools.log("Checking permissions for " + file);
-        File f = new File(file);
-        if (f.exists()) {
-            String symlink_final = "";
-            Permissions permissions;
-            log(file + " was found.");
-            try {
-                List<String> results = sendShell(new String[] { "ls -l " + file,
-                        "busybox ls -l " + file, "/system/bin/failsafe/toolbox ls -l " + file,
-                        "toolbox ls -l " + file }, 0, InternalVariables.timeout);
-                for (String line : results) {
-                    String[] lineArray = line.split(" ");
-                    if (lineArray[0].length() != 10) {
-                        break;
-                    }
-
-                    RootTools.log("Line " + line);
-
-                    try {
-                        String[] symlink = line.split(" ");
-                        if (symlink[symlink.length - 2].equals("->")) {
-                            RootTools.log("Symlink found.");
-                            symlink_final = symlink[symlink.length - 1];
-                        }
-                    } catch (Exception e) {
-                    }
-
-                    try {
-                        permissions = new InternalMethods().getPermissions(line);
-                        if (permissions != null) {
-                            permissions.setSymlink(symlink_final);
-                            return permissions;
-                        }
-                    } catch (Exception e) {
-                        RootTools.log(e.getMessage());
-                    }
-                }
-            } catch (Exception e) {
-                RootTools.log(e.getMessage());
-                return null;
-            }
-        }
-
-        return null;
+    	
+		return InternalMethods.getFilePermissionsSymlinks(file);
     }
     
     /**
@@ -1017,72 +958,9 @@ public class RootTools {
      * @return <code>true</code> if process was found and killed successfully
      */
     public static boolean killProcess(final String processName) {
-        RootTools.log("Killing process " + processName);
 
-        boolean processKilled = false;
-        try {
-            Result result = new Result() {
-                @Override
-                public void process(String line) throws Exception {
-                    if (line.contains(processName)) {
-                        Matcher psMatcher = InternalVariables.psPattern.matcher(line);
-
-                        try {
-                            if (psMatcher.find()) {
-                                String pid = psMatcher.group(1);
-                                // concatenate to existing pids, to use later in kill
-                                if (getData() != null) {
-                                    setData(getData() + " " + pid);
-                                } else {
-                                    setData(pid);
-                                }
-                                RootTools.log("Found pid: " + pid);
-                            } else {
-                                RootTools.log("Matching in ps command failed!");
-                            }
-                        } catch (Exception e) {
-                            RootTools.log("Error with regex!");
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(1);
-                }
-
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                }
-
-            };
-            sendShell(new String[] { "ps" }, 1, result, -1);
-
-            if (result.getError() == 0) {
-                // get all pids in one string, created in process method
-                String pids = (String) result.getData();
-
-                // kill processes
-                if (pids != null) {
-                    try {
-                        // example: kill -9 1234 1222 5343
-                        sendShell(new String[] { "kill -9 " + pids }, 1, -1);
-                        processKilled = true;
-                    } catch (Exception e) {
-                        RootTools.log(e.getMessage());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            RootTools.log(e.getMessage());
-        }
-
-        return processKilled;
+		//TODO
+		return InternalMethods.killProcess(processName);
     }
     
     /**
@@ -1182,7 +1060,7 @@ public class RootTools {
      *         remounted as specified.
      */
     public static boolean remount(String file, String mountType) {
-        // Recieved a request, get an instance of Remounter
+    	// Recieved a request, get an instance of Remounter
         Remounter remounter = new Remounter();
         // send the request.
         return (remounter.remount(file, mountType));
@@ -1212,8 +1090,7 @@ public class RootTools {
      *            parameter to append to binary like "-vxf"
      */
     public static void runBinary(Context context, String binaryName, String parameter) {
-        // executes binary as separated thread
-        Runner runner = new Runner(context, binaryName, parameter);
+		Runner runner = new Runner(context, binaryName, parameter);
         runner.start();
     }
 
@@ -1447,11 +1324,11 @@ public class RootTools {
      * 			  The exception that was thrown (Needed for errors)
      */
     public static void log(String msg) {
-        log(null, msg, 1, null);
+        log(null, msg, 3, null);
     }
     
     public static void log(String TAG, String msg) {
-        log(TAG, msg, 1, null);
+        log(TAG, msg, 3, null);
     }
 
     public static void log(String msg, int type, Exception e) {

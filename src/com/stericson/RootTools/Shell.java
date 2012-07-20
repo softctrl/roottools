@@ -29,6 +29,7 @@
 package com.stericson.RootTools;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,7 +41,7 @@ import android.os.SystemClock;
 class Shell {
 	private final Process proc;
 	private final DataInputStream in;
-	private final OutputStream out;
+	private final DataOutputStream out;
 	private final List<Command> commands = new ArrayList<Command>();
 	private boolean close = false;
 	private static final String token = "F*D^W@#FGF";
@@ -106,13 +107,39 @@ class Shell {
 		closeRootShell();
 	}
 	
+	public static boolean isShellOpen()
+	{
+		if (shell == null)
+			return false;
+		else
+			return true;
+	}
+	
+	public static boolean isRootShellOpen()
+	{
+		if (rootShell == null)
+			return false;
+		else
+			return true;
+	}
+	
+	public static boolean isAnyShellOpen()
+	{
+		if (shell != null)
+			return true;
+		else if (rootShell != null)
+			return true;
+		else
+			return false;
+	}
+	
 	public Shell(String cmd) throws IOException {
 
 		RootTools.log("Starting shell: " + cmd);
 
 		proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
 		in = new DataInputStream(proc.getInputStream());
-		out = proc.getOutputStream();
+		out = new DataOutputStream(proc.getOutputStream());
 
 		out.write("echo Started\n".getBytes());
 		out.flush();
@@ -141,7 +168,7 @@ class Shell {
 		try {
 			int write = 0;
 			while (true) {
-				OutputStream out;
+				DataOutputStream out;
 				synchronized (commands) {
 					while (!close && write >= commands.size()) {
 						commands.wait();
@@ -197,7 +224,7 @@ class Shell {
 
 			int pos = line.indexOf(token);
 			if (pos > 0)
-				command.output(line.substring(0, pos));
+				command.output(command.id, line.substring(0, pos));
 			if (pos >= 0) {
 				line = line.substring(pos);
 				String fields[] = line.split(" ");
@@ -209,7 +236,7 @@ class Shell {
 					continue;
 				}
 			}
-			command.output(line);
+			command.output(command.id, line);
 		}
 		RootTools.log("Read all output");
 		proc.waitFor();
