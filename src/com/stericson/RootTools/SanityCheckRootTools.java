@@ -111,6 +111,15 @@ public class SanityCheckRootTools extends Activity {
             }
             */
 
+            try
+			{
+				Shell.startRootShell();
+			}
+			catch (IOException e2)
+			{
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
             boolean result;
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing Find Binary");
@@ -266,7 +275,7 @@ public class SanityCheckRootTools extends Activity {
                                 "ls",
                                 "echo \"* DATE:\"",
                                 "date"},
-                        2000,
+                        0,
                         result2,
                         InternalVariables.timeout
                 );
