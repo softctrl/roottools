@@ -121,6 +121,17 @@ public class RootTools {
     {
     	Shell.closeAll();
     }
+
+    /**
+     * This will close the custom shell that you opened.
+     * 
+     * @throws IOException 
+     *  
+     */
+    public static void closeCustomShell() throws IOException
+    {
+		Shell.closeCustomShell();
+    }
     
     /**
      * This will close either the root shell or the standard shell depending on what you specify.
@@ -154,72 +165,9 @@ public class RootTools {
      *            only permissions are preserved
      * @return true if it was successfully copied
      */
-    public static boolean copyFile(String source, String destination, boolean remountAsRw,
-            boolean preserveFileAttributes) {
-        boolean result = true;
-
-        try {
-            // mount destination as rw before writing to it
-            if (remountAsRw) {
-                remount(destination, "RW");
-            }
-
-            // if cp is available and has appropriate permissions
-            if (checkUtil("cp")) {
-                log("cp command is available!");
-
-                if (preserveFileAttributes) {
-                    sendShell("cp -fp " + source + " " + destination, InternalVariables.timeout);
-                } else {
-                    sendShell("cp -f " + source + " " + destination, InternalVariables.timeout);
-                }
-            } else {
-                if (checkUtil("busybox") && hasUtil("cp", "busybox")) {
-                    log("busybox cp command is available!");
-
-                    if (preserveFileAttributes) {
-                        sendShell("busybox cp -fp " + source + " " + destination,
-                                InternalVariables.timeout);
-                    } else {
-                        sendShell("busybox cp -f " + source + " " + destination,
-                                InternalVariables.timeout);
-                    }
-                } else { // if cp is not available use cat
-                    // if cat is available and has appropriate permissions
-                    if (checkUtil("cat")) {
-                        log("cp is not available, use cat!");
-
-                        int filePermission = -1;
-                        if (preserveFileAttributes) {
-                            // get permissions of source before overwriting
-                            Permissions permissions = getFilePermissionsSymlinks(source);
-                            filePermission = permissions.permissions;
-                        }
-
-                        // copy with cat
-                        sendShell("cat " + source + " > " + destination, InternalVariables.timeout);
-
-                        if (preserveFileAttributes) {
-                            // set premissions of source to destination
-                            sendShell("chmod " + filePermission + " " + destination,
-                                    InternalVariables.timeout);
-                        }
-                    } else {
-                        result = false;
-                    }
-                }
-            }
-
-            // mount destination back to ro
-            if (remountAsRw) {
-                remount(destination, "RO");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = false;
-        }
-
-        return result;
+    public static boolean copyFile(String source, String destination, boolean remountAsRw, 
+    		boolean preserveFileAttributes) {
+        return InternalMethods.copyFile(source, destination, remountAsRw, preserveFileAttributes);
     }
     
     /**
@@ -235,22 +183,7 @@ public class RootTools {
      *            RootTools.getWorkingToolbox()
      */
     public static void fixUtil(String util, String utilPath) {
-        try {
-            RootTools.remount("/system", "rw");
-
-            if (RootTools.findBinary(util)) {
-                for (String path : RootTools.lastFoundBinaryPaths)
-                    RootTools.sendShell(utilPath + " rm " + path + "/" + util,
-                            InternalVariables.timeout);
-
-                RootTools.sendShell(new String[] {
-                        utilPath + " ln -s " + utilPath + " /system/bin/" + util,
-                        utilPath + " chmod 0755 /system/bin/" + util }, 10,
-                        InternalVariables.timeout);
-            }
-
-            RootTools.remount("/system", "ro");
-        } catch (Exception e) {}
+    	InternalMethods.fixUtil(util, utilPath);
     }
     
     /**
@@ -269,55 +202,9 @@ public class RootTools {
      *         exceptions.
      */
     public static boolean fixUtils(String[] utils) throws Exception {
-
-        for (String util : utils) {
-            if (!checkUtil(util)) {
-                if (checkUtil("busybox")) {
-                    if (hasUtil(util, "busybox")) {
-                        fixUtil(util, utilPath);
-                    }
-                } else {
-                    if (checkUtil("toolbox")) {
-                        if (hasUtil(util, "toolbox")) {
-                            fixUtil(util, utilPath);
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
+    	return InternalMethods.fixUtils(utils);
     }
-    
-    /**
-     * This method will return the inode number of a file. This method is dependent on having a version of
-     * ls that supports the -i parameter. 
-     * 
-     *  @param String path to the file that you wish to return the inode number
-     *  
-     *  @return String The inode number for this file or "" if the inode number could not be found.
-     */
-    public static String getInode(String file)
-    {
-    	try
-    	{
-	    	for (String line : RootTools.sendShell("/data/local/ls -i " + file, -1))
-	    	{
-	    		if (Character.isDigit((char) line.trim().substring(0, 1).toCharArray()[0]))
-	    		{
-	    			return line.trim().split(" ")[0].toString();
-	    		}
-	    	}
-	    	return "";
-    	}
-    	catch (Exception ignore)
-    	{
-    		return "";
-    	}
-    }
-    
+        
     /**
      * 
      * @param binaryName
@@ -329,82 +216,14 @@ public class RootTools {
      * 
      */
     public static boolean findBinary(String binaryName) {
-    	
-        boolean found = false;
-        lastFoundBinaryPaths.clear();
-
-    	List<String> list = new ArrayList<String>();
-
-        RootTools.log("Checking for " + binaryName);
-        
-        try {
-        	Set<String> paths = getPath();
-        	if (paths.size() > 0)
-        	{
-	            for (String path : paths) {
-	                File file = new File(path + "/" + binaryName);
-	                if (file.exists()) {
-	                    log(binaryName + " was found here: " + path);
-	                    list.add(path);
-	                    found = true;
-	                } else {
-	                    log(binaryName + " was NOT found here: " + path);
-	                }
-	            }
-        	}
-        } catch (TimeoutException ex) {
-            RootTools.log("TimeoutException!!!");
-        } catch (Exception e) {
-            RootTools.log(binaryName + " was not found, more information MAY be available with Debugging on.");
-        }
-
-        if (!found) {
-            RootTools.log("Trying second method");
-            RootTools.log("Checking for " + binaryName);
-            String[] places = { "/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
-                    "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
-            for (String where : places) {
-                File file = new File(where + binaryName);
-                if (file.exists()) {
-                    log(binaryName + " was found here: " + where);
-                    list.add(where);
-                    found = true;
-                } else {
-                    log(binaryName + " was NOT found here: " + where);
-                }
-            }
-        }
-
-        if (RootTools.debugMode)
-        {        	
-        	for (String path : list)
-        	{
-            	log("Paths: " + path);	
-        	}        	
-        }
-        
-        Collections.reverse(list);
-        
-        RootTools.lastFoundBinaryPaths.addAll(list);
-        
-        return found;
+    	return InternalMethods.findBinary(binaryName);
     }
     
     /**
      * @return BusyBox version is found, "" if not found.
      */
     public static String getBusyBoxVersion() {
-        RootTools.log("Getting BusyBox Version");
-        InternalVariables.busyboxVersion = null;
-        try {
-            sendShell(new String[] { "busybox" }, 0, InternalVariables.timeout);
-        } catch (TimeoutException ex) {
-            RootTools.log("TimeoutException!!!");
-        } catch (Exception e) {
-            RootTools.log("BusyBox was not found, more information MAY be available with Debugging on.");
-            return "";
-        }
-        return InternalVariables.busyboxVersion;
+        return InternalMethods.getBusyBoxVersion();
     }
 
     /**
@@ -417,12 +236,7 @@ public class RootTools {
      *             if we cannot return the applets available.
      */
     public static List<String> getBusyBoxApplets() throws Exception {
-        List<String> commands = sendShell("busybox --list", InternalVariables.timeout);
-        if (commands != null) {
-            return commands;
-        } else {
-            throw new Exception();
-        }
+        return InternalMethods.getBusyBoxApplets();
     }
     
     /**
@@ -436,10 +250,22 @@ public class RootTools {
      * 
      */
     public static Permissions getFilePermissionsSymlinks(String file) {
-    	
 		return InternalMethods.getFilePermissionsSymlinks(file);
     }
     
+    /**
+     * This method will return the inode number of a file. This method is dependent on having a version of
+     * ls that supports the -i parameter. 
+     * 
+     *  @param String path to the file that you wish to return the inode number
+     *  
+     *  @return String The inode number for this file or "" if the inode number could not be found.
+     */
+    public static String getInode(String file)
+    {
+    	return InternalMethods.getInode(file);
+    }
+
     /**
      * This will return an ArrayList of the class Mount. The class mount contains the following
      * property's: device mountPoint type flags
@@ -451,12 +277,7 @@ public class RootTools {
      *             if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        InternalVariables.mounts = new InternalMethods().getMounts();
-        if (InternalVariables.mounts != null) {
-            return InternalVariables.mounts;
-        } else {
-            throw new Exception();
-        }
+        return InternalMethods.getMounts();
     }
     
     /**
@@ -469,23 +290,7 @@ public class RootTools {
      *             if we cannot determine how the mount is mounted.
      */
     public static String getMountedAs(String path) throws Exception {
-        InternalVariables.mounts = new InternalMethods().getMounts();
-        if (InternalVariables.mounts != null) {
-        	for (Mount mount : InternalVariables.mounts)
-        	{
-        		if (path.contains(mount.getMountPoint().getAbsolutePath()))
-        		{
-        			log((String) mount.getFlags().toArray()[0]);
-        			return (String) mount.getFlags().toArray()[0];
-        		}
-        	}
-        	
-        	throw new Exception();
-        } 
-        else 
-        {
-            throw new Exception();
-        }
+        return InternalMethods.getMountedAs(path);
     }
     
     /**
@@ -496,15 +301,7 @@ public class RootTools {
      *             if we cannot return the $PATH variable
      */
     public static Set<String> getPath() throws Exception {
-        if (InternalVariables.path != null) {
-            return InternalVariables.path;
-        } else {
-            if (new InternalMethods().returnPath()) {
-                return InternalVariables.path;
-            } else {
-                throw new Exception();
-            }
-        }
+        return InternalMethods.getPath();
     }
     
     /**
@@ -517,53 +314,7 @@ public class RootTools {
      * @throws TimeoutException
      */
     public static long getSpace(String path) {
-        InternalVariables.getSpaceFor = path;
-        boolean found = false;
-        String[] commands = { "df " + path };
-        try {
-            sendShell(commands, 0, -1);
-        } catch (Exception e) {
-        }
-
-        RootTools.log("Looking for Space");
-
-        if (InternalVariables.space != null) {
-            RootTools.log("First Method");
-
-            for (String spaceSearch : InternalVariables.space) {
-
-                RootTools.log(spaceSearch);
-
-                if (found) {
-                    return new InternalMethods().getConvertedSpace(spaceSearch);
-                } else if (spaceSearch.equals("used,")) {
-                    found = true;
-                }
-            }
-
-            // Try this way
-            int count = 0, targetCount = 3;
-
-            RootTools.log("Second Method");
-
-            if (InternalVariables.space[0].length() <= 5 ) {
-                targetCount = 2;
-            }
-
-            for (String spaceSearch : InternalVariables.space) {
-
-                RootTools.log(spaceSearch);
-                if (spaceSearch.length() > 0) {
-                    RootTools.log(spaceSearch + ("Valid"));
-                    if (count == targetCount) {
-                        return new InternalMethods().getConvertedSpace(spaceSearch);
-                    }
-                    count++;
-                }
-            }
-        }
-        RootTools.log("Returning -1, space could not be determined.");
-        return -1;
+        return InternalMethods.getSpace(path);
     }
 
     /**
@@ -577,47 +328,7 @@ public class RootTools {
      *         empty string if no symlink exists.
      */
     public static String getSymlink(File file) {
-        RootTools.log("Looking for Symlink for " + file.toString());
-        if (file.exists()) {
-            RootTools.log("File exists");
-
-            try {
-                List<String> results = sendShell("ls -l " + file.getAbsolutePath(), InternalVariables.timeout);
-                String[] symlink = results.get(0).split(" ");
-                if (symlink[symlink.length - 2].equals("->")) {
-                    RootTools.log("Symlink found.");
-                    
-                    String final_symlink = "";
-                    if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
-                    {
-                    	//We assume that we need to get the path for this symlink as it is probably not absolute.
-                    	findBinary(symlink[symlink.length - 1]);
-                    	if (RootTools.lastFoundBinaryPaths.size() > 0)
-                    	{
-                    		//We return the first found location.
-                    		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
-                    	}
-                    	else
-                    	{
-                        	//we couldnt find a path, return the symlink by itself.
-                        	final_symlink = symlink[symlink.length - 1];
-                    	}
-                    }
-                    else
-                    {
-                    	final_symlink = symlink[symlink.length - 1];
-                    }
-
-                    return final_symlink;
-                }
-            } catch (Exception e) {
-            	if (RootTools.debugMode)
-            		e.printStackTrace();
-            }
-        }
-
-        RootTools.log("Symlink not found");
-        return "";
+    	return InternalMethods.getSymlink(file);
     }
     
     /**
@@ -634,20 +345,7 @@ public class RootTools {
      *             if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-
-        // this command needs find
-        if (!checkUtil("find")) {
-            throw new Exception();
-        }
-
-        sendShell(new String[] { "find " + path
-                + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;" }, 0, -1);
-        InternalVariables.symlinks = new InternalMethods().getSymLinks();
-        if (InternalVariables.symlinks != null) {
-            return InternalVariables.symlinks;
-        } else {
-            throw new Exception();
-        }
+    	return InternalMethods.getSymlinks(path);
     }
     
     /**
@@ -658,13 +356,7 @@ public class RootTools {
      * @return String that indicates the available toolbox to use for accessing applets.
      */
     public static String getWorkingToolbox() {
-        if (RootTools.checkUtil("busybox")) {
-            return "busybox";
-        } else if (RootTools.checkUtil("toolbox")) {
-            return "toolbox";
-        } else {
-            return "";
-        }
+        return InternalMethods.getWorkingToolbox();
     }
     
     /**
@@ -677,16 +369,7 @@ public class RootTools {
      *         read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        RootTools.log("Checking SDcard size and that it is mounted as RW");
-        String status = Environment.getExternalStorageState();
-        if (!status.equals(Environment.MEDIA_MOUNTED)) {
-            return false;
-        }
-        File path = Environment.getExternalStorageDirectory();
-        StatFs stat = new StatFs(path.getPath());
-        long blockSize = stat.getBlockSize();
-        long availableBlocks = stat.getAvailableBlocks();
-        return (updateSize < availableBlocks * blockSize);
+        return InternalMethods.hasEnoughSpaceOnSdCard(updateSize);
     }
 
     /**
@@ -698,71 +381,8 @@ public class RootTools {
      * @return true if it contains this util
      */
     public static boolean hasUtil(final String util, final String box) {
-
-        // only for busybox and toolbox
-        if (!(box.equals("toolbox") || box.equals("busybox"))) {
-            return false;
-        }
-
-        try {
-            Result result = new Result() {
-                @Override
-                public void process(String line) throws Exception {
-                    // TODO: blocking shell commands like "toolbox watchprops" makes this stuck
-                    // possible fix could be terminating the running process after one line output
-                    if (box.equals("toolbox")) {
-                        if (line.contains("no such tool")) {
-                            setError(1);
-                        }
-                    } else if (box.equals("busybox")) {
-                        // go through all lines of busybox --list
-                        if (line.contains(util)) {
-                            log("Found util!");
-                            setData(1);
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(2);
-                }
-
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                    getProcess().destroy();
-                }
-
-            };
-            if (box.equals("toolbox")) {
-                sendShell(new String[] { "toolbox " + util }, 0, result, false,
-                        InternalVariables.timeout);
-            } else if (box.equals("busybox")) {
-                sendShell(new String[] { "busybox --list" }, 0, result, false,
-                        InternalVariables.timeout);
-            }
-
-            if (result.getError() == 0) {
-                // if data has been set process is running
-                if (result.getData() != null) {
-                    RootTools.log("Box contains " + util + " util!");
-                    return true;
-                } else {
-                    RootTools.log("Box does not contain " + util + " util!");
-                    return false;
-                }
-            } else {
-                RootTools.log("Box does not contain " + util + " util!");
-                return false;
-            }
-        } catch (Exception e) {
-            RootTools.log(e.getMessage());
-            return false;
-        }
+    	//TODO Convert this to use the new shell.
+    	return InternalMethods.hasUtil(util, box);
     }
 
     /**
@@ -782,18 +402,7 @@ public class RootTools {
      *         file.
      */
     public static boolean installBinary(Context context, int sourceId, String destName, String mode) {
-        Installer installer;
-
-        try {
-            installer = new Installer(context);
-        } catch (IOException ex) {
-            if (debugMode) {
-                ex.printStackTrace();
-            }
-            return false;
-        }
-
-        return (installer.installBinary(sourceId, destName, mode));
+        return InternalMethods.installBinary(context, sourceId, destName, mode);
     }
 
     /**
@@ -823,17 +432,7 @@ public class RootTools {
      * @return <code>true</code> if applet is available, false otherwise.
      */
     public static boolean isAppletAvailable(String Applet) {
-        try {
-            for (String applet : getBusyBoxApplets()) {
-                if (applet.equals(Applet)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (Exception e) {
-            RootTools.log(e.toString());
-            return false;
-        }
+        return InternalMethods.isAppletAvailable(Applet);
     }
 
     /**
@@ -842,24 +441,7 @@ public class RootTools {
      *             if this operation times out. (cannot determine if access is given)
      */
     public static boolean isAccessGiven() {
-        try {
-            RootTools.shellDelay = 500;
-            RootTools.log("Checking for Root access");
-            InternalVariables.accessGiven = false;
-            sendShell(new String[] { "id" }, 0, InternalVariables.timeout);
-
-            if (InternalVariables.accessGiven) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            RootTools.shellDelay = 0;
-        }
+    	return InternalMethods.isAccessGiven();
     }
 
     /**
@@ -870,26 +452,7 @@ public class RootTools {
     }
     
     public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
-        RootTools.log("Preparing Native Tools");
-        InternalVariables.nativeToolsReady = false;
-
-        Installer installer;
-        try {
-            installer = new Installer(context);
-        } catch (IOException ex) {
-            if (debugMode) {
-                ex.printStackTrace();
-            }
-            return false;
-        }
-
-        if (installer.isBinaryInstalled("nativetools")) {
-            InternalVariables.nativeToolsReady = true;
-        } else {
-            InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId,
-                    "nativetools", "700");
-        }
-        return InternalVariables.nativeToolsReady;
+    	return InternalMethods.isNativeToolsReady(nativeToolsId, context);
     }
     
     /**
@@ -902,45 +465,8 @@ public class RootTools {
      *             (Could not determine if the process is running)
      */
     public static boolean isProcessRunning(final String processName) {
-        RootTools.log("Checks if process is running: " + processName);
-
-        boolean processRunning = false;
-        try {
-            Result result = new Result() {
-                @Override
-                public void process(String line) throws Exception {
-                    if (line.contains(processName)) {
-                        setData(1);
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(1);
-                }
-
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                }
-
-            };
-            sendShell(new String[] { "ps" }, 1, result, -1);
-
-            if (result.getError() == 0) {
-                // if data has been set process is running
-                if (result.getData() != null) {
-                    processRunning = true;
-                }
-            }
-        } catch (Exception e) {
-            RootTools.log(e.getMessage());
-        }
-
-        return processRunning;
+    	//TODO convert to new shell
+        return InternalMethods.isProcessRunning(processName);
     }
     
     /**
@@ -958,8 +484,7 @@ public class RootTools {
      * @return <code>true</code> if process was found and killed successfully
      */
     public static boolean killProcess(final String processName) {
-
-		//TODO
+    	//TODO convert to new shell
 		return InternalMethods.killProcess(processName);
     }
     
@@ -970,10 +495,7 @@ public class RootTools {
      *            pass in your Activity
      */
     public static void offerBusyBox(Activity activity) {
-        RootTools.log("Launching Market for BusyBox");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=stericson.busybox"));
-        activity.startActivity(i);
+        InternalMethods.offerBusyBox(activity);
     }
 
     /**
@@ -987,11 +509,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerBusyBox(Activity activity, int requestCode) {
-        RootTools.log("Launching Market for BusyBox");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=stericson.busybox"));
-        activity.startActivityForResult(i, requestCode);
-        return i;
+        return InternalMethods.offerBusyBox(activity, requestCode);
     }
 
     /**
@@ -1001,10 +519,7 @@ public class RootTools {
      *            pass in your Activity
      */
     public static void offerSuperUser(Activity activity) {
-        RootTools.log("Launching Market for SuperUser");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=com.noshufou.android.su"));
-        activity.startActivity(i);
+        InternalMethods.offerSuperUser(activity);
     }
 
     /**
@@ -1018,13 +533,24 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
-        RootTools.log("Launching Market for SuperUser");
-        Intent i = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=com.noshufou.android.su"));
-        activity.startActivityForResult(i, requestCode);
-        return i;
+        return InternalMethods.offerSuperUser(activity, requestCode);
     }
 
+    /**
+     * This will open a custom shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	shellPath
+     * 				a <code>String</code> to Indicate the path to the shell that you want to open.
+     * 
+     * @throws	IOException 
+     *  
+     */
+    public static Shell openCustomShell(String shellPath) throws IOException
+    {
+    	return Shell.startCustomShell(shellPath);
+    }
+    
     /**
      * This will open a shell, you are responsible for managing the shell, reading the output
      * and for closing the shell when you are done using it.

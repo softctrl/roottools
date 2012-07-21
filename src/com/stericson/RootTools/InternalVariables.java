@@ -23,6 +23,7 @@
 package com.stericson.RootTools;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -36,9 +37,15 @@ class InternalVariables {
 
 	//Constants
     // Version numbers should be maintained here.
-    protected static String TAG = "RootTools v1.7.1";
+    protected static String TAG = "RootTools v2.0";
     protected static int timeout = 10000;
     protected static int FPS = 1;
+    protected static int IAG = 2;
+    protected static int BBA = 3;
+    protected static int BBV = 4;
+    protected static int GI = 5;
+    protected static int GS = 6;
+    protected static int GSYM = 7;
     
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;
@@ -48,6 +55,8 @@ class InternalVariables {
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
     protected static ArrayList<Symlink> symlinks;
+    protected static List<String> results;
+    protected static String inode = "";
 
 
     // regex to get pid out of ps line, example:

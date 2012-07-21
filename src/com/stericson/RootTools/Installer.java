@@ -32,6 +32,8 @@ import java.io.InputStream;
 import android.content.Context;
 import android.util.Log;
 
+import com.stericson.RootTools.InternalMethods.InternalCommand;
+
 class Installer {
 
     //-------------
@@ -143,7 +145,9 @@ class Installer {
             }
 
             try {
-				RootTools.sendShell(new String[] { "chmod " + mode + " " + filesPath + File.separator + destName }, 0, -1);
+            	InternalCommand command = new InternalMethods.InternalCommand(0, "chmod " + mode + " " + filesPath + File.separator + destName);
+            	Shell.startRootShell().add(command);
+            	command.waitForFinish();
 			} catch (Exception e) {}
         }
         return true;

@@ -48,6 +48,7 @@ class Shell {
 
 	private static Shell rootShell;
 	private static Shell shell;
+	private static Shell customShell;
 
 	public static Shell startRootShell() throws IOException {
 		if (rootShell == null) {
@@ -74,6 +75,13 @@ class Shell {
 		return rootShell;
 	}
 
+	public static Shell startCustomShell(String shellPath) throws IOException {
+		if (customShell == null) {
+			customShell = new Shell(shellPath);
+		}
+		return customShell;
+	}
+	
 	public static Shell startShell() throws IOException {
 		if (shell == null) {
 			shell = new Shell("/system/bin/sh");
@@ -89,12 +97,18 @@ class Shell {
 		startShell().add(command);
 	}
 
+	public static void closeCustomShell() throws IOException {
+		if (customShell == null)
+			return;
+		customShell.close();
+	}
+
 	public static void closeRootShell() throws IOException {
 		if (rootShell == null)
 			return;
 		rootShell.close();
 	}
-
+	
 	public static void closeShell() throws IOException {
 		if (shell == null)
 			return;
@@ -105,6 +119,7 @@ class Shell {
 	{
 		closeShell();
 		closeRootShell();
+		closeCustomShell();
 	}
 	
 	public static boolean isShellOpen()
@@ -114,7 +129,15 @@ class Shell {
 		else
 			return true;
 	}
-	
+
+	public static boolean isCustomShellOpen()
+	{
+		if (customShell == null)
+			return false;
+		else
+			return true;
+	}
+
 	public static boolean isRootShellOpen()
 	{
 		if (rootShell == null)
@@ -128,6 +151,8 @@ class Shell {
 		if (shell != null)
 			return true;
 		else if (rootShell != null)
+			return true;
+		else if (customShell != null)
 			return true;
 		else
 			return false;
@@ -244,7 +269,7 @@ class Shell {
 		RootTools.log("Shell destroyed");
 	}
 
-	public void add(Command command) throws IOException {
+	public Command add(Command command) throws IOException {
 		if (close)
 			throw new IllegalStateException(
 					"Unable to add commands to a closed shell");
@@ -252,6 +277,8 @@ class Shell {
 			commands.add(command);
 			commands.notifyAll();
 		}
+		
+		return command;
 	}
 
 	public void close() throws IOException {

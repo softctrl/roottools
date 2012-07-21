@@ -182,33 +182,6 @@ class Executer {
 						} else {
 							executer.result.process(line);
 						}
-
-						if (commands[0].equals("id")) {
-		                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-		                    for (String id : ID) {
-	                            RootTools.log(id);
-
-		                        if (id.toLowerCase().contains("uid=0")) {
-		                            InternalVariables.accessGiven = true;
-		                            RootTools.log("Access Given");
-		                            break;
-		                        }
-		                    }
-		                    if (!InternalVariables.accessGiven) {
-		                        RootTools.log("Access Denied?");
-		                    }		                    
-		                }
-		                if (commands[0].equals("busybox")) {
-		                    if (line.startsWith("BusyBox")) {
-		                        String[] temp = line.split(" ");
-		                        InternalVariables.busyboxVersion = temp[1];
-		                    }
-		                }
-		                if (commands[0].startsWith("df")) {
-		                    if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
-		                        InternalVariables.space = line.split(" ");
-		                    }
-		                }
 		                
 						RootTools.log("input stream: " + line);
 						
