@@ -336,7 +336,7 @@ public class Shell {
 		if (commands.size() > 0)
 		{
 			Command command = commands.get(commands.size() - 1);
-			command.exitCode(command.id);
+			command.exitCode();
 		}
 	}
 }

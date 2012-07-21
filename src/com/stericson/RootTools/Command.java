@@ -81,4 +81,14 @@ public abstract class Command {
 			}
 		}
 	}
+	
+	// waits for this command to finish and returns the exit code
+	public int exitCode() throws InterruptedException {
+		synchronized (this) {
+			while (!finished) {
+				this.wait();
+			}
+		}
+		return exitCode;
+	}
 }

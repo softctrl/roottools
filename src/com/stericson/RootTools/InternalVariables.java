@@ -37,7 +37,7 @@ class InternalVariables {
 
 	//Constants
     // Version numbers should be maintained here.
-    protected static String TAG = "RootTools v2.0";
+    protected static String TAG = "RootTools v2.1";
     protected static int timeout = 10000;
     protected static int FPS = 1;
     protected static int IAG = 2;
