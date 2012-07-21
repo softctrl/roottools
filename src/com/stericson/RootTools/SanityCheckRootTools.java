@@ -46,6 +46,8 @@ public class SanityCheckRootTools extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+    	RootTools.debugMode = true;
+
         mTextView = new TextView(this);
         mTextView.setText("");
         mScrollView = new ScrollView(this);
@@ -120,6 +122,7 @@ public class SanityCheckRootTools extends Activity {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
+			
             boolean result;
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing Find Binary");
@@ -292,6 +295,16 @@ public class SanityCheckRootTools extends Activity {
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);
+            
+            try
+			{
+				RootTools.closeAllShells();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
 
         private void visualUpdate(int action, String text) {

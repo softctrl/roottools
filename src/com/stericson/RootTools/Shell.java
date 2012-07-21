@@ -46,12 +46,13 @@ class Shell {
 	private boolean close = false;
 	private static final String token = "F*D^W@#FGF";
 
-	private static Shell rootShell;
-	private static Shell shell;
-	private static Shell customShell;
+	private static Shell rootShell = null;
+	private static Shell shell = null;
+	private static Shell customShell = null;
 
 	public static Shell startRootShell() throws IOException {
 		if (rootShell == null) {
+			RootTools.log("Starting Root Shell!");
 			String cmd = "/system/bin/su";
 			if (!new File(cmd).exists()) {
 				cmd = "/system/xbin/su";
@@ -72,20 +73,32 @@ class Shell {
 				}
 			}
 		}
+		else
+		{
+			RootTools.log("Using Existing Root Shell!");
+		}
+		
 		return rootShell;
 	}
 
 	public static Shell startCustomShell(String shellPath) throws IOException {
 		if (customShell == null) {
+			RootTools.log("Starting Custom Shell!");
 			customShell = new Shell(shellPath);
 		}
+		else
+			RootTools.log("Using Existing Custom Shell!");
+
 		return customShell;
 	}
 	
 	public static Shell startShell() throws IOException {
 		if (shell == null) {
+			RootTools.log("Starting Shell!");
 			shell = new Shell("/system/bin/sh");
 		}
+		else
+			RootTools.log("Using Existing Shell!");
 		return shell;
 	}
 
