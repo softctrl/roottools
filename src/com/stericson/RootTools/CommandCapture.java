@@ -38,17 +38,17 @@ public class CommandCapture extends Command {
 	@Override
 	public void output(int id, String line) {
 		sb.append(line).append('\n');
-	}
-
-	@Override
-	public String toString() {
-		return sb.toString();
+		RootTools.log("Command", "ID: " + id + ", " + line);
 	}
 
 	@Override
 	public void commandFinished(int id)
 	{
-		// TODO Auto-generated method stub
-		
+		RootTools.log("Command " + id + " finished.");
+	}
+	
+	@Override
+	public String toString() {
+		return sb.toString();
 	}
 }

@@ -64,8 +64,7 @@ class InternalMethods
 			if(!tmpDir.exists())
 			{
 				command = new InternalCommand(0, "mkdir /data/local/tmp");
-				Shell.startRootShell().add(command);
-				command.exitCode();
+				Shell.startRootShell().add(command).waitForFinish();
 			}
 
 			InternalVariables.path = new HashSet<String>();
@@ -82,8 +81,7 @@ class InternalMethods
 			Shell.startRootShell().add(command);
 			command = new InternalCommand(0,
 					"chmod 0777 /data/local/tmp/init.rc");
-			Shell.startRootShell().add(command);
-			command.exitCode();
+			Shell.startRootShell().add(command).waitForFinish();
 
 			RootTools.remount("/", mountedas);
 
@@ -1323,7 +1321,7 @@ class InternalMethods
         return i;
     }
     
-	static class InternalCommand extends CommandLog
+	static class InternalCommand extends CommandCapture
 	{
 		Permissions permissions;
 

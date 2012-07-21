@@ -30,6 +30,7 @@ package com.stericson.RootTools;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -181,10 +182,18 @@ public class Shell {
 		out.write("echo Started\n".getBytes());
 		out.flush();
 
-		String line = in.readLine();
-		if (!line.equals("Started")) {
+		while (true) {
+			String line = in.readLine();
+			if (line == null)
+				throw new EOFException();
+			if ("".equals(line))
+				continue;
+			if ("Started".equals(line))
+				break;
+
 			proc.destroy();
-			throw new IOException("Unable to start shell " + line);
+			throw new IOException("Unable to start shell, unexpected output \""
+					+ line + "\"");
 		}
 
 		new Thread(input, "Shell Input").start();
@@ -247,15 +256,21 @@ public class Shell {
 	private void readOutput() throws IOException, InterruptedException {
 		Command command = null;
 		int read = 0;
-		while (!close) {
+		while (true) {
 			String line = in.readLine();
+
+			// terminate on EOF
 			if (line == null)
 				break;
-
+			
 			// Log.v("Shell", "Out; \"" + line + "\"");
 			if (command == null) {
 				if (read >= commands.size())
+				{
+					if (close)
+						break;
 					continue;
+				}
 				command = commands.get(read);
 			}
 
@@ -279,6 +294,14 @@ public class Shell {
 		proc.waitFor();
 		proc.destroy();
 		RootTools.log("Shell destroyed");
+		
+		while (read < commands.size()) {
+			if (command == null)
+				command = commands.get(read);
+			command.terminated();
+			command = null;
+			read++;
+		}
 	}
 
 	public Command add(Command command) throws IOException {
@@ -304,9 +327,16 @@ public class Shell {
 		}
 	}
 
+	public int countCommands() {
+		return commands.size();
+	}
+	
 	public void waitFor() throws IOException, InterruptedException {
 		close();
 		if (commands.size() > 0)
-			commands.get(commands.size() - 1).exitCode();
+		{
+			Command command = commands.get(commands.size() - 1);
+			command.exitCode(command.id);
+		}
 	}
 }
