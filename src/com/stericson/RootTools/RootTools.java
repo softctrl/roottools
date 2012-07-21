@@ -240,6 +240,21 @@ public class RootTools {
     }
     
     /**
+     * This will open or return, if one is already open, a custom shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	shellPath
+     * 				a <code>String</code> to Indicate the path to the shell that you want to open.
+     * 
+     * @throws	IOException 
+     *  
+     */
+    public static Shell getCustomShell(String shellPath) throws IOException
+    {
+    	return Shell.startCustomShell(shellPath);
+    }
+    
+    /**
      * 
      * @param file
      *            String that represent the file, including the full path to the file and its name.
@@ -302,6 +317,24 @@ public class RootTools {
      */
     public static Set<String> getPath() throws Exception {
         return InternalMethods.getPath();
+    }
+    
+    /**
+     * This will open or return, if one is already open, a shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	root
+     * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
+     * 
+     * @throws	IOException 
+     *  
+     */
+    public static Shell getShell(boolean root) throws IOException
+    {
+    	if (root)
+    		return Shell.startRootShell();
+    	else
+    		return Shell.startShell();
     }
     
     /**
@@ -534,39 +567,6 @@ public class RootTools {
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
         return InternalMethods.offerSuperUser(activity, requestCode);
-    }
-
-    /**
-     * This will open a custom shell, you are responsible for managing the shell, reading the output
-     * and for closing the shell when you are done using it.
-     * 
-     * @param	shellPath
-     * 				a <code>String</code> to Indicate the path to the shell that you want to open.
-     * 
-     * @throws	IOException 
-     *  
-     */
-    public static Shell openCustomShell(String shellPath) throws IOException
-    {
-    	return Shell.startCustomShell(shellPath);
-    }
-    
-    /**
-     * This will open a shell, you are responsible for managing the shell, reading the output
-     * and for closing the shell when you are done using it.
-     * 
-     * @param	root
-     * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
-     * 
-     * @throws	IOException 
-     *  
-     */
-    public static Shell openShell(boolean root) throws IOException
-    {
-    	if (root)
-    		return Shell.startRootShell();
-    	else
-    		return Shell.startShell();
     }
     
     /**

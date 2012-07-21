@@ -862,13 +862,13 @@ class InternalMethods
             RootTools.log("File exists");
 
             try {
+            	InternalVariables.results = null;
+            	InternalVariables.results = new ArrayList<String>();
+
             	InternalCommand command = new InternalCommand(InternalVariables.GSYM, "ls -l " + file.getAbsolutePath());
             	Shell.startRootShell().add(command);
             	command.waitForFinish();
             	
-            	InternalVariables.results = null;
-            	InternalVariables.results = new ArrayList<String>();
-
             	List<String> results = new ArrayList<String>();
                 results.addAll(InternalVariables.results);
                 

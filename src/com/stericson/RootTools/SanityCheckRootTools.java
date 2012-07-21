@@ -148,6 +148,10 @@ public class SanityCheckRootTools extends Activity {
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox version ]\n");
             visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion() + " k\n\n");
             
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getInode");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking Inodes ]\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getInode("/system/bin/busybox") + " k\n\n");
+            
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing GetBusyBoxapplets");
             try
 			{

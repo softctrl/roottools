@@ -32,13 +32,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.os.SystemClock;
 
-class Shell {
+public class Shell {
 	private final Process proc;
 	private final DataInputStream in;
 	private final DataOutputStream out;
