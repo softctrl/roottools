@@ -665,6 +665,53 @@ class InternalMethods
 	}
 
 	/**
+	 * Use this to check whether or not a file exists on the filesystem.
+	 * 
+	 * @param file
+	 *            String that represent the file, including the full path to the
+	 *            file and its name.
+	 * 
+	 * @return a boolean that will indicate whether or not the file exists.
+	 * 
+	 */
+	public static boolean exists(final String file)
+	{
+		final List<String> result = new ArrayList<String>();
+		
+		try
+		{
+			Command command = new Command(0, "ls " + file)
+			{
+	
+				@Override
+				public void commandFinished(int arg0) {}
+	
+				@Override
+				public void output(int arg0, String arg1)
+				{
+					result.add(arg1);
+				}
+				
+			};
+			RootTools.getShell(true).add(command).waitForFinish();
+			
+			for (String line : result)
+			{
+				if (line.contains(file) && !line.contains("no such"))
+				{
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+	
+	/**
 	 * 
 	 * @param file
 	 *            String that represent the file, including the full path to the

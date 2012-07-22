@@ -170,6 +170,21 @@ public class RootTools {
         return InternalMethods.copyFile(source, destination, remountAsRw, preserveFileAttributes);
     }
     
+	/**
+	 * Use this to check whether or not a file exists on the filesystem.
+	 * 
+	 * @param file
+	 *            String that represent the file, including the full path to the
+	 *            file and its name.
+	 * 
+	 * @return a boolean that will indicate whether or not the file exists.
+	 * 
+	 */
+	public static boolean exists(final String file)
+	{
+		return InternalMethods.exists(file);
+	}
+	
     /**
      * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets) By
      * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
