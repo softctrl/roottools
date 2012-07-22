@@ -355,12 +355,12 @@ public class RootTools {
      * <p/>
      * 
      * @param The
-     *            file to get the Symlink for. (must have absolute path)
+     *            path to the file to get the Symlink for. (must have absolute path)
      * 
      * @return <code>String</code> a String that represent the symlink for a specified file or an
      *         empty string if no symlink exists.
      */
-    public static String getSymlink(File file) {
+    public static String getSymlink(String file) {
     	return InternalMethods.getSymlink(file);
     }
     

@@ -22,6 +22,7 @@
 
 package com.stericson.RootTools;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -153,6 +154,18 @@ public class SanityCheckRootTools extends Activity {
                 visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing fixUtils");
                 visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking Utils ]\n");
                 visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.fixUtils(new String[] {"ls", "rm", "ln", "dd", "chmod", "mount"}) + " k\n\n");
+			}
+			catch (Exception e2)
+			{
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+			
+            try
+			{
+                visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getSymlink");
+                visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking [[ for symlink ]\n");
+                visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getSymlink("/system/bin/[[") + " k\n\n");
 			}
 			catch (Exception e2)
 			{

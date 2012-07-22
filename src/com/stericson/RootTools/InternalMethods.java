@@ -859,53 +859,50 @@ class InternalMethods
      * @return <code>String</code> a String that represent the symlink for a specified file or an
      *         empty string if no symlink exists.
      */
-    static String getSymlink(File file) {
-        RootTools.log("Looking for Symlink for " + file.toString());
-        if (file.exists()) {
-            RootTools.log("File exists");
+    static String getSymlink(String file) {
+        RootTools.log("Looking for Symlink for " + file);
 
-            try {
-            	InternalVariables.results = null;
-            	InternalVariables.results = new ArrayList<String>();
+        try {
+        	InternalVariables.results = null;
+        	InternalVariables.results = new ArrayList<String>();
 
-            	InternalCommand command = new InternalCommand(InternalVariables.GSYM, "ls -l " + file.getAbsolutePath());
-            	Shell.startRootShell().add(command);
-            	command.waitForFinish();
-            	
-            	List<String> results = new ArrayList<String>();
-                results.addAll(InternalVariables.results);
+        	InternalCommand command = new InternalCommand(InternalVariables.GSYM, "ls -l " + file);
+        	Shell.startRootShell().add(command);
+        	command.waitForFinish();
+        	
+        	List<String> results = new ArrayList<String>();
+            results.addAll(InternalVariables.results);
+            
+            String[] symlink = results.get(0).split(" ");
+            if (symlink[symlink.length - 2].equals("->")) {
+                RootTools.log("Symlink found.");
                 
-                String[] symlink = results.get(0).split(" ");
-                if (symlink[symlink.length - 2].equals("->")) {
-                    RootTools.log("Symlink found.");
-                    
-                    String final_symlink = "";
-                    if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
-                    {
-                    	//We assume that we need to get the path for this symlink as it is probably not absolute.
-                    	findBinary(symlink[symlink.length - 1]);
-                    	if (RootTools.lastFoundBinaryPaths.size() > 0)
-                    	{
-                    		//We return the first found location.
-                    		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
-                    	}
-                    	else
-                    	{
-                        	//we couldnt find a path, return the symlink by itself.
-                        	final_symlink = symlink[symlink.length - 1];
-                    	}
-                    }
-                    else
-                    {
+                String final_symlink = "";
+                if (!symlink[symlink.length - 1].equals("") && !symlink[symlink.length - 1].contains("/"))
+                {
+                	//We assume that we need to get the path for this symlink as it is probably not absolute.
+                	findBinary(symlink[symlink.length - 1]);
+                	if (RootTools.lastFoundBinaryPaths.size() > 0)
+                	{
+                		//We return the first found location.
+                		final_symlink = RootTools.lastFoundBinaryPaths.get(0) + "/" + symlink[symlink.length - 1];
+                	}
+                	else
+                	{
+                    	//we couldnt find a path, return the symlink by itself.
                     	final_symlink = symlink[symlink.length - 1];
-                    }
-
-                    return final_symlink;
+                	}
                 }
-            } catch (Exception e) {
-            	if (RootTools.debugMode)
-            		e.printStackTrace();
+                else
+                {
+                	final_symlink = symlink[symlink.length - 1];
+                }
+
+                return final_symlink;
             }
+        } catch (Exception e) {
+        	if (RootTools.debugMode)
+        		e.printStackTrace();
         }
 
         RootTools.log("Symlink not found");
