@@ -650,8 +650,8 @@ class InternalMethods
 					else
 						permission = Integer.toString(permissions.getPermissions());
 					
-					if(permission.equals(755) || permission.equals(777)
-							|| permission.equals(775))
+					if(permission.equals("755") || permission.equals("777")
+							|| permission.equals("775"))
 					{
 						RootTools.utilPath = path + "/" + util;
 						return true;
