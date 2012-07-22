@@ -643,8 +643,13 @@ class InternalMethods
 
 				if(permissions != null)
 				{
-					String permission = Integer.toString(permissions.getPermissions()).substring(1);
-
+					String permission;
+					
+					if (Integer.toString(permissions.getPermissions()).length() > 3)
+						permission = Integer.toString(permissions.getPermissions()).substring(1);
+					else
+						permission = Integer.toString(permissions.getPermissions());
+					
 					if(permission.equals(755) || permission.equals(777)
 							|| permission.equals(775))
 					{
