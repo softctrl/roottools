@@ -53,12 +53,7 @@ public class Shell {
 	public static Shell startRootShell() throws IOException {
 		if (rootShell == null) {
 			RootTools.log("Starting Root Shell!");
-			String cmd = "/system/bin/su";
-			if (!new File(cmd).exists()) {
-				cmd = "/system/xbin/su";
-				if (!new File(cmd).exists())
-					throw new IOException("Unable to locate su binary");
-			}
+			String cmd = "su";
 			// keep prompting the user until they accept, we hit 10 retries, or
 			// the attempt fails quickly
 			int retries = 0;

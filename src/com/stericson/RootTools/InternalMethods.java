@@ -58,10 +58,9 @@ class InternalMethods
 
 		InternalCommand command = null;
 
-		File tmpDir = new File("/data/local/tmp");
 		try
 		{
-			if(!tmpDir.exists())
+			if(!RootTools.exists("/data/local/tmp"))
 			{
 				command = new InternalCommand(0, "mkdir /data/local/tmp");
 				Shell.startRootShell().add(command).waitForFinish();
@@ -321,6 +320,111 @@ class InternalMethods
         return result;
     }
 
+	/**
+	 * This will check a given binary, determine if it exists and determine that
+	 * it has either the permissions 755, 775, or 777.
+	 * 
+	 * 
+	 * @param String
+	 *            Name of the utility to check.
+	 * 
+	 * @return boolean to indicate whether the binary is installed and has
+	 *         appropriate permissions.
+	 */
+	static boolean checkUtil(String util)
+	{
+		if(RootTools.findBinary(util))
+		{
+
+			List<String> binaryPaths = new ArrayList<String>();
+			binaryPaths.addAll(RootTools.lastFoundBinaryPaths);
+
+			for(String path : binaryPaths)
+			{
+				Permissions permissions = RootTools
+						.getFilePermissionsSymlinks(path + "/" + util);
+
+				if(permissions != null)
+				{
+					String permission;
+					
+					if (Integer.toString(permissions.getPermissions()).length() > 3)
+						permission = Integer.toString(permissions.getPermissions()).substring(1);
+					else
+						permission = Integer.toString(permissions.getPermissions());
+					
+					if(permission.equals("755") || permission.equals("777")
+							|| permission.equals("775"))
+					{
+						RootTools.utilPath = path + "/" + util;
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Use this to check whether or not a file exists on the filesystem.
+	 * 
+	 * @param file
+	 *            String that represent the file, including the full path to the
+	 *            file and its name.
+	 * 
+	 * @return a boolean that will indicate whether or not the file exists.
+	 * 
+	 */
+	public static boolean exists(final String file)
+	{
+		final List<String> result = new ArrayList<String>();
+		
+		try
+		{
+			Command command = new Command(0, "ls " + file)
+			{
+	
+				@Override
+				public void commandFinished(int arg0) {}
+	
+				@Override
+				public void output(int arg0, String arg1)
+				{
+					result.add(arg1);
+				}
+				
+			};
+			RootTools.getShell(false).add(command).waitForFinish();
+			
+			for (String line : result)
+			{
+				if (line.contains(file) && !line.contains("no such"))
+				{
+					return true;
+				}
+			}
+			
+			result.clear();
+			RootTools.getShell(true).add(command).waitForFinish();
+			
+			for (String line : result)
+			{
+				if (line.contains(file) && !line.contains("no such"))
+				{
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+	
     /**
      * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets) By
      * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
@@ -415,8 +519,7 @@ class InternalMethods
         	if (paths.size() > 0)
         	{
 	            for (String path : paths) {
-	                File file = new File(path + "/" + binaryName);
-	                if (file.exists()) {
+	                if (RootTools.exists(path + "/" + binaryName)) {
 	                	RootTools.log(binaryName + " was found here: " + path);
 	                    list.add(path);
 	                    found = true;
@@ -437,8 +540,7 @@ class InternalMethods
             String[] places = { "/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
                     "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
             for (String where : places) {
-                File file = new File(where + binaryName);
-                if (file.exists()) {
+                if (RootTools.exists(where + binaryName)) {
                 	RootTools.log(binaryName + " was found here: " + where);
                     list.add(where);
                     found = true;
@@ -616,100 +718,6 @@ class InternalMethods
         }
         return InternalVariables.nativeToolsReady;
     }
-
-	/**
-	 * This will check a given binary, determine if it exists and determine that
-	 * it has either the permissions 755, 775, or 777.
-	 * 
-	 * 
-	 * @param String
-	 *            Name of the utility to check.
-	 * 
-	 * @return boolean to indicate whether the binary is installed and has
-	 *         appropriate permissions.
-	 */
-	static boolean checkUtil(String util)
-	{
-		if(RootTools.findBinary(util))
-		{
-
-			List<String> binaryPaths = new ArrayList<String>();
-			binaryPaths.addAll(RootTools.lastFoundBinaryPaths);
-
-			for(String path : binaryPaths)
-			{
-				Permissions permissions = RootTools
-						.getFilePermissionsSymlinks(path + "/" + util);
-
-				if(permissions != null)
-				{
-					String permission;
-					
-					if (Integer.toString(permissions.getPermissions()).length() > 3)
-						permission = Integer.toString(permissions.getPermissions()).substring(1);
-					else
-						permission = Integer.toString(permissions.getPermissions());
-					
-					if(permission.equals("755") || permission.equals("777")
-							|| permission.equals("775"))
-					{
-						RootTools.utilPath = path + "/" + util;
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * Use this to check whether or not a file exists on the filesystem.
-	 * 
-	 * @param file
-	 *            String that represent the file, including the full path to the
-	 *            file and its name.
-	 * 
-	 * @return a boolean that will indicate whether or not the file exists.
-	 * 
-	 */
-	public static boolean exists(final String file)
-	{
-		final List<String> result = new ArrayList<String>();
-		
-		try
-		{
-			Command command = new Command(0, "ls " + file)
-			{
-	
-				@Override
-				public void commandFinished(int arg0) {}
-	
-				@Override
-				public void output(int arg0, String arg1)
-				{
-					result.add(arg1);
-				}
-				
-			};
-			RootTools.getShell(true).add(command).waitForFinish();
-			
-			for (String line : result)
-			{
-				if (line.contains(file) && !line.contains("no such"))
-				{
-					return true;
-				}
-			}
-			
-			return false;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-	}
 	
 	/**
 	 * 
@@ -725,8 +733,7 @@ class InternalMethods
 	static Permissions getFilePermissionsSymlinks(String file)
 	{
 		RootTools.log("Checking permissions for " + file);
-		File f = new File(file);
-		if(f.exists())
+		if(RootTools.exists(file))
 		{
 			RootTools.log(file + " was found.");
 			try
