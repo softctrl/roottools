@@ -56,13 +56,13 @@ class InternalMethods
 	protected boolean returnPath() throws TimeoutException
 	{
 
-		InternalCommand command = null;
+		CommandCapture command = null;
 
 		try
 		{
 			if(!RootTools.exists("/data/local/tmp"))
 			{
-				command = new InternalCommand(0, "mkdir /data/local/tmp");
+				command = new CommandCapture(0, "mkdir /data/local/tmp");
 				Shell.startRootShell().add(command).waitForFinish();
 			}
 
@@ -73,12 +73,12 @@ class InternalMethods
 			String mountedas = RootTools.getMountedAs("/");
 			RootTools.remount("/", "rw");
 
-			command = new InternalCommand(0, "chmod 0777 /init.rc");
+			command = new CommandCapture(0, "chmod 0777 /init.rc");
 			Shell.startRootShell().add(command);
-			command = new InternalCommand(0,
+			command = new CommandCapture(0,
 					"dd if=/init.rc of=/data/local/tmp/init.rc");
 			Shell.startRootShell().add(command);
-			command = new InternalCommand(0,
+			command = new CommandCapture(0,
 					"chmod 0777 /data/local/tmp/init.rc");
 			Shell.startRootShell().add(command).waitForFinish();
 
@@ -263,10 +263,10 @@ class InternalMethods
                 RootTools.log("cp command is available!");
 
                 if (preserveFileAttributes) {
-                	InternalCommand command = new InternalCommand(0, "cp -fp " + source + " " + destination);
+                	CommandCapture command = new CommandCapture(0, "cp -fp " + source + " " + destination);
                 	Shell.startRootShell().add(command).waitForFinish();
                 } else {
-                	InternalCommand command = new InternalCommand(0, "cp -f " + source + " " + destination);
+                	CommandCapture command = new CommandCapture(0, "cp -f " + source + " " + destination);
                 	Shell.startRootShell().add(command).waitForFinish();
                 }
             } else {
@@ -274,10 +274,10 @@ class InternalMethods
                     RootTools.log("busybox cp command is available!");
 
                     if (preserveFileAttributes) {
-                    	InternalCommand command = new InternalCommand(0, "busybox cp -fp " + source + " " + destination);
+                    	CommandCapture command = new CommandCapture(0, "busybox cp -fp " + source + " " + destination);
                     	Shell.startRootShell().add(command).waitForFinish();
                     } else {
-                    	InternalCommand command = new InternalCommand(0, "busybox cp -f " + source + " " + destination);
+                    	CommandCapture command = new CommandCapture(0, "busybox cp -f " + source + " " + destination);
                     	Shell.startRootShell().add(command).waitForFinish();
                     }
                 } else { // if cp is not available use cat
@@ -292,14 +292,14 @@ class InternalMethods
                             filePermission = permissions.permissions;
                         }
 
-                        InternalCommand command;
+                        CommandCapture command;
                         // copy with cat
-                    	command = new InternalCommand(0, "cat " + source + " > " + destination);
+                    	command = new CommandCapture(0, "cat " + source + " > " + destination);
                     	Shell.startRootShell().add(command).waitForFinish();
                         
                         if (preserveFileAttributes) {
                             // set premissions of source to destination
-                        	command = new InternalCommand(0, "chmod " + filePermission + " " + destination);
+                        	command = new CommandCapture(0, "chmod " + filePermission + " " + destination);
                         	Shell.startRootShell().add(command).waitForFinish();
                         }
                     } else {
@@ -381,48 +381,53 @@ class InternalMethods
 	{
 		final List<String> result = new ArrayList<String>();
 		
+		Command command = new Command(0, "ls " + file)
+		{
+			@Override
+			public void output(int arg0, String arg1)
+			{
+				RootTools.log(arg1);
+				result.add(arg1);
+			}			
+		};
+		
 		try
 		{
-			Command command = new Command(0, "ls " + file)
-			{
-	
-				@Override
-				public void commandFinished(int arg0) {}
-	
-				@Override
-				public void output(int arg0, String arg1)
-				{
-					result.add(arg1);
-				}
-				
-			};
 			RootTools.getShell(false).add(command).waitForFinish();
-			
-			for (String line : result)
-			{
-				if (line.contains(file) && !line.contains("no such"))
-				{
-					return true;
-				}
-			}
-			
-			result.clear();
-			RootTools.getShell(true).add(command).waitForFinish();
-			
-			for (String line : result)
-			{
-				if (line.contains(file) && !line.contains("no such"))
-				{
-					return true;
-				}
-			}
-			
-			return false;
+
 		}
 		catch (Exception e)
 		{
 			return false;
 		}
+		
+		for (String line : result)
+		{
+			if (line.trim().equals(file))
+			{
+				return true;
+			}
+		}
+		
+		result.clear();
+		try
+		{
+			RootTools.getShell(true).add(command).waitForFinish();
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+		for (String line : result)
+		{
+			if (line.trim().equals(file))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+
 	}
 	
     /**
@@ -446,11 +451,11 @@ class InternalMethods
             	paths.addAll(RootTools.lastFoundBinaryPaths);
                 for (String path : paths)
                 {
-                	InternalCommand command = new InternalCommand(0, utilPath + " rm " + path + "/" + util);
+                	CommandCapture command = new CommandCapture(0, utilPath + " rm " + path + "/" + util);
                 	Shell.startRootShell().add(command).waitForFinish();
                 }
 
-            	InternalCommand command = new InternalCommand(0, utilPath + " ln -s " + utilPath + " /system/bin/" + util, utilPath + " chmod 0755 /system/bin/" + util);
+                CommandCapture command = new CommandCapture(0, utilPath + " ln -s " + utilPath + " /system/bin/" + util, utilPath + " chmod 0755 /system/bin/" + util);
             	Shell.startRootShell().add(command).waitForFinish();
             }
 
@@ -576,10 +581,22 @@ class InternalMethods
      */
     static List<String> getBusyBoxApplets() throws Exception {
     	
-    	InternalVariables.results = null;
-    	InternalVariables.results = new ArrayList<String>();
+    	final List<String> results = new ArrayList<String>();
     	
-    	InternalCommand command = new InternalCommand(InternalVariables.BBA, "busybox --list");
+    	Command command = new Command(InternalVariables.BBA, "busybox --list")
+    	{
+
+			@Override
+			public void output(int id, String line)
+			{
+				if (id == InternalVariables.BBA)
+				{
+					if (!line.trim().equals(""))
+						results.add(line);
+				}				
+			}    		
+    	};
+    	
     	Shell.startRootShell().add(command);
     	command.waitForFinish();
     	
@@ -597,7 +614,22 @@ class InternalMethods
         RootTools.log("Getting BusyBox Version");
         InternalVariables.busyboxVersion = null;
         try {
-        	InternalCommand command = new InternalCommand(InternalVariables.BBV, "busybox");
+        	Command command = new Command(InternalVariables.BBV, "busybox")
+        	{
+
+				@Override
+				public void output(int id, String line)
+				{
+					if (id == InternalVariables.BBV)
+					{
+		                if (line.startsWith("BusyBox")) {
+		                    String[] temp = line.split(" ");
+		                    InternalVariables.busyboxVersion = temp[1];
+		                }
+					}					
+				}
+        	};
+        	
         	Shell.startRootShell().add(command);
         	command.waitForFinish();
         	
@@ -655,7 +687,21 @@ class InternalMethods
     {
     	try
     	{
-    		InternalCommand command = new InternalCommand(InternalVariables.GI, "/data/local/ls -i " + file);
+    		Command command = new Command(InternalVariables.GI, "/data/local/ls -i " + file)
+    		{
+
+				@Override
+				public void output(int id, String line)
+				{
+					if (id == InternalVariables.GI)
+					{
+			    		if (!line.trim().equals("") && Character.isDigit((char) line.trim().substring(0, 1).toCharArray()[0]))
+			    		{
+			    			InternalVariables.inode = line.trim().split(" ")[0].toString();
+			    		}
+					}					
+				}
+    		};
     		Shell.startRootShell().add(command);
     		command.waitForFinish();
     		
@@ -677,7 +723,30 @@ class InternalMethods
             RootTools.log("Checking for Root access");
             InternalVariables.accessGiven = false;
             
-        	InternalCommand command = new InternalCommand(InternalVariables.IAG, "id");
+        	Command command = new Command(InternalVariables.IAG, "id")
+        	{
+				@Override
+				public void output(int id, String line)
+				{
+					if (id == InternalVariables.IAG)
+					{
+						Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
+		                for (String userid : ID) {
+		                    RootTools.log(userid);
+
+		                    if (userid.toLowerCase().contains("uid=0")) {
+		                        InternalVariables.accessGiven = true;
+		                        RootTools.log("Access Given");
+		                        break;
+		                    }
+		                }
+		                if (!InternalVariables.accessGiven) {
+		                    RootTools.log("Access Denied?");
+		                }		                    
+					}					
+				}
+        	};
+        	
         	Shell.startRootShell().add(command);
         	command.waitForFinish();
         	
@@ -739,15 +808,60 @@ class InternalMethods
 			try
 			{
 
-				InternalCommand command = new InternalCommand(
+				Command command = new Command(
 						InternalVariables.FPS, "ls -l " + file,
 						"busybox ls -l " + file,
 						"/system/bin/failsafe/toolbox ls -l " + file,
-						"toolbox ls -l " + file);
+						"toolbox ls -l " + file)
+				{
+					@Override
+					public void output(int id, String line)
+					{
+						if(id == InternalVariables.FPS)
+						{
+							String symlink_final = "";
+
+							String[] lineArray = line.split(" ");
+							if(lineArray[0].length() != 10)
+							{
+								return;
+							}
+
+							RootTools.log("Line " + line);
+
+							try
+							{
+								String[] symlink = line.split(" ");
+								if(symlink[symlink.length - 2].equals("->"))
+								{
+									RootTools.log("Symlink found.");
+									symlink_final = symlink[symlink.length - 1];
+								}
+							}
+							catch (Exception e)
+							{
+							}
+
+							try
+							{
+								InternalVariables.permissions = new InternalMethods().getPermissions(line);
+								if(InternalVariables.permissions != null)
+								{
+									InternalVariables.permissions.setSymlink(symlink_final);
+								}
+							}
+							catch (Exception e)
+							{
+								RootTools.log(e.getMessage());
+							}
+						}						
+					}
+					
+				};
 				Shell.startRootShell().add(command);
 				command.waitForFinish();
 
-				return command.permissions;
+				return InternalVariables.permissions;
 
 			}
 			catch (Exception e)
@@ -859,7 +973,21 @@ class InternalMethods
         boolean found = false;
         RootTools.log("Looking for Space");
         try {
-            InternalCommand command = new InternalCommand(InternalVariables.GS, "df " + path);
+            Command command = new Command(InternalVariables.GS, "df " + path)
+            {
+
+				@Override
+				public void output(int id, String line)
+				{
+					if (id == InternalVariables.GS)
+					{
+						if (line.contains(command[0].substring(2, command[0].length()).trim())) {
+		                    InternalVariables.space = line.split(" ");
+		                }
+					}					
+				}
+            };
+            
             Shell.startRootShell().add(command);
             command.waitForFinish();
         } catch (Exception e) {}
@@ -917,16 +1045,27 @@ class InternalMethods
         RootTools.log("Looking for Symlink for " + file);
 
         try {
-        	InternalVariables.results = null;
-        	InternalVariables.results = new ArrayList<String>();
+        	final List<String> results = new ArrayList<String>();
 
-        	InternalCommand command = new InternalCommand(InternalVariables.GSYM, "ls -l " + file);
+        	Command command = new Command(InternalVariables.GSYM, "ls -l " + file)
+        	{
+
+				@Override
+				public void output(int id, String line)
+				{
+					if (id == InternalVariables.GSYM)
+					{
+						if (!line.trim().equals(""))
+						{
+							results.add(line);
+						}
+					}					
+				}
+        	};
+        	
         	Shell.startRootShell().add(command);
         	command.waitForFinish();
-        	
-        	List<String> results = new ArrayList<String>();
-            results.addAll(InternalVariables.results);
-            
+        	            
             String[] symlink = results.get(0).split(" ");
             if (symlink[symlink.length - 2].equals("->")) {
                 RootTools.log("Symlink found.");
@@ -983,7 +1122,7 @@ class InternalMethods
             throw new Exception();
         }
 
-        InternalCommand command = new InternalCommand(0, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
+        CommandCapture command = new CommandCapture(0, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
         Shell.startRootShell().add(command);
         command.waitForFinish();
         
@@ -1376,104 +1515,4 @@ class InternalMethods
         activity.startActivityForResult(i, requestCode);
         return i;
     }
-    
-	static class InternalCommand extends CommandCapture
-	{
-		Permissions permissions;
-
-		public InternalCommand(int id, String... command)
-		{
-			super(id, command);
-		}
-
-		@Override
-		public void output(int id, String line)
-		{
-			super.output(id, line);
-
-			// getFilePermissionsSymlinks
-			if(id == InternalVariables.FPS)
-			{
-				String symlink_final = "";
-
-				String[] lineArray = line.split(" ");
-				if(lineArray[0].length() != 10)
-				{
-					return;
-				}
-
-				RootTools.log("Line " + line);
-
-				try
-				{
-					String[] symlink = line.split(" ");
-					if(symlink[symlink.length - 2].equals("->"))
-					{
-						RootTools.log("Symlink found.");
-						symlink_final = symlink[symlink.length - 1];
-					}
-				}
-				catch (Exception e)
-				{
-				}
-
-				try
-				{
-					permissions = new InternalMethods().getPermissions(line);
-					if(permissions != null)
-					{
-						permissions.setSymlink(symlink_final);
-					}
-				}
-				catch (Exception e)
-				{
-					RootTools.log(e.getMessage());
-				}
-			}
-			else if (id == InternalVariables.IAG)
-			{
-				Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-                for (String userid : ID) {
-                    RootTools.log(userid);
-
-                    if (userid.toLowerCase().contains("uid=0")) {
-                        InternalVariables.accessGiven = true;
-                        RootTools.log("Access Given");
-                        break;
-                    }
-                }
-                if (!InternalVariables.accessGiven) {
-                    RootTools.log("Access Denied?");
-                }		                    
-			}
-			else if (id == InternalVariables.BBA)
-			{
-				InternalVariables.results.add(line);
-			}
-			else if (id == InternalVariables.BBV)
-			{
-                if (line.startsWith("BusyBox")) {
-                    String[] temp = line.split(" ");
-                    InternalVariables.busyboxVersion = temp[1];
-                }
-			}
-			else if (id == InternalVariables.GI)
-			{
-	    		if (Character.isDigit((char) line.trim().substring(0, 1).toCharArray()[0]))
-	    		{
-	    			InternalVariables.inode = line.trim().split(" ")[0].toString();
-	    		}
-			}
-			else if (id == InternalVariables.GS)
-			{
-				if (line.contains(command[0].substring(2, command[0].length()).trim())) {
-                    InternalVariables.space = line.split(" ");
-                }
-			}
-			else if (id == InternalVariables.GSYM)
-			{
-				InternalVariables.results.add(line);
-			}
-		}
-	}
 }

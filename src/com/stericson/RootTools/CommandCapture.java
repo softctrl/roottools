@@ -40,12 +40,6 @@ public class CommandCapture extends Command {
 		sb.append(line).append('\n');
 		RootTools.log("Command", "ID: " + id + ", " + line);
 	}
-
-	@Override
-	public void commandFinished(int id)
-	{
-		RootTools.log("Command " + id + " finished.");
-	}
 	
 	@Override
 	public String toString() {

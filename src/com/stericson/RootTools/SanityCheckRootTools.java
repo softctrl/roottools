@@ -22,7 +22,6 @@
 
 package com.stericson.RootTools;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -130,6 +129,10 @@ public class SanityCheckRootTools extends Activity {
             result = RootTools.isRootAvailable();
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking Root ]\n");
             visualUpdate(TestHandler.ACTION_DISPLAY, result + " k\n\n");
+            
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing file exists");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking Exists() ]\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.exists("/system/sbin/[") + " k\n\n");
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing Is Access Given");
             result = RootTools.isAccessGiven();

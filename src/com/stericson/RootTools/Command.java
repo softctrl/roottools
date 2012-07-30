@@ -57,7 +57,11 @@ public abstract class Command {
 	}
 
 	public abstract void output(int id, String line);
-	public abstract void commandFinished(int id);
+	
+	public void commandFinished(int id)
+	{
+		RootTools.log("Command " + id + "finished.");
+	}
 
 	public void exitCode(int code) {
 		synchronized (this) {

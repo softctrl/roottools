@@ -28,8 +28,6 @@ import java.util.ArrayList;
 
 import android.util.Log;
 
-import com.stericson.RootTools.InternalMethods.InternalCommand;
-
 //no modifier, this means it is package-private. Only our internal classes can use this.
 class Remounter {
 
@@ -94,7 +92,7 @@ class Remounter {
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
-            	InternalCommand command = new InternalMethods.InternalCommand(0,
+            	CommandCapture command = new CommandCapture(0,
 				        		"busybox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),		
 				        		"toolbox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),		
 				        		"mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),				        		

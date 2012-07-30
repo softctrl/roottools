@@ -57,6 +57,8 @@ class InternalVariables {
     protected static ArrayList<Symlink> symlinks;
     protected static List<String> results;
     protected static String inode = "";
+    protected static Permissions permissions;
+
 
 
     // regex to get pid out of ps line, example:

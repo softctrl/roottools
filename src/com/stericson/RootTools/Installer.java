@@ -32,8 +32,6 @@ import java.io.InputStream;
 import android.content.Context;
 import android.util.Log;
 
-import com.stericson.RootTools.InternalMethods.InternalCommand;
-
 class Installer {
 
     //-------------
@@ -145,7 +143,7 @@ class Installer {
             }
 
             try {
-            	InternalCommand command = new InternalMethods.InternalCommand(0, "chmod " + mode + " " + filesPath + File.separator + destName);
+            	CommandCapture command = new CommandCapture(0, "chmod " + mode + " " + filesPath + File.separator + destName);
             	Shell.startRootShell().add(command);
             	command.waitForFinish();
 			} catch (Exception e) {}

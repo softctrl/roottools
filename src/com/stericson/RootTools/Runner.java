@@ -27,8 +27,6 @@ import java.io.IOException;
 import android.content.Context;
 import android.util.Log;
 
-import com.stericson.RootTools.InternalMethods.InternalCommand;
-
 class Runner extends Thread {
 
     private static final String LOG_TAG = "RootTools::Runner";
@@ -55,7 +53,7 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	InternalCommand command = new InternalMethods.InternalCommand(0, privateFilesPath + "/" + binaryName + " " + parameter);
+            	CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
             	Shell.startRootShell().add(command);
             	command.waitForFinish();
 			} catch (Exception e) {}
