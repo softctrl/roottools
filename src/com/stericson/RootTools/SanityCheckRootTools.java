@@ -183,19 +183,20 @@ public class SanityCheckRootTools extends Activity {
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing GetBusyBoxapplets");
             try
 			{
-				RootTools.getBusyBoxApplets();
+
+	            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Getting all available Busybox applets ]\n");
+	            for (String applet : RootTools.getBusyBoxApplets())
+	            {
+	                visualUpdate(TestHandler.ACTION_DISPLAY,  applet + " k\n\n");            	
+	            }
+
 			}
 			catch (Exception e1)
 			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Getting all available Busybox applets ]\n");
-            for (String applet : InternalVariables.results)
-            {
-                visualUpdate(TestHandler.ACTION_DISPLAY,  applet + " k\n\n");            	
-            }
-
+			
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getFilePermissionsSymlinks");
             Permissions permissions = RootTools.getFilePermissionsSymlinks("/system/bin/busybox");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox permissions and symlink ]\n");

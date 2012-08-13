@@ -43,8 +43,8 @@ public class Shell {
 	private final DataOutputStream out;
 	private final List<Command> commands = new ArrayList<Command>();
 	private boolean close = false;
+	
 	private static final String token = "F*D^W@#FGF";
-
 	private static Shell rootShell = null;
 	private static Shell shell = null;
 	private static Shell customShell = null;
@@ -63,7 +63,10 @@ public class Shell {
 				} catch (IOException e) {
 					long delay = SystemClock.elapsedRealtime() - start;
 					if (delay < 500 || retries++ >= 10)
+					{
+						RootTools.log("IOException, could not start shell");
 						throw e;
+					}
 				}
 			}
 		}
@@ -165,7 +168,7 @@ public class Shell {
 			return false;
 	}
 	
-	public Shell(String cmd) throws IOException {
+	private Shell(String cmd) throws IOException {
 
 		RootTools.log("Starting shell: " + cmd);
 
@@ -276,7 +279,7 @@ public class Shell {
 				String fields[] = line.split(" ");
 				int id = Integer.parseInt(fields[1]);
 				if (id == read) {
-					command.exitCode(Integer.parseInt(fields[2]));
+					command.setExitCode(Integer.parseInt(fields[2]));
 					read++;
 					command = null;
 					continue;
@@ -292,7 +295,7 @@ public class Shell {
 		while (read < commands.size()) {
 			if (command == null)
 				command = commands.get(read);
-			command.terminated();
+			command.terminated("Unexpected Termination.");
 			command = null;
 			read++;
 		}
@@ -315,6 +318,8 @@ public class Shell {
 			rootShell = null;
 		if (this == shell)
 			shell = null;
+		if (this == customShell)
+			customShell = null;
 		synchronized (commands) {
 			this.close = true;
 			commands.notifyAll();
