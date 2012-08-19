@@ -418,7 +418,12 @@ class InternalMethods
 		{
 			return false;
 		}
-		for (String line : result)
+		
+		//Avoid concurrent modification...
+		List<String> final_result = new ArrayList<String>();
+		final_result.addAll(result);
+		
+		for (String line : final_result)
 		{
 			if (line.trim().equals(file))
 			{
