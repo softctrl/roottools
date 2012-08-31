@@ -49,6 +49,16 @@ public class Shell {
 	private static Shell shell = null;
 	private static Shell customShell = null;
 
+	public static Shell getOpenShell()
+	{
+		if (customShell != null)
+			return customShell;
+		else if (rootShell != null)
+			return rootShell;
+		else
+			return shell;
+	}
+	
 	public static Shell startRootShell() throws IOException {
 		if (rootShell == null) {
 			RootTools.log("Starting Root Shell!");
@@ -62,7 +72,7 @@ public class Shell {
 					rootShell = new Shell(cmd);
 				} catch (IOException e) {
 					long delay = SystemClock.elapsedRealtime() - start;
-					if (delay < 500 || retries++ >= 10)
+					if (delay < 500 || retries++ >= 2)
 					{
 						RootTools.log("IOException, could not start shell");
 						throw e;
@@ -323,7 +333,7 @@ public class Shell {
 		synchronized (commands) {
 			this.close = true;
 			commands.notifyAll();
-		}
+		}		
 	}
 
 	public int countCommands() {

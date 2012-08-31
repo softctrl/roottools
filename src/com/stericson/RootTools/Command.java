@@ -36,7 +36,7 @@ public abstract class Command {
 	final String command[];
 	boolean finished = false;
 	int exitCode;
-	int id;
+	int id = 0;
 	int timeout = InternalVariables.timeout;
 
 	public Command(int id, String... command) {

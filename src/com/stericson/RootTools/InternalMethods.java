@@ -393,8 +393,11 @@ class InternalMethods
 		
 		try
 		{
-			RootTools.getShell(false).add(command).waitForFinish();
-
+			//Try not to open a new shell if one is open.
+			if (!Shell.isAnyShellOpen())
+				Shell.startShell().add(command).waitForFinish();
+			else
+				Shell.getOpenShell().add(command).waitForFinish();
 		}
 		catch (Exception e)
 		{
@@ -409,10 +412,15 @@ class InternalMethods
 			}
 		}
 		
+		try
+		{
+			RootTools.closeShell(false);
+		} catch (Exception e) {}
+		
 		result.clear();
 		try
 		{
-			RootTools.getShell(true).add(command).waitForFinish();
+			Shell.startRootShell().add(command).waitForFinish();
 		}
 		catch (Exception e)
 		{
