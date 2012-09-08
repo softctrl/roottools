@@ -256,9 +256,10 @@ public class RootTools {
      * 				a <code>String</code> to Indicate the path to the shell that you want to open.
      * 
      * @throws	IOException 
+     * @throws TimeoutException 
      *  
      */
-    public static Shell getCustomShell(String shellPath) throws IOException
+    public static Shell getCustomShell(String shellPath) throws IOException, TimeoutException
     {
     	return Shell.startCustomShell(shellPath);
     }
@@ -336,9 +337,10 @@ public class RootTools {
      * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
      * 
      * @throws	IOException 
+     * @throws TimeoutException 
      *  
      */
-    public static Shell getShell(boolean root) throws IOException
+    public static Shell getShell(boolean root) throws IOException, TimeoutException
     {
     	if (root)
     		return Shell.startRootShell();

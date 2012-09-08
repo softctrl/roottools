@@ -64,6 +64,22 @@ public class SanityCheckRootTools extends Activity {
         }
 
         print("SanityCheckRootTools v " + version + "\n\n");
+        
+        try
+		{
+			Shell.startRootShell();
+		}
+		catch (IOException e2)
+		{
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		catch (TimeoutException e)
+		{
+            print("[ TIMEOUT EXCEPTION! ]\n");
+			e.printStackTrace();
+		}
+		
         try {
 			if (false == RootTools.isAccessGiven()) {
 			    print("ERROR: No root access to this device.\n");
@@ -112,16 +128,6 @@ public class SanityCheckRootTools extends Activity {
                 return;
             }
             */
-
-            try
-			{
-				Shell.startRootShell();
-			}
-			catch (IOException e2)
-			{
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
 			
             boolean result;
 
