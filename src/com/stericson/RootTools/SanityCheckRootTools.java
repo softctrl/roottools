@@ -156,7 +156,7 @@ public class SanityCheckRootTools extends Activity {
             
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getBusyBoxVersion");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox version ]\n");
-            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion() + " k\n\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion("/data/data/stericson.busybox.donate/files/bb") + " k\n\n");
 
             try
 			{
@@ -191,7 +191,7 @@ public class SanityCheckRootTools extends Activity {
 			{
 
 	            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Getting all available Busybox applets ]\n");
-	            for (String applet : RootTools.getBusyBoxApplets())
+	            for (String applet : RootTools.getBusyBoxApplets("/data/data/stericson.busybox.donate/files/bb"))
 	            {
 	                visualUpdate(TestHandler.ACTION_DISPLAY,  applet + " k\n\n");            	
 	            }

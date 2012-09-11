@@ -49,6 +49,7 @@ class InternalVariables {
     
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;
+    protected static boolean found = false;
     protected static String[] space;
     protected static String getSpaceFor;
     protected static String busyboxVersion;
