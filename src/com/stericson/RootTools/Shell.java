@@ -292,7 +292,7 @@ public class Shell {
 			if (pos >= 0) {
 				line = line.substring(pos);
 				String fields[] = line.split(" ");
-				if (fields[1] != null)
+				if (fields.length >= 2 && fields[1] != null)
 				{
 					int id = Integer.parseInt(fields[1]);
 					if (id == read) {
