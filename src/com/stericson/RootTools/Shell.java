@@ -44,6 +44,7 @@ public class Shell {
 	private final List<Command> commands = new ArrayList<Command>();
 	private boolean close = false;
 	
+	private static int shellTimeout = 10000;
 	private static String error = "";
 	private static final String token = "F*D^W@#FGF";
 	private static Shell rootShell = null;
@@ -63,7 +64,7 @@ public class Shell {
         
         try
         {
-        	worker.join(5000);
+        	worker.join(shellTimeout);
         	
             if (worker.exit == -911) {
             	proc.destroy();
@@ -96,17 +97,23 @@ public class Shell {
 	}
 	
 	public static Shell startRootShell() throws IOException, TimeoutException {
+		return Shell.startRootShell(10000);
+	}
+	
+	public static Shell startRootShell(int timeout) throws IOException, TimeoutException {
+		Shell.shellTimeout = timeout;
+		
 		if (rootShell == null) {
 			RootTools.log("Starting Root Shell!");
 			String cmd = "su";
-			// keep prompting the user until they accept, we hit 10 retries, or
+			// keep prompting the user until they accept, we hit 3 retries, or
 			// the attempt fails quickly
 			int retries = 0;
 			while (rootShell == null) {
 				try {
 					rootShell = new Shell(cmd);
 				} catch (IOException e) {
-					if (retries++ >= 2)
+					if (retries++ >= 3)
 					{
 						RootTools.log("IOException, could not start shell");
 						throw e;
@@ -123,6 +130,12 @@ public class Shell {
 	}
 
 	public static Shell startCustomShell(String shellPath) throws IOException, TimeoutException {
+		return Shell.startCustomShell(shellPath, 10000);
+	}
+	
+	public static Shell startCustomShell(String shellPath, int timeout) throws IOException, TimeoutException {
+		Shell.shellTimeout = timeout;
+		
 		if (customShell == null) {
 			RootTools.log("Starting Custom Shell!");
 			customShell = new Shell(shellPath);
@@ -134,6 +147,12 @@ public class Shell {
 	}
 	
 	public static Shell startShell() throws IOException, TimeoutException {
+		return Shell.startShell(10000);
+	}
+	
+	public static Shell startShell(int timeout) throws IOException, TimeoutException {
+		Shell.shellTimeout = timeout;
+		
 		if (shell == null) {
 			RootTools.log("Starting Shell!");
 			shell = new Shell("/system/bin/sh");

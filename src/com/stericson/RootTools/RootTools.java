@@ -275,6 +275,25 @@ public class RootTools {
     public static List<String> getBusyBoxApplets(String path) throws Exception {
         return InternalMethods.getBusyBoxApplets(path);
     }
+
+    /**
+     * This will open or return, if one is already open, a custom shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	shellPath
+     * 				a <code>String</code> to Indicate the path to the shell that you want to open.
+     * 
+     * @param	timeout
+     * 				an <code>int</code> to Indicate the length of time before giving up on opening a shell.
+     * 
+     * @throws	IOException 
+     * @throws TimeoutException 
+     *  
+     */
+    public static Shell getCustomShell(String shellPath, int timeout) throws IOException, TimeoutException
+    {
+    	return Shell.startCustomShell(shellPath, timeout);
+    }
     
     /**
      * This will open or return, if one is already open, a custom shell, you are responsible for managing the shell, reading the output
@@ -289,7 +308,7 @@ public class RootTools {
      */
     public static Shell getCustomShell(String shellPath) throws IOException, TimeoutException
     {
-    	return Shell.startCustomShell(shellPath);
+    	return RootTools.getCustomShell(shellPath, 10000);
     }
     
     /**
@@ -364,16 +383,35 @@ public class RootTools {
      * @param	root
      * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
      * 
+     * @param	timeout
+     * 				an <code>int</code> to Indicate the length of time to wait before giving up on opening a shell.
+     * 
+     * @throws	IOException 
+     * @throws TimeoutException 
+     *  
+     */
+    public static Shell getShell(boolean root, int timeout) throws IOException, TimeoutException
+    {
+    	if (root)
+    		return Shell.startRootShell(timeout);
+    	else
+    		return Shell.startShell(timeout);
+    }
+    
+    /**
+     * This will open or return, if one is already open, a shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     * 
+     * @param	root
+     * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
+     * 
      * @throws	IOException 
      * @throws TimeoutException 
      *  
      */
     public static Shell getShell(boolean root) throws IOException, TimeoutException
     {
-    	if (root)
-    		return Shell.startRootShell();
-    	else
-    		return Shell.startShell();
+    	return RootTools.getShell(root, 10000);
     }
     
     /**
