@@ -34,7 +34,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-public class RootTools {
+import com.stericson.RootTools.containers.Mount;
+import com.stericson.RootTools.containers.Permissions;
+import com.stericson.RootTools.containers.Symlink;
+import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.exceptions.RootToolsException;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.Executer;
+import com.stericson.RootTools.execution.IResult;
+import com.stericson.RootTools.execution.Shell;
+import com.stericson.RootTools.internal.InternalVariables;
+import com.stericson.RootTools.internal.Remounter;
+import com.stericson.RootTools.internal.RootToolsInternalMethods;
+import com.stericson.RootTools.internal.Runner;
+
+public final class RootTools {
 
     /**
      * This class is the gateway to every functionality within the RootTools library.The developer
@@ -49,6 +63,21 @@ public class RootTools {
      * here.For examples of this being done, look at the remount functionality.
      */
 
+	private static RootToolsInternalMethods rim = null;
+	
+	public static void setRim(RootToolsInternalMethods rim) {
+		RootTools.rim = rim;
+	}
+	
+	private static final RootToolsInternalMethods getInternals() {
+		if (rim == null) {
+			RootToolsInternalMethods.getInstance();
+			return rim;
+		} else {
+			return rim;
+		}
+	}
+	
     // --------------------
     // # Public Variables #
     // --------------------
@@ -102,7 +131,7 @@ public class RootTools {
      */
     public static boolean checkUtil(String util) {
     	
-		return InternalMethods.checkUtil(util);
+		return getInternals().checkUtil(util);
     }
 
     /**
@@ -161,7 +190,7 @@ public class RootTools {
      */
     public static boolean copyFile(String source, String destination, boolean remountAsRw, 
     		boolean preserveFileAttributes) {
-        return InternalMethods.copyFile(source, destination, remountAsRw, preserveFileAttributes);
+        return getInternals().copyFile(source, destination, remountAsRw, preserveFileAttributes);
     }
     
 	/**
@@ -176,7 +205,7 @@ public class RootTools {
 	 */
 	public static boolean exists(final String file)
 	{
-		return InternalMethods.exists(file);
+		return getInternals().exists(file);
 	}
 	
     /**
@@ -192,7 +221,7 @@ public class RootTools {
      *            RootTools.getWorkingToolbox()
      */
     public static void fixUtil(String util, String utilPath) {
-    	InternalMethods.fixUtil(util, utilPath);
+    	getInternals().fixUtil(util, utilPath);
     }
     
     /**
@@ -211,7 +240,7 @@ public class RootTools {
      *         exceptions.
      */
     public static boolean fixUtils(String[] utils) throws Exception {
-    	return InternalMethods.fixUtils(utils);
+    	return getInternals().fixUtils(utils);
     }
         
     /**
@@ -225,7 +254,7 @@ public class RootTools {
      * 
      */
     public static boolean findBinary(String binaryName) {
-    	return InternalMethods.findBinary(binaryName);
+    	return getInternals().findBinary(binaryName);
     }
     
     /**
@@ -235,7 +264,7 @@ public class RootTools {
      * @return BusyBox version is found, "" if not found.
      */
     public static String getBusyBoxVersion(String path) {
-        return InternalMethods.getBusyBoxVersion(path);
+        return getInternals().getBusyBoxVersion(path);
     }
 
     /**
@@ -273,7 +302,7 @@ public class RootTools {
      * 
      */
     public static List<String> getBusyBoxApplets(String path) throws Exception {
-        return InternalMethods.getBusyBoxApplets(path);
+        return getInternals().getBusyBoxApplets(path);
     }
 
     /**
@@ -288,9 +317,10 @@ public class RootTools {
      * 
      * @throws	IOException 
      * @throws TimeoutException 
+     * @throws RootDeniedException 
      *  
      */
-    public static Shell getCustomShell(String shellPath, int timeout) throws IOException, TimeoutException
+    public static Shell getCustomShell(String shellPath, int timeout) throws IOException, TimeoutException, RootDeniedException
     {
     	return Shell.startCustomShell(shellPath, timeout);
     }
@@ -304,9 +334,10 @@ public class RootTools {
      * 
      * @throws	IOException 
      * @throws TimeoutException 
+     * @throws RootDeniedException 
      *  
      */
-    public static Shell getCustomShell(String shellPath) throws IOException, TimeoutException
+    public static Shell getCustomShell(String shellPath) throws IOException, TimeoutException, RootDeniedException
     {
     	return RootTools.getCustomShell(shellPath, 10000);
     }
@@ -322,7 +353,7 @@ public class RootTools {
      * 
      */
     public static Permissions getFilePermissionsSymlinks(String file) {
-		return InternalMethods.getFilePermissionsSymlinks(file);
+		return getInternals().getFilePermissionsSymlinks(file);
     }
     
     /**
@@ -335,7 +366,7 @@ public class RootTools {
      */
     public static String getInode(String file)
     {
-    	return InternalMethods.getInode(file);
+    	return getInternals().getInode(file);
     }
 
     /**
@@ -349,7 +380,7 @@ public class RootTools {
      *             if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        return InternalMethods.getMounts();
+        return getInternals().getMounts();
     }
     
     /**
@@ -362,7 +393,7 @@ public class RootTools {
      *             if we cannot determine how the mount is mounted.
      */
     public static String getMountedAs(String path) throws Exception {
-        return InternalMethods.getMountedAs(path);
+        return getInternals().getMountedAs(path);
     }
     
     /**
@@ -373,7 +404,7 @@ public class RootTools {
      *             if we cannot return the $PATH variable
      */
     public static Set<String> getPath() throws Exception {
-        return InternalMethods.getPath();
+        return getInternals().getPath();
     }
     
     /**
@@ -388,9 +419,10 @@ public class RootTools {
      * 
      * @throws	IOException 
      * @throws TimeoutException 
+     * @throws RootDeniedException 
      *  
      */
-    public static Shell getShell(boolean root, int timeout) throws IOException, TimeoutException
+    public static Shell getShell(boolean root, int timeout) throws IOException, TimeoutException, RootDeniedException
     {
     	if (root)
     		return Shell.startRootShell(timeout);
@@ -407,9 +439,10 @@ public class RootTools {
      * 
      * @throws	IOException 
      * @throws TimeoutException 
+     * @throws RootDeniedException 
      *  
      */
-    public static Shell getShell(boolean root) throws IOException, TimeoutException
+    public static Shell getShell(boolean root) throws IOException, TimeoutException, RootDeniedException
     {
     	return RootTools.getShell(root, 10000);
     }
@@ -424,7 +457,7 @@ public class RootTools {
      * @throws TimeoutException
      */
     public static long getSpace(String path) {
-        return InternalMethods.getSpace(path);
+        return getInternals().getSpace(path);
     }
 
     /**
@@ -438,7 +471,7 @@ public class RootTools {
      *         empty string if no symlink exists.
      */
     public static String getSymlink(String file) {
-    	return InternalMethods.getSymlink(file);
+    	return getInternals().getSymlink(file);
     }
     
     /**
@@ -455,7 +488,7 @@ public class RootTools {
      *             if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-    	return InternalMethods.getSymlinks(path);
+    	return getInternals().getSymlinks(path);
     }
     
     /**
@@ -466,7 +499,7 @@ public class RootTools {
      * @return String that indicates the available toolbox to use for accessing applets.
      */
     public static String getWorkingToolbox() {
-        return InternalMethods.getWorkingToolbox();
+        return getInternals().getWorkingToolbox();
     }
     
     /**
@@ -479,7 +512,7 @@ public class RootTools {
      *         read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        return InternalMethods.hasEnoughSpaceOnSdCard(updateSize);
+        return getInternals().hasEnoughSpaceOnSdCard(updateSize);
     }
 
     /**
@@ -492,7 +525,7 @@ public class RootTools {
      */
     public static boolean hasUtil(final String util, final String box) {
     	//TODO Convert this to use the new shell.
-    	return InternalMethods.hasUtil(util, box);
+    	return getInternals().hasUtil(util, box);
     }
 
     /**
@@ -512,7 +545,7 @@ public class RootTools {
      *         file.
      */
     public static boolean installBinary(Context context, int sourceId, String destName, String mode) {
-        return InternalMethods.installBinary(context, sourceId, destName, mode);
+        return getInternals().installBinary(context, sourceId, destName, mode);
     }
 
     /**
@@ -544,7 +577,7 @@ public class RootTools {
      * @return <code>true</code> if applet is available, false otherwise.
      */
     public static boolean isAppletAvailable(String Applet, String path) {
-        return InternalMethods.isAppletAvailable(Applet, path);
+        return getInternals().isAppletAvailable(Applet, path);
     }
 
     /**
@@ -565,7 +598,7 @@ public class RootTools {
      *             if this operation times out. (cannot determine if access is given)
      */
     public static boolean isAccessGiven() {
-    	return InternalMethods.isAccessGiven();
+    	return getInternals().isAccessGiven();
     }
 
     /**
@@ -576,7 +609,7 @@ public class RootTools {
     }
     
     public static boolean isNativeToolsReady(int nativeToolsId, Context context) {
-    	return InternalMethods.isNativeToolsReady(nativeToolsId, context);
+    	return getInternals().isNativeToolsReady(nativeToolsId, context);
     }
     
     /**
@@ -590,7 +623,7 @@ public class RootTools {
      */
     public static boolean isProcessRunning(final String processName) {
     	//TODO convert to new shell
-        return InternalMethods.isProcessRunning(processName);
+        return getInternals().isProcessRunning(processName);
     }
     
     /**
@@ -609,7 +642,7 @@ public class RootTools {
      */
     public static boolean killProcess(final String processName) {
     	//TODO convert to new shell
-		return InternalMethods.killProcess(processName);
+		return getInternals().killProcess(processName);
     }
     
     /**
@@ -619,7 +652,7 @@ public class RootTools {
      *            pass in your Activity
      */
     public static void offerBusyBox(Activity activity) {
-        InternalMethods.offerBusyBox(activity);
+        getInternals().offerBusyBox(activity);
     }
 
     /**
@@ -633,7 +666,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerBusyBox(Activity activity, int requestCode) {
-        return InternalMethods.offerBusyBox(activity, requestCode);
+        return getInternals().offerBusyBox(activity, requestCode);
     }
 
     /**
@@ -643,7 +676,7 @@ public class RootTools {
      *            pass in your Activity
      */
     public static void offerSuperUser(Activity activity) {
-        InternalMethods.offerSuperUser(activity);
+        getInternals().offerSuperUser(activity);
     }
 
     /**
@@ -657,7 +690,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
-        return InternalMethods.offerSuperUser(activity, requestCode);
+        return getInternals().offerSuperUser(activity, requestCode);
     }
     
     /**
@@ -763,6 +796,8 @@ public class RootTools {
      * Sends several shell command as su (attempts to) if useRoot is true; as the current user
      * (app_xxx) otherwise.
      * 
+     * @deprecated
+     * 
      * @param commands
      *            array of commands to send to the shell
      * @param sleepTime
@@ -795,6 +830,8 @@ public class RootTools {
     /**
      * Sends several shell command as su, unless useRoot is set to false
      * 
+     * @deprecated
+     * 
      * @param commands
      *            array of commands to send to the shell
      * @param sleepTime
@@ -823,6 +860,8 @@ public class RootTools {
 
     /**
      * Sends one shell command as su, unless useRoot is set to false
+     * 
+     * @deprecated
      * 
      * @param command
      *            command to send to the shell
@@ -853,6 +892,8 @@ public class RootTools {
 
     /**
      * Sends one shell command as su, unless useRoot is set to false
+     * 
+     * @deprecated
      * 
      * @param command
      *            command to send to the shell
@@ -956,7 +997,7 @@ public class RootTools {
         if (msg != null && !msg.equals("")) {
             if (debugMode) {
                 if (TAG == null) {
-                	TAG = InternalVariables.TAG;
+                	TAG = Constants.TAG;
                 }
                 
             	switch (type)

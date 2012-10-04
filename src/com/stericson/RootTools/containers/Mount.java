@@ -20,24 +20,44 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools;
+package com.stericson.RootTools.containers;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Symlink {
-    protected final File file;
-    protected final File symlinkPath;
+public class Mount {
+    final File mDevice;
+    final File mMountPoint;
+    final String mType;
+    final Set<String> mFlags;
 
-    Symlink(File file, File path) {
-        this.file = file;
-        symlinkPath = path;
+    public Mount(File device, File path, String type, String flagsStr) {
+        mDevice = device;
+        mMountPoint = path;
+        mType = type;
+        mFlags = new HashSet<String>(Arrays.asList(flagsStr.split(",")));
     }
 
-    public File getFile() {
-        return this.file;
+    public File getDevice() {
+        return mDevice;
     }
 
-    public File getSymlinkPath() {
-        return symlinkPath;
+    public File getMountPoint() {
+        return mMountPoint;
+    }
+
+    public String getType() {
+        return mType;
+    }
+
+    public Set<String> getFlags() {
+        return mFlags;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s on %s type %s %s", mDevice, mMountPoint, mType, mFlags);
     }
 }

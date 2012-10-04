@@ -26,18 +26,19 @@
  *Stephen
  */
 
-package com.stericson.RootTools;
+package com.stericson.RootTools.execution;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.concurrent.TimeoutException;
+
+import com.stericson.RootTools.RootTools;
 
 public abstract class Command {
-	final String command[];
+	final String[] command;
 	boolean finished = false;
 	int exitCode;
 	int id = 0;
-	int timeout = InternalVariables.timeout;
+	int timeout = 5000;
 
 	public Command(int id, String... command) {
 		this.command = command;

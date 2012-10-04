@@ -20,27 +20,31 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools;
-
-import java.io.Serializable;
-
-/**
- * Implement this interface and inject the resulting object
- * when invoking <code>sendShell</code>.
- * <code>RootTools</code> comes with a reference implementation:
- * <code>RootTools.Result</code>
+/*
+ *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
+ *
+ *Stephen
  */
-public interface IResult {
-    public abstract void process(String line) throws Exception;
-    public abstract void processError(String line) throws Exception;
-    public abstract void onFailure(Exception ex);
-    public abstract void onComplete(int diag);
 
-    public IResult      setProcess(Process process);
-    public Process      getProcess();
-    public IResult      setData(Serializable data);
-    public Serializable getData();
-    public IResult      setError(int error);
-    public int          getError();
+package com.stericson.RootTools.execution;
 
+import com.stericson.RootTools.RootTools;
+
+public class CommandCapture extends Command {
+	private StringBuilder sb = new StringBuilder();
+
+	public CommandCapture(int id, String... command) {
+		super(id, command);
+	}
+
+	@Override
+	public void output(int id, String line) {
+		sb.append(line).append('\n');
+		RootTools.log("Command", "ID: " + id + ", " + line);
+	}
+	
+	@Override
+	public String toString() {
+		return sb.toString();
+	}
 }
