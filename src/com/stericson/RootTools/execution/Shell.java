@@ -325,9 +325,20 @@ public class Shell {
 				String fields[] = line.split(" ");
 				if (fields.length >= 2 && fields[1] != null)
 				{
-					int id = Integer.parseInt(fields[1]);
+                    int id=0;
+                    try {
+					    id = Integer.parseInt(fields[1]);
+                    }
+                    catch (NumberFormatException e) {
+                    }
+                    int exitCode = -1;
+                    try {
+                        exitCode = Integer.parseInt(fields[2]);
+                    }
+                    catch (NumberFormatException e) {
+                    }
 					if (id == read) {
-						command.setExitCode(Integer.parseInt(fields[2]));
+						command.setExitCode(exitCode);
 						read++;
 						command = null;
 						continue;
