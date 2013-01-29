@@ -167,7 +167,7 @@ public class SanityCheckRootTools extends Activity {
             
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getBusyBoxVersion");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox version ]\n");
-            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion("/data/data/stericson.busybox.donate/files/bb") + " k\n\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion("/system/bin/") + " k\n\n");
 
             try
 			{

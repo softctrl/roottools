@@ -642,7 +642,7 @@ public final class RootToolsInternalMethods
      * @return BusyBox version is found, "" if not found.
      */
     public String getBusyBoxVersion(String path) {
-    	
+
     	if (!path.equals("") && !path.endsWith("/"))
     	{
     		path += "/";
@@ -658,7 +658,7 @@ public final class RootToolsInternalMethods
 				{
 					if (id == Constants.BBV)
 					{
-		                if (line.startsWith("BusyBox")) {
+		                if (line.startsWith("BusyBox") && InternalVariables.busyboxVersion.isEmpty()) {
 		                    String[] temp = line.split(" ");
 		                    InternalVariables.busyboxVersion = temp[1];
 		                }

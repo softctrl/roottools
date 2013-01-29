@@ -43,7 +43,6 @@ import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.Executer;
 import com.stericson.RootTools.execution.IResult;
 import com.stericson.RootTools.execution.Shell;
-import com.stericson.RootTools.internal.InternalVariables;
 import com.stericson.RootTools.internal.Remounter;
 import com.stericson.RootTools.internal.RootToolsInternalMethods;
 import com.stericson.RootTools.internal.Runner;
@@ -124,7 +123,7 @@ public final class RootTools {
      * permissions 755, 775, or 777.
      * 
      * 
-     * @param String
+     * @param util
      *            Name of the utility to check.
      * 
      * @return boolean to indicate whether the binary is installed and has appropriate permissions.
@@ -213,9 +212,9 @@ public final class RootTools {
      * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
      * permissions if the permissions are not correct.
      * 
-     * @param String
+     * @param util
      *            Name of the utility to fix.
-     * @param String
+     * @param utilPath
      *            path to the toolbox that provides ln, rm, and chmod. This can be a blank string, a
      *            path to a binary that will provide these, or you can use
      *            RootTools.getWorkingToolbox()
@@ -229,7 +228,7 @@ public final class RootTools {
      * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
      * fix it. (This is for Busybox applets or Toolbox applets)
      * 
-     * @param String
+     * @param utils
      *            Name of the utility to check.
      * 
      * @throws Exception
@@ -258,7 +257,7 @@ public final class RootTools {
     }
     
     /**
-     * @param binaryName
+     * @param path
      *				String that represents the path to the Busybox binary you want to retrieve the version of.
      *            
      * @return BusyBox version is found, "" if not found.
@@ -360,7 +359,7 @@ public final class RootTools {
      * This method will return the inode number of a file. This method is dependent on having a version of
      * ls that supports the -i parameter. 
      * 
-     *  @param String path to the file that you wish to return the inode number
+     *  @param file path to the file that you wish to return the inode number
      *  
      *  @return String The inode number for this file or "" if the inode number could not be found.
      */
@@ -386,7 +385,7 @@ public final class RootTools {
     /**
      * This will tell you how the specified mount is mounted. rw, ro, etc...
      * <p/>
-     * @param The mount you want to check
+     * @param path The mount you want to check
      * 
      * @return <code>String</code> What the mount is mounted as.
      * @throws Exception
@@ -464,7 +463,7 @@ public final class RootTools {
      * This will return a String that represent the symlink for a specified file.
      * <p/>
      * 
-     * @param The
+     * @param file
      *            path to the file to get the Symlink for. (must have absolute path)
      * 
      * @return <code>String</code> a String that represent the symlink for a specified file or an
@@ -480,7 +479,7 @@ public final class RootTools {
      * <p/>
      * These will provide you with any Symlinks in the given path.
      * 
-     * @param The
+     * @param path
      *            path to search for Symlinks.
      * 
      * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
@@ -570,26 +569,26 @@ public final class RootTools {
      * This will let you know if an applet is available from BusyBox
      * <p/>
      * 
-     * @param <code>String</code> The applet to check for.
+     * @param applet The applet to check for.
      * @param path
      *				Path to the busybox binary that you want to check. (do not include binary name)
      * 
      * @return <code>true</code> if applet is available, false otherwise.
      */
-    public static boolean isAppletAvailable(String Applet, String path) {
-        return getInternals().isAppletAvailable(Applet, path);
+    public static boolean isAppletAvailable(String applet, String path) {
+        return getInternals().isAppletAvailable(applet, path);
     }
 
     /**
      * This will let you know if an applet is available from BusyBox
      * <p/>
      * 
-     * @param <code>String</code> The applet to check for.
+     * @param applet The applet to check for.
      * 
      * @return <code>true</code> if applet is available, false otherwise.
      */
-    public static boolean isAppletAvailable(String Applet) {
-        return RootTools.isAppletAvailable(Applet, "");
+    public static boolean isAppletAvailable(String applet) {
+        return RootTools.isAppletAvailable(applet, "");
     }
 
     /**
@@ -959,7 +958,7 @@ public final class RootTools {
         }
     }
     
-    
+
     /**
      * This method allows you to output debug messages only when debugging is on. This will allow
      * you to add a debug option to your app, which by default can be left off for performance.
@@ -969,30 +968,78 @@ public final class RootTools {
      * This method handles whether or not to log the information you pass it depending whether or
      * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
      * yourself.
-     * 
-     * @param TAG
-     *            Optional parameter to define the tag that the Log will use.
+     *
      * @param msg
      *            The message to output.
-     *            
-     * @param type
-     * 			  The type of log, 1 for verbose, 2 for error, 3 for debug
-     * 
-     * @param exception
-     * 			  The exception that was thrown (Needed for errors)
      */
     public static void log(String msg) {
         log(null, msg, 3, null);
     }
-    
+
+    /**
+     * This method allows you to output debug messages only when debugging is on. This will allow
+     * you to add a debug option to your app, which by default can be left off for performance.
+     * However, when you need debugging information, a simple switch can enable it and provide you
+     * with detailed logging.
+     * <p/>
+     * This method handles whether or not to log the information you pass it depending whether or
+     * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
+     * yourself.
+     *
+     * @param TAG
+     *            Optional parameter to define the tag that the Log will use.
+     * @param msg
+     *            The message to output.
+     *
+     */
     public static void log(String TAG, String msg) {
         log(TAG, msg, 3, null);
     }
 
+    /**
+     * This method allows you to output debug messages only when debugging is on. This will allow
+     * you to add a debug option to your app, which by default can be left off for performance.
+     * However, when you need debugging information, a simple switch can enable it and provide you
+     * with detailed logging.
+     * <p/>
+     * This method handles whether or not to log the information you pass it depending whether or
+     * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
+     * yourself.
+     *
+     * @param msg
+     *            The message to output.
+     *
+     * @param type
+     * 			  The type of log, 1 for verbose, 2 for error, 3 for debug
+     *
+     * @param e
+     * 			  The exception that was thrown (Needed for errors)
+     */
     public static void log(String msg, int type, Exception e) {
         log(null, msg, type, e);
     }
 
+    /**
+     * This method allows you to output debug messages only when debugging is on. This will allow
+     * you to add a debug option to your app, which by default can be left off for performance.
+     * However, when you need debugging information, a simple switch can enable it and provide you
+     * with detailed logging.
+     * <p/>
+     * This method handles whether or not to log the information you pass it depending whether or
+     * not RootTools.debugMode is on. So you can use this and not have to worry about handling it
+     * yourself.
+     *
+     * @param TAG
+     *            Optional parameter to define the tag that the Log will use.
+     * @param msg
+     *            The message to output.
+     *
+     * @param type
+     * 			  The type of log, 1 for verbose, 2 for error, 3 for debug
+     *
+     * @param e
+     * 			  The exception that was thrown (Needed for errors)
+     */
     public static void log(String TAG, String msg, int type, Exception e) {
         if (msg != null && !msg.equals("")) {
             if (debugMode) {
