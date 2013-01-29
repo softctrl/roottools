@@ -341,7 +341,7 @@ public final class RootToolsInternalMethods
 	 * it has either the permissions 755, 775, or 777.
 	 * 
 	 * 
-	 * @param String
+	 * @param util
 	 *            Name of the utility to check.
 	 * 
 	 * @return boolean to indicate whether the binary is installed and has
@@ -382,6 +382,58 @@ public final class RootToolsInternalMethods
 		return false;
 
 	}
+
+    /**
+     * Deletes a file or directory
+     *
+     * @param target
+     *          example: /data/data/org.adaway/files/hosts
+     * @param remountAsRw
+     *          remounts the destination as read/write before writing to it
+     * @return true if it was successfully deleted
+     */
+    public boolean deleteFileOrDirectory(String target, boolean remountAsRw) {
+        boolean result = true;
+
+        try {
+            // mount destination as rw before writing to it
+            if (remountAsRw) {
+                RootTools.remount(target, "RW");
+            }
+
+            if (hasUtil("rm", "toolbox")) {
+                RootTools.log("rm command is available!");
+
+                CommandCapture command = new CommandCapture(0, "rm -r " + target);
+                Shell.startRootShell().add(command).waitForFinish();
+                if (command.exitCode() != 0) {
+                    RootTools.log("target not exist or unable to delete file");
+                    result = false;
+                }
+            } else {
+                if (checkUtil("busybox") && hasUtil("rm", "busybox")) {
+                    RootTools.log("busybox cp command is available!");
+
+                    CommandCapture command = new CommandCapture(0, "busybox rm -rf " + target);
+                    Shell.startRootShell().add(command).waitForFinish();
+                    if (command.exitCode() != 0) {
+                        RootTools.log("target not exist or unable to delete file");
+                        result = false;
+                    }
+                }
+            }
+
+            // mount destination back to ro
+            if (remountAsRw) {
+                RootTools.remount(target, "RO");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = false;
+        }
+
+        return result;
+   	}
 
 	/**
 	 * Use this to check whether or not a file exists on the filesystem.
@@ -464,9 +516,9 @@ public final class RootToolsInternalMethods
      * "fix", I mean it will try and symlink the binary from either toolbox or Busybox and fix the
      * permissions if the permissions are not correct.
      * 
-     * @param String
+     * @param util
      *            Name of the utility to fix.
-     * @param String
+     * @param utilPath
      *            path to the toolbox that provides ln, rm, and chmod. This can be a blank string, a
      *            path to a binary that will provide these, or you can use
      *            RootTools.getWorkingToolbox()
@@ -497,7 +549,7 @@ public final class RootToolsInternalMethods
      * either the permissions 755, 775, or 777. If an applet is not setup correctly it will try and
      * fix it. (This is for Busybox applets or Toolbox applets)
      * 
-     * @param String
+     * @param utils
      *            Name of the utility to check.
      * 
      * @throws Exception
@@ -613,21 +665,23 @@ public final class RootToolsInternalMethods
      */
     public List<String> getBusyBoxApplets(String path) throws Exception {
     	
-    	if (path != null && !path.endsWith("/"))
+    	if (path != null && !path.endsWith("/") && !path.equals("")) {
     		path += "/";
-    	
+        } else if (path == null) {
+            //Don't know what the user wants to do...what am I pshycic?
+            throw new Exception("Path is null, please specifiy a path");
+        }
+
     	final List<String> results = new ArrayList<String>();
     	
-    	Command command = new Command(Constants.BBA, path + "busybox --list")
-    	{
+    	Command command = new Command(Constants.BBA, path + "busybox --list") {
 
 			@Override
-			public void output(int id, String line)
-			{
-				if (id == Constants.BBA)
-				{
-					if (!line.trim().equals("") && !line.trim().contains("not found"))
+			public void output(int id, String line) {
+				if (id == Constants.BBA) {
+					if (!line.trim().equals("") && !line.trim().contains("not found")) {
 						results.add(line);
+                    }
 				}				
 			}    		
     	};
@@ -658,7 +712,7 @@ public final class RootToolsInternalMethods
 				{
 					if (id == Constants.BBV)
 					{
-		                if (line.startsWith("BusyBox") && InternalVariables.busyboxVersion.isEmpty()) {
+		                if (line.startsWith("BusyBox") && InternalVariables.busyboxVersion.equals("")) {
 		                    String[] temp = line.split(" ");
 		                    InternalVariables.busyboxVersion = temp[1];
 		                }
@@ -716,7 +770,7 @@ public final class RootToolsInternalMethods
      * This method will return the inode number of a file. This method is dependent on having a version of
      * ls that supports the -i parameter. 
      * 
-     *  @param String path to the file that you wish to return the inode number
+     *  @param file path to the file that you wish to return the inode number
      *  
      *  @return String The inode number for this file or "" if the inode number could not be found.
      */
@@ -951,7 +1005,7 @@ public final class RootToolsInternalMethods
     /**
      * This will tell you how the specified mount is mounted. rw, ro, etc...
      * <p/>
-     * @param The mount you want to check
+     * @param path mount you want to check
      * 
      * @return <code>String</code> What the mount is mounted as.
      * @throws Exception
@@ -1072,7 +1126,7 @@ public final class RootToolsInternalMethods
      * This will return a String that represent the symlink for a specified file.
      * <p/>
      * 
-     * @param The
+     * @param file
      *            file to get the Symlink for. (must have absolute path)
      * 
      * @return <code>String</code> a String that represent the symlink for a specified file or an
@@ -1145,7 +1199,7 @@ public final class RootToolsInternalMethods
      * <p/>
      * These will provide you with any Symlinks in the given path.
      * 
-     * @param The
+     * @param path
      *            path to search for Symlinks.
      * 
      * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
@@ -1298,14 +1352,14 @@ public final class RootToolsInternalMethods
      * This will let you know if an applet is available from BusyBox
      * <p/>
      * 
-     * @param <code>String</code> The applet to check for.
+     * @param applet The applet to check for.
      * 
      * @return <code>true</code> if applet is available, false otherwise.
      */
-    public boolean isAppletAvailable(String Applet, String binaryPath) {
+    public boolean isAppletAvailable(String applet, String binaryPath) {
         try {
-            for (String applet : getBusyBoxApplets(binaryPath)) {
-                if (applet.equals(Applet)) {
+            for (String aplet : getBusyBoxApplets(binaryPath)) {
+                if (aplet.equals(applet)) {
                     return true;
                 }
             }

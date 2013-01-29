@@ -104,7 +104,7 @@ public class Shell {
 	}
 	
 	public static Shell startRootShell() throws IOException, TimeoutException, RootDeniedException {
-		return Shell.startRootShell(15000);
+		return Shell.startRootShell(20000);
 	}
 	
 	public static Shell startRootShell(int timeout) throws IOException, TimeoutException, RootDeniedException {
@@ -137,7 +137,7 @@ public class Shell {
 	}
 
 	public static Shell startCustomShell(String shellPath) throws IOException, TimeoutException, RootDeniedException {
-		return Shell.startCustomShell(shellPath, 15000);
+		return Shell.startCustomShell(shellPath, 20000);
 	}
 	
 	public static Shell startCustomShell(String shellPath, int timeout) throws IOException, TimeoutException, RootDeniedException {
@@ -154,7 +154,7 @@ public class Shell {
 	}
 	
 	public static Shell startShell() throws IOException, TimeoutException {
-		return Shell.startShell(15000);
+		return Shell.startShell(20000);
 	}
 	
 	public static Shell startShell(int timeout) throws IOException, TimeoutException {

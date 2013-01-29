@@ -191,7 +191,20 @@ public final class RootTools {
     		boolean preserveFileAttributes) {
         return getInternals().copyFile(source, destination, remountAsRw, preserveFileAttributes);
     }
-    
+
+    /**
+     * Deletes a file or directory
+     *
+     * @param target
+     *          example: /data/data/org.adaway/files/hosts
+     * @param remountAsRw
+     *          remounts the destination as read/write before writing to it
+     * @return true if it was successfully deleted
+     */
+    public boolean deleteFileOrDirectory(String target, boolean remountAsRw) {
+        return getInternals().deleteFileOrDirectory(target, remountAsRw);
+    }
+
 	/**
 	 * Use this to check whether or not a file exists on the filesystem.
 	 * 
