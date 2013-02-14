@@ -43,13 +43,14 @@ public class Shell {
 	private final OutputStreamWriter out;
 	private final List<Command> commands = new ArrayList<Command>();
 	private boolean close = false;
-	
-	private static int shellTimeout = 10000;
+
 	private static String error = "";
 	private static final String token = "F*D^W@#FGF";
 	private static Shell rootShell = null;
 	private static Shell shell = null;
 	private static Shell customShell = null;
+
+    private static int shellTimeout = 10000;
 
 	private Shell(String cmd) throws IOException, TimeoutException, RootDeniedException {
 
@@ -89,95 +90,36 @@ public class Shell {
             throw new TimeoutException();
         } 		
 	}
-	
-	public static Shell getOpenShell()
-	{
-		if (customShell != null)
-			return customShell;
-		else if (rootShell != null)
-			return rootShell;
-		else
-			return shell;
-	}
-	
-	public static Shell startRootShell() throws IOException, TimeoutException, RootDeniedException {
-		return Shell.startRootShell(20000);
-	}
-	
-	public static Shell startRootShell(int timeout) throws IOException, TimeoutException, RootDeniedException {
-		Shell.shellTimeout = timeout;
-		
-		if (rootShell == null) {
-			RootTools.log("Starting Root Shell!");
-			String cmd = "su";
-			// keep prompting the user until they accept, we hit 3 retries, or
-			// the attempt fails quickly
-			int retries = 0;
-			while (rootShell == null) {
-				try {
-					rootShell = new Shell(cmd);
-				} catch (IOException e) {
-					if (retries++ >= 3)
-					{
-						RootTools.log("IOException, could not start shell");
-						throw e;
-					}
-				}
-			}
-		}
-		else
-		{
-			RootTools.log("Using Existing Root Shell!");
-		}
-		
-		return rootShell;
-	}
 
-	public static Shell startCustomShell(String shellPath) throws IOException, TimeoutException, RootDeniedException {
-		return Shell.startCustomShell(shellPath, 20000);
-	}
-	
-	public static Shell startCustomShell(String shellPath, int timeout) throws IOException, TimeoutException, RootDeniedException {
-		Shell.shellTimeout = timeout;
-		
-		if (customShell == null) {
-			RootTools.log("Starting Custom Shell!");
-			customShell = new Shell(shellPath);
-		}
-		else
-			RootTools.log("Using Existing Custom Shell!");
 
-		return customShell;
-	}
-	
-	public static Shell startShell() throws IOException, TimeoutException {
-		return Shell.startShell(20000);
-	}
-	
-	public static Shell startShell(int timeout) throws IOException, TimeoutException {
-		Shell.shellTimeout = timeout;
-		
-		try {
-			if (shell == null) {
-				RootTools.log("Starting Shell!");
-				shell = new Shell("/system/bin/sh");
-			}
-			else
-				RootTools.log("Using Existing Shell!");
-			return shell;
-		} catch (RootDeniedException e) {
-			//Root Denied should never be thrown.
-			throw new IOException();
-		}
-	}
+    public Command add(Command command) throws IOException {
+   		if (close)
+   			throw new IllegalStateException(
+   					"Unable to add commands to a closed shell");
+   		synchronized (commands) {
+   			commands.add(command);
+   			commands.notifyAll();
+   		}
 
-	public static void runRootCommand(Command command) throws IOException, TimeoutException, RootDeniedException {
-		startRootShell().add(command);
-	}
+   		return command;
+   	}
 
-	public static void runCommand(Command command) throws IOException, TimeoutException {
-		startShell().add(command);
-	}
+   	public void close() throws IOException {
+   		if (this == rootShell)
+   			rootShell = null;
+   		if (this == shell)
+   			shell = null;
+   		if (this == customShell)
+   			customShell = null;
+   		synchronized (commands) {
+   			this.close = true;
+   			commands.notifyAll();
+   		}
+   	}
+
+   	public int countCommands() {
+   		return commands.size();
+   	}
 
 	public static void closeCustomShell() throws IOException {
 		if (customShell == null)
@@ -203,7 +145,17 @@ public class Shell {
 		closeRootShell();
 		closeCustomShell();
 	}
-	
+
+    public static Shell getOpenShell()
+   	{
+   		if (customShell != null)
+   			return customShell;
+   		else if (rootShell != null)
+   			return rootShell;
+   		else
+   			return shell;
+   	}
+
 	public static boolean isShellOpen()
 	{
 		if (shell == null)
@@ -249,37 +201,6 @@ public class Shell {
 			}
 		}
 	};
-
-	private void writeCommands() throws IOException {
-		try {
-			int write = 0;
-			while (true) {
-				OutputStreamWriter out;
-				synchronized (commands) {
-					while (!close && write >= commands.size()) {
-						commands.wait();
-					}
-					out = this.out;
-				}
-				if (write < commands.size()) {
-					Command next = commands.get(write);
-					next.writeCommand(out);
-					String line = "\necho " + token + " " + write + " $?\n";
-					out.write(line);
-					out.flush();
-					write++;
-				} else if (close) {
-					out.write("\nexit 0\n");
-					out.flush();
-					out.close();
-					RootTools.log("Closing shell");
-					return;
-				}
-			}
-		} catch (InterruptedException e) {
-			RootTools.log(e.getMessage(), 2, e);
-		}
-	}
 
 	private Runnable output = new Runnable() {
 		public void run() {
@@ -358,35 +279,89 @@ public class Shell {
 		}
 	}
 
-	public Command add(Command command) throws IOException {
-		if (close)
-			throw new IllegalStateException(
-					"Unable to add commands to a closed shell");
-		synchronized (commands) {
-			commands.add(command);
-			commands.notifyAll();
-		}
-		
-		return command;
-	}
+    public static void runRootCommand(Command command) throws IOException, TimeoutException, RootDeniedException {
+       		startRootShell().add(command);
+       	}
 
-	public void close() throws IOException {
-		if (this == rootShell)
-			rootShell = null;
-		if (this == shell)
-			shell = null;
-		if (this == customShell)
-			customShell = null;
-		synchronized (commands) {
-			this.close = true;
-			commands.notifyAll();
-		}		
-	}
+    public static void runCommand(Command command) throws IOException, TimeoutException {
+       		startShell().add(command);
+       	}
 
-	public int countCommands() {
-		return commands.size();
-	}
-	
+    public static Shell startRootShell() throws IOException, TimeoutException, RootDeniedException {
+       		return Shell.startRootShell(20000, 3);
+    }
+
+    public static Shell startRootShell(int timeout) throws IOException, TimeoutException, RootDeniedException {
+   		return Shell.startRootShell(timeout, 3);
+   	}
+
+   	public static Shell startRootShell(int timeout, int retry) throws IOException, TimeoutException, RootDeniedException {
+
+        Shell.shellTimeout = timeout;
+
+   		if (rootShell == null) {
+   			RootTools.log("Starting Root Shell!");
+   			String cmd = "su";
+   			// keep prompting the user until they accept for x amount of times...
+   			int retries = 0;
+   			while (rootShell == null) {
+   				try {
+   					rootShell = new Shell(cmd);
+   				} catch (IOException e) {
+   					if (retries++ >= retry)
+   					{
+   						RootTools.log("IOException, could not start shell");
+   						throw e;
+   					}
+   				}
+   			}
+   		}
+   		else
+   		{
+   			RootTools.log("Using Existing Root Shell!");
+   		}
+
+   		return rootShell;
+   	}
+
+   	public static Shell startCustomShell(String shellPath) throws IOException, TimeoutException, RootDeniedException {
+   		return Shell.startCustomShell(shellPath, 20000);
+   	}
+
+   	public static Shell startCustomShell(String shellPath, int timeout) throws IOException, TimeoutException, RootDeniedException {
+   		Shell.shellTimeout = timeout;
+
+   		if (customShell == null) {
+   			RootTools.log("Starting Custom Shell!");
+   			customShell = new Shell(shellPath);
+   		}
+   		else
+   			RootTools.log("Using Existing Custom Shell!");
+
+   		return customShell;
+   	}
+
+   	public static Shell startShell() throws IOException, TimeoutException {
+   		return Shell.startShell(20000);
+   	}
+
+   	public static Shell startShell(int timeout) throws IOException, TimeoutException {
+   		Shell.shellTimeout = timeout;
+
+   		try {
+   			if (shell == null) {
+   				RootTools.log("Starting Shell!");
+   				shell = new Shell("/system/bin/sh");
+   			}
+   			else
+   				RootTools.log("Using Existing Shell!");
+   			return shell;
+   		} catch (RootDeniedException e) {
+   			//Root Denied should never be thrown.
+   			throw new IOException();
+   		}
+   	}
+
 	public void waitFor() throws IOException, InterruptedException {
 		close();
 		if (commands.size() > 0)
@@ -444,4 +419,36 @@ public class Shell {
 			
 		}
     }
+
+    private void writeCommands() throws IOException {
+   		try {
+   			int write = 0;
+   			while (true) {
+   				OutputStreamWriter out;
+   				synchronized (commands) {
+   					while (!close && write >= commands.size()) {
+   						commands.wait();
+   					}
+   					out = this.out;
+   				}
+   				if (write < commands.size()) {
+   					Command next = commands.get(write);
+   					next.writeCommand(out);
+   					String line = "\necho " + token + " " + write + " $?\n";
+   					out.write(line);
+   					out.flush();
+   					write++;
+   				} else if (close) {
+   					out.write("\nexit 0\n");
+   					out.flush();
+   					out.close();
+   					RootTools.log("Closing shell");
+   					return;
+   				}
+   			}
+   		} catch (InterruptedException e) {
+   			RootTools.log(e.getMessage(), 2, e);
+   		}
+   	}
+
 }

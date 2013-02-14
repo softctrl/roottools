@@ -418,7 +418,33 @@ public final class RootTools {
     public static Set<String> getPath() throws Exception {
         return getInternals().getPath();
     }
-    
+
+    /**
+     * This will open or return, if one is already open, a shell, you are responsible for managing the shell, reading the output
+     * and for closing the shell when you are done using it.
+     *
+     * @param	root
+     * 				a <code>boolean</code> to Indicate whether or not you want to open a root shell or a standard shell
+     *
+     * @param	timeout
+     * 				an <code>int</code> to Indicate the length of time to wait before giving up on opening a shell.
+     *
+     * @param   retry
+     *              a <code>int</code> to indicate how many times the ROOT shell should try to open with root priviliges...
+     *
+     * @throws	IOException
+     * @throws TimeoutException
+     * @throws RootDeniedException
+     *
+     */
+    public static Shell getShell(boolean root, int timeout, int retry) throws IOException, TimeoutException, RootDeniedException
+    {
+    	if (root)
+    		return Shell.startRootShell(timeout);
+    	else
+    		return Shell.startShell(timeout);
+    }
+
     /**
      * This will open or return, if one is already open, a shell, you are responsible for managing the shell, reading the output
      * and for closing the shell when you are done using it.
@@ -436,10 +462,7 @@ public final class RootTools {
      */
     public static Shell getShell(boolean root, int timeout) throws IOException, TimeoutException, RootDeniedException
     {
-    	if (root)
-    		return Shell.startRootShell(timeout);
-    	else
-    		return Shell.startShell(timeout);
+    	return getShell(root, timeout, 3);
     }
     
     /**
