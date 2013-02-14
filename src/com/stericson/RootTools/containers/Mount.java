@@ -25,6 +25,7 @@ package com.stericson.RootTools.containers;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Mount {
@@ -37,7 +38,7 @@ public class Mount {
         mDevice = device;
         mMountPoint = path;
         mType = type;
-        mFlags = new HashSet<String>(Arrays.asList(flagsStr.split(",")));
+        mFlags = new LinkedHashSet<String>(Arrays.asList(flagsStr.split(",")));
     }
 
     public File getDevice() {

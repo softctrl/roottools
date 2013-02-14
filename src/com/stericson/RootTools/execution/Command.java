@@ -29,7 +29,7 @@
 package com.stericson.RootTools.execution;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import com.stericson.RootTools.RootTools;
 
@@ -61,8 +61,8 @@ public abstract class Command {
 		return sb.toString();
 	}
 
-	public void writeCommand(OutputStream out) throws IOException {
-		out.write(getCommand().getBytes());
+	public void writeCommand(OutputStreamWriter out) throws IOException {
+		out.write(getCommand());
 	}
 
 	public abstract void output(int id, String line);

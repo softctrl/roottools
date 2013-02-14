@@ -28,10 +28,7 @@
 
 package com.stericson.RootTools.execution;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -42,8 +39,8 @@ import com.stericson.RootTools.exceptions.RootDeniedException;
 public class Shell {
 	
 	private final Process proc;
-	private final DataInputStream in;
-	private final DataOutputStream out;
+	private final BufferedReader in;
+	private final OutputStreamWriter out;
 	private final List<Command> commands = new ArrayList<Command>();
 	private boolean close = false;
 	
@@ -59,8 +56,8 @@ public class Shell {
 		RootTools.log("Starting shell: " + cmd);
 
 		proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-		in = new DataInputStream(proc.getInputStream());
-		out = new DataOutputStream(proc.getOutputStream());
+		in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+		out = new OutputStreamWriter(proc.getOutputStream(), "UTF-8");
 
         Worker worker = new Worker(proc, in, out);
         worker.start();
@@ -257,7 +254,7 @@ public class Shell {
 		try {
 			int write = 0;
 			while (true) {
-				DataOutputStream out;
+				OutputStreamWriter out;
 				synchronized (commands) {
 					while (!close && write >= commands.size()) {
 						commands.wait();
@@ -268,11 +265,11 @@ public class Shell {
 					Command next = commands.get(write);
 					next.writeCommand(out);
 					String line = "\necho " + token + " " + write + " $?\n";
-					out.write(line.getBytes());
+					out.write(line);
 					out.flush();
 					write++;
 				} else if (close) {
-					out.write("\nexit 0\n".getBytes());
+					out.write("\nexit 0\n");
 					out.flush();
 					out.close();
 					RootTools.log("Closing shell");
@@ -404,10 +401,10 @@ public class Shell {
     	public int exit = -911;
     	
     	public Process proc;
-    	public DataInputStream in;
-    	public DataOutputStream out;
+    	public BufferedReader in;
+    	public OutputStreamWriter out;
 	  
-		private Worker(Process proc, DataInputStream in, DataOutputStream out)  {
+		private Worker(Process proc, BufferedReader in, OutputStreamWriter out)  {
 			this.proc = proc;
 			this.in = in;
 			this.out = out;
@@ -418,7 +415,7 @@ public class Shell {
 
 			try
 			{
-				out.write("echo Started\n".getBytes());
+				out.write("echo Started\n");
 				out.flush();
 	
 				while (true) {
