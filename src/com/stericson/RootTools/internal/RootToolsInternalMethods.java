@@ -45,7 +45,6 @@ import android.os.StatFs;
 
 import com.stericson.RootTools.Constants;
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.RootTools.Result;
 import com.stericson.RootTools.containers.Mount;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.containers.Symlink;
@@ -59,8 +58,7 @@ public final class RootToolsInternalMethods
 	// --------------------
 	// # Internal methods #
 	// --------------------
-	boolean instantiated = false;
-	
+
 	protected RootToolsInternalMethods() {}
 	
 	public static void getInstance() {
@@ -127,8 +125,7 @@ public final class RootToolsInternalMethods
 		}
 	}
 
-	public ArrayList<Symlink> getSymLinks() throws FileNotFoundException,
-			IOException
+	public ArrayList<Symlink> getSymLinks() throws IOException
 	{
 		LineNumberReader lnr = null;
 		try
@@ -1380,45 +1377,28 @@ public final class RootToolsInternalMethods
      *             (Could not determine if the process is running)
      */
     public boolean isProcessRunning(final String processName) {
+
         RootTools.log("Checks if process is running: " + processName);
 
-        boolean processRunning = false;
+        InternalVariables.processRunning = false;
+
         try {
-            Result result = new Result() {
+            Command cmd = new Command(0, "ps") {
                 @Override
-                public void process(String line) throws Exception {
+                public void output(int id, String line) {
                     if (line.contains(processName)) {
-                        setData(1);
+                        InternalVariables.processRunning = true;
                     }
                 }
-
-                @Override
-                public void onFailure(Exception ex) {
-                    setError(1);
-                }
-
-                @Override
-                public void onComplete(int diag) {
-                }
-
-                @Override
-                public void processError(String arg0) throws Exception {
-                }
-
             };
-            RootTools.sendShell(new String[] { "ps" }, 1, result, -1);
 
-            if (result.getError() == 0) {
-                // if data has been set process is running
-                if (result.getData() != null) {
-                    processRunning = true;
-                }
-            }
+            RootTools.getShell(true).add(cmd).waitForFinish();
+
         } catch (Exception e) {
             RootTools.log(e.getMessage());
         }
 
-        return processRunning;
+        return InternalVariables.processRunning;
     }
 
 	/**
@@ -1432,94 +1412,77 @@ public final class RootToolsInternalMethods
 	{
 		RootTools.log("Killing process " + processName);
 
-		boolean processKilled = false;
+        InternalVariables.pid_list = "";
+
+        //Assume that the process is running
+        InternalVariables.processRunning = true;
+
 		try
 		{
-			Result result = new Result()
-			{
-				@Override
-				public void process(String line) throws Exception
-				{
-					if(line.contains(processName))
-					{
-						Matcher psMatcher = InternalVariables.psPattern.matcher(line);
 
-						try
-						{
-							if(psMatcher.find())
-							{
-								String pid = psMatcher.group(1);
-								// concatenate to existing pids, to use later in
-								// kill
-								if(getData() != null)
-								{
-									setData(getData() + " " + pid);
-								}
-								else
-								{
-									setData(pid);
-								}
-								RootTools.log("Found pid: " + pid);
-							}
-							else
-							{
-								RootTools.log("Matching in ps command failed!");
-							}
-						}
-						catch (Exception e)
-						{
-							RootTools.log("Error with regex!");
-							e.printStackTrace();
-						}
-					}
-				}
+            Command cmd = new Command(0, "ps") {
+                @Override
+                public void output(int id, String line) {
+                    if(line.contains(processName))
+                    {
+                        Matcher psMatcher = InternalVariables.psPattern.matcher(line);
 
-				@Override
-				public void onFailure(Exception ex)
-				{
-					setError(1);
-				}
+                        try
+                        {
+                            if(psMatcher.find())
+                            {
+                                String pid = psMatcher.group(1);
 
-				@Override
-				public void onComplete(int diag)
-				{
-				}
+                                InternalVariables.pid_list += " " + pid;
+                                InternalVariables.pid_list.trim();
 
-				@Override
-				public void processError(String arg0) throws Exception
-				{
-				}
+                                RootTools.log("Found pid: " + pid);
+                            }
+                            else
+                            {
+                                RootTools.log("Matching in ps command failed!");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            RootTools.log("Error with regex!");
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
 
-			};
-			RootTools.sendShell(new String[] { "ps" }, 1, result, -1);
+            RootTools.getShell(true).add(cmd).waitForFinish();
 
-			if(result.getError() == 0)
-			{
-				// get all pids in one string, created in process method
-				String pids = (String) result.getData();
+            // get all pids in one string, created in process method
+            String pids = InternalVariables.pid_list;
 
-				// kill processes
-				if(pids != null)
-				{
-					try
-					{
-						// example: kill -9 1234 1222 5343
-						RootTools.sendShell(new String[] { "kill -9 " + pids }, 1, -1);
-						processKilled = true;
-					}
-					catch (Exception e)
-					{
-						RootTools.log(e.getMessage());
-					}
-				}
-			}
+            // kill processes
+            if(!pids.equals(""))
+            {
+                try
+                {
+                    // example: kill -9 1234 1222 5343
+                    CommandCapture kill_cmd = new CommandCapture(0, "kill -9 " + pids);
+                    RootTools.getShell(true).add(kill_cmd).waitForFinish();
+
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    RootTools.log(e.getMessage());
+                }
+            } else {
+                //no pids match, must be dead
+                return true;
+            }
 		}
 		catch (Exception e)
 		{
 			RootTools.log(e.getMessage());
 		}
 
-		return processKilled;
+		return false;
 	}
 
     /**

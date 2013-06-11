@@ -61,10 +61,6 @@ public abstract class Command {
 		return sb.toString();
 	}
 
-	public void writeCommand(OutputStreamWriter out) throws IOException {
-		out.write(getCommand());
-	}
-
 	public abstract void output(int id, String line);
 	
 	public void commandFinished(int id)

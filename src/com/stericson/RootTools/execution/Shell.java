@@ -19,13 +19,6 @@
  * See each License for the specific language governing permissions and
  * limitations under that License.
  */
-
-/*
- *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
- *
- *Stephen
- */
-
 package com.stericson.RootTools.execution;
 
 import java.io.*;
@@ -42,16 +35,19 @@ public class Shell {
 	private final BufferedReader in;
 	private final OutputStreamWriter out;
 	private final List<Command> commands = new ArrayList<Command>();
+
+    //indicates whether or not to close the shell
 	private boolean close = false;
 
 	private static String error = "";
 	private static final String token = "F*D^W@#FGF";
-	private static Shell rootShell = null;
+    private static Shell rootShell = null;
 	private static Shell shell = null;
 	private static Shell customShell = null;
 
     private static int shellTimeout = 10000;
 
+    //private constructor responsible for opening/constructing the shell
 	private Shell(String cmd) throws IOException, TimeoutException, RootDeniedException {
 
 		RootTools.log("Starting shell: " + cmd);
@@ -60,30 +56,57 @@ public class Shell {
 		in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 		out = new OutputStreamWriter(proc.getOutputStream(), "UTF-8");
 
+        /**
+         * Thread responsible for carrying out the requested operations
+         */
         Worker worker = new Worker(proc, in, out);
         worker.start();
         
         try
         {
+            /**
+             * The flow of execution will wait for the thread to die or wait until the
+             * given timeout has expired.
+             *
+             * The result of the worker, which is determined by the exit code of the worker,
+             * will tell us if the operation was completed successfully or it the operation
+             * failed.
+             */
         	worker.join(shellTimeout);
-        	
+
+            /**
+             * The operation could not be completed before the timeout occured.
+             */
         	if (worker.exit == -911) {
             	proc.destroy();
 				
             	throw new TimeoutException(error);
             }
-        	if (worker.exit == -42) {
+            /**
+             * Root access denied?
+             */
+        	else if (worker.exit == -42) {
             	proc.destroy();
 				
             	throw new RootDeniedException("Root Access Denied"); 
             }
+            /**
+             * Normal exit
+             */
             else
             {
+                /**
+                 * The shell is open.
+                 *
+                 * Start two threads, one to handle the input and one to handle the output.
+                 *
+                 * input, and output are runnables that the threads execute.
+                 */
         		new Thread(input, "Shell Input").start();
         		new Thread(output, "Shell Output").start();
             }
-        } 
-        catch(InterruptedException ex) 
+        }
+        catch(InterruptedException ex)
         {
             worker.interrupt();
             Thread.currentThread().interrupt();
@@ -107,21 +130,21 @@ public class Shell {
    	public void close() throws IOException {
    		if (this == rootShell)
    			rootShell = null;
-   		if (this == shell)
+   		else if (this == shell)
    			shell = null;
-   		if (this == customShell)
+   		else if (this == customShell)
    			customShell = null;
    		synchronized (commands) {
+            /**
+             * instruct the two threads monitoring input and output
+             * of the shell to close.
+             */
    			this.close = true;
    			commands.notifyAll();
    		}
    	}
 
-   	public int countCommands() {
-   		return commands.size();
-   	}
-
-	public static void closeCustomShell() throws IOException {
+   	public static void closeCustomShell() throws IOException {
 		if (customShell == null)
 			return;
 		customShell.close();
@@ -192,92 +215,173 @@ public class Shell {
 			return false;
 	}
 
+    /**
+     * Runnable to write commands to the open shell.
+     *
+     * When writing commands we stay in a loop and wait for new
+     * commands to added to "commands"
+     *
+     * The notification of a new command is handled by the method add in this class
+     */
 	private Runnable input = new Runnable() {
 		public void run() {
 			try {
-				writeCommands();
-			} catch (IOException e) {
+                int write = 0;
+                while (true) {
+
+                    synchronized (commands) {
+                        /**
+                         * While loop is used in the case that notifyAll is called
+                         * and there are still no commands to be written, a rare
+                         * case but one that could happen.
+                         */
+                        while (!close && write >= commands.size()) {
+                            commands.wait();
+                        }
+                    }
+
+                    /**
+                     * Write the new command
+                     *
+                     * We write the command followed by the token to indicate
+                     * the end of the command execution
+                     */
+                    if (write < commands.size()) {
+                        Command cmd = commands.get(write);
+                        out.write(cmd.getCommand());
+                        String line = "\necho " + token + " " + write + " $?\n";
+                        out.write(line);
+                        out.flush();
+                        write++;
+                    } else if (close) {
+                        /**
+                         * close the thread, the shell is closing.
+                         */
+                        out.write("\nexit 0\n");
+                        out.flush();
+                        out.close();
+                        RootTools.log("Closing shell");
+                        return;
+                    }
+                }
+            } catch (IOException e) {
 				RootTools.log(e.getMessage(), 2, e);
-			}
+			} catch (InterruptedException e) {
+                RootTools.log(e.getMessage(), 2, e);
+            }
 		}
 	};
 
+    /**
+     * Runnable to monitor the responses from the open shell.
+     *
+     * This con
+     */
 	private Runnable output = new Runnable() {
 		public void run() {
 			try {
-				readOutput();
-			} catch (IOException e) {
+                Command command = null;
+                int read = 0;
+
+                while (true) {
+                    String line = in.readLine();
+
+                    /**
+                     * If we recieve EOF then the shell closed
+                     */
+                    if (line == null)
+                        break;
+
+                    if (command == null) {
+                        if (read >= commands.size())
+                        {
+                            if (close)
+                                break;
+
+                            continue;
+                        }
+                        command = commands.get(read);
+                    }
+
+                    /**
+                     * trying to determine if all commands have been completed.
+                     *
+                     * if the token is present then the command has finished execution.
+                     */
+                    int pos = line.indexOf(token);
+
+
+                    if (pos == -1) {
+                        /**
+                         * send the output for the implementer to process
+                         */
+                        command.output(command.id, line);
+                    }
+                    else {
+                        line = line.substring(0, pos);
+
+                        String fields[] = line.split(" ");
+
+                        if (fields.length >= 2 && fields[1] != null)
+                        {
+                            int id = 0;
+
+                            try {
+                                id = Integer.parseInt(fields[1]);
+                            }
+                            catch (NumberFormatException e) {}
+
+                            int exitCode = -1;
+
+                            try {
+                                exitCode = Integer.parseInt(fields[2]);
+                            }
+                            catch (NumberFormatException e) {}
+
+                            if (id == read) {
+                                command.setExitCode(exitCode);
+                                read++;
+                                command = null;
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                RootTools.log("Read all output");
+                proc.waitFor();
+                proc.destroy();
+                RootTools.log("Shell destroyed");
+
+                while (read < commands.size()) {
+                    if (command == null)
+                        command = commands.get(read);
+
+                    command.terminated("Unexpected Termination.");
+                    command = null;
+                    read++;
+                }
+
+                /**
+                 * clean things up.
+                 *
+                 * indicate that the shell should be closed.
+                 *
+                 * since the input thread waits on notification to
+                 * continue we need to let it know that
+                 * it should close.
+                 */
+                close = true;
+                commands.notifyAll();
+
+
+            } catch (IOException e) {
 				RootTools.log(e.getMessage(), 2, e);
 			} catch (InterruptedException e) {
 				RootTools.log(e.getMessage(), 2, e);
 			}
 		}
 	};
-
-	private void readOutput() throws IOException, InterruptedException {
-		Command command = null;
-		int read = 0;
-		while (true) {
-			String line = in.readLine();
-
-			// terminate on EOF
-			if (line == null)
-				break;
-			
-			// Log.v("Shell", "Out; \"" + line + "\"");
-			if (command == null) {
-				if (read >= commands.size())
-				{
-					if (close)
-						break;
-					continue;
-				}
-				command = commands.get(read);
-			}
-
-			int pos = line.indexOf(token);
-			if (pos > 0)
-				command.output(command.id, line.substring(0, pos));
-			if (pos >= 0) {
-				line = line.substring(pos);
-				String fields[] = line.split(" ");
-				if (fields.length >= 2 && fields[1] != null)
-				{
-                    int id=0;
-                    try {
-					    id = Integer.parseInt(fields[1]);
-                    }
-                    catch (NumberFormatException e) {
-                    }
-                    int exitCode = -1;
-                    try {
-                        exitCode = Integer.parseInt(fields[2]);
-                    }
-                    catch (NumberFormatException e) {
-                    }
-					if (id == read) {
-						command.setExitCode(exitCode);
-						read++;
-						command = null;
-						continue;
-					}
-				}
-			}
-			command.output(command.id, line);
-		}
-		RootTools.log("Read all output");
-		proc.waitFor();
-		proc.destroy();
-		RootTools.log("Shell destroyed");
-		
-		while (read < commands.size()) {
-			if (command == null)
-				command = commands.get(read);
-			command.terminated("Unexpected Termination.");
-			command = null;
-			read++;
-		}
-	}
 
     public static void runRootCommand(Command command) throws IOException, TimeoutException, RootDeniedException {
        		startRootShell().add(command);
@@ -361,15 +465,6 @@ public class Shell {
    			throw new IOException();
    		}
    	}
-
-	public void waitFor() throws IOException, InterruptedException {
-		close();
-		if (commands.size() > 0)
-		{
-			Command command = commands.get(commands.size() - 1);
-			command.exitCode();
-		}
-	}
 	
     protected static class Worker extends Thread 
     {
@@ -388,6 +483,16 @@ public class Shell {
 		public void run() 
 		{
 
+            /**
+             * Trying to open the shell.
+             *
+             * We echo "Started" and we look for it in the output.
+             *
+             * If we find the output then the shell is open and we return.
+             *
+             * If we do not find it then we determine the error and report
+             * it by setting the value of the variable exit
+             */
 			try
 			{
 				out.write("echo Started\n");
@@ -405,6 +510,7 @@ public class Shell {
 						this.exit = 1;
 						break;
 					}
+
 					Shell.error = "unkown error occured.";
 				}
 			}
@@ -419,36 +525,4 @@ public class Shell {
 			
 		}
     }
-
-    private void writeCommands() throws IOException {
-   		try {
-   			int write = 0;
-   			while (true) {
-   				OutputStreamWriter out;
-   				synchronized (commands) {
-   					while (!close && write >= commands.size()) {
-   						commands.wait();
-   					}
-   					out = this.out;
-   				}
-   				if (write < commands.size()) {
-   					Command next = commands.get(write);
-   					next.writeCommand(out);
-   					String line = "\necho " + token + " " + write + " $?\n";
-   					out.write(line);
-   					out.flush();
-   					write++;
-   				} else if (close) {
-   					out.write("\nexit 0\n");
-   					out.flush();
-   					out.close();
-   					RootTools.log("Closing shell");
-   					return;
-   				}
-   			}
-   		} catch (InterruptedException e) {
-   			RootTools.log(e.getMessage(), 2, e);
-   		}
-   	}
-
 }

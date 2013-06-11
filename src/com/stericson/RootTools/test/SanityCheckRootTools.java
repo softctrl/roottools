@@ -41,6 +41,7 @@ import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.exceptions.RootToolsException;
+import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 public class SanityCheckRootTools extends Activity {
@@ -236,112 +237,6 @@ public class SanityCheckRootTools extends Activity {
             long spaceValue = RootTools.getSpace("/data");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking /data partition size]\n");
             visualUpdate(TestHandler.ACTION_DISPLAY, spaceValue + "k\n\n");
-
-            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ return array");
-            try {
-                List<String> response = RootTools.sendShell("ls /", -1);
-                visualUpdate(TestHandler.ACTION_DISPLAY, "[ Listing of / (passing a List)]\n");
-                for (String line : response) {
-                    visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
-                }
-            } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-                return;
-            } catch (RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
-                return;
-            } catch (TimeoutException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
-                return;
-			}
-
-            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ callbacks");
-            try {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "\n[ Listing of / (callback)]\n");
-                RootTools.Result result2 = new RootTools.Result() {
-                    @Override
-                    public void process(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
-                    }
-
-                    @Override
-                    public void onFailure(Exception ex) {
-                        visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + ex);
-                        setError(1);
-                    }
-
-                    @Override
-                    public void onComplete(int diag) {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
-                    }
-
-					@Override
-					public void processError(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
-					}
-                };
-                RootTools.sendShell("ls /", result2, -1);
-                if (0 != result2.getError())
-                    return;
-            } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-                return;
-            } catch (RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
-                return;
-            } catch (TimeoutException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
-                return;
-			}
-
-            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() for multiple commands");
-            try {
-                visualUpdate(TestHandler.ACTION_DISPLAY, "\n[ ps + ls + date / (callback)]\n");
-                RootTools.Result result2 = new RootTools.Result() {
-                    @Override
-                    public void process(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
-                    }
-
-                    @Override
-                    public void onFailure(Exception ex) {
-                        visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + ex);
-                        setError(1);
-                    }
-
-                    @Override
-                    public void onComplete(int diag) {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
-                    }
-
-					@Override
-					public void processError(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
-					}
-
-                };
-                RootTools.sendShell(
-                        new String[]{
-                                "echo \"* PS:\"",
-                                "ps",
-                                "echo \"* LS:\"",
-                                "ls",
-                                "echo \"* DATE:\"",
-                                "date"},
-                        0,
-                        result2,
-                        -1
-                );
-                if (0 != result2.getError())
-                    return;
-            } catch (IOException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-            } catch (RootToolsException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
-            } catch (TimeoutException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
-                return;
-			}
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);
