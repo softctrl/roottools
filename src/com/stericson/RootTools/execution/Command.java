@@ -20,16 +20,9 @@
  * limitations under that License.
  */
 
-/*
- *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
- *
- *Stephen
- */
-
 package com.stericson.RootTools.execution;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 
 import com.stericson.RootTools.RootTools;
 
@@ -89,7 +82,7 @@ public abstract class Command {
 
 	public void terminated(String reason) {
 		setExitCode(-1);
-		RootTools.log("Command " + id + " did not finish.");
+		RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
 	}
 	
 	// waits for this command to finish

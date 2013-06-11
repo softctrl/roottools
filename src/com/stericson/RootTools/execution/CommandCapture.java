@@ -20,12 +20,6 @@
  * limitations under that License.
  */
 
-/*
- *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
- *
- *Stephen
- */
-
 package com.stericson.RootTools.execution;
 
 import com.stericson.RootTools.RootTools;

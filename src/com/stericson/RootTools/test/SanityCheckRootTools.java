@@ -23,7 +23,6 @@
 package com.stericson.RootTools.test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import android.app.Activity;
@@ -40,8 +39,6 @@ import android.widget.TextView;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.exceptions.RootDeniedException;
-import com.stericson.RootTools.exceptions.RootToolsException;
-import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 public class SanityCheckRootTools extends Activity {
