@@ -58,7 +58,7 @@ public abstract class Command {
 	
 	public void commandFinished(int id)
 	{
-		RootTools.log("Command " + id + "finished.");
+		RootTools.log("Command " + id + " finished.");
 	}
 
 	public void setExitCode(int code) {

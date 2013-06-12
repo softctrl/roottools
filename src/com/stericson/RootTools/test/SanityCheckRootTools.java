@@ -36,9 +36,11 @@ import android.os.Message;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.stericson.RootTools.Constants;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 public class SanityCheckRootTools extends Activity {
@@ -237,7 +239,21 @@ public class SanityCheckRootTools extends Activity {
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);
-            
+
+            Shell shell;
+
+            try {
+                shell = RootTools.getShell(true);
+
+                CommandCapture cmd = new CommandCapture(0, "echo hello");
+
+                shell.add(cmd).waitForFinish();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
             try
 			{
 				RootTools.closeAllShells();

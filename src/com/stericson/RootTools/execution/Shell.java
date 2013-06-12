@@ -275,7 +275,6 @@ public class Shell {
     /**
      * Runnable to monitor the responses from the open shell.
      *
-     * This con
      */
 	private Runnable output = new Runnable() {
 		public void run() {
@@ -318,7 +317,6 @@ public class Shell {
                         command.output(command.id, line);
                     }
                     else {
-                        line = line.substring(0, pos);
 
                         String fields[] = line.split(" ");
 
@@ -361,18 +359,6 @@ public class Shell {
                     command = null;
                     read++;
                 }
-
-                /**
-                 * clean things up.
-                 *
-                 * indicate that the shell should be closed.
-                 *
-                 * since the input thread waits on notification to
-                 * continue we need to let it know that
-                 * it should close.
-                 */
-                close = true;
-                commands.notifyAll();
 
 
             } catch (IOException e) {
