@@ -25,20 +25,20 @@ package com.stericson.RootTools.execution;
 import com.stericson.RootTools.RootTools;
 
 public class CommandCapture extends Command {
-	private StringBuilder sb = new StringBuilder();
+    private StringBuilder sb = new StringBuilder();
 
-	public CommandCapture(int id, String... command) {
-		super(id, command);
-	}
+    public CommandCapture(int id, String... command) {
+        super(id, command);
+    }
 
-	@Override
-	public void output(int id, String line) {
-		sb.append(line).append('\n');
-		RootTools.log("Command", "ID: " + id + ", " + line);
-	}
-	
-	@Override
-	public String toString() {
-		return sb.toString();
-	}
+    @Override
+    public void output(int id, String line) {
+        sb.append(line).append('\n');
+        RootTools.log("Command", "ID: " + id + ", " + line);
+    }
+
+    @Override
+    public String toString() {
+        return sb.toString();
+    }
 }

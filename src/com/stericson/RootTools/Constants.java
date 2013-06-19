@@ -1,7 +1,6 @@
 package com.stericson.RootTools;
 
-public class Constants
-{
+public class Constants {
     public static final String TAG = "RootTools v3.0";
     public static final int FPS = 1;
     public static final int IAG = 2;

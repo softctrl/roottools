@@ -57,10 +57,11 @@ public class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
-            	Shell.startRootShell().add(command);
-            	command.waitForFinish();
-			} catch (Exception e) {}
+                CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
+                Shell.startRootShell().add(command);
+                command.waitForFinish();
+            } catch (Exception e) {
+            }
         }
     }
 
