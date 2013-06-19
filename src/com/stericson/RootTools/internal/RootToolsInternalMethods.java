@@ -888,10 +888,12 @@ public final class RootToolsInternalMethods {
         } finally {
             try {
                 fr.close();
+                fr = null;
             } catch (Exception e) {}
 
             try {
                 lnr.close();
+                lnr = null;
             } catch (Exception e) {}
         }
     }
