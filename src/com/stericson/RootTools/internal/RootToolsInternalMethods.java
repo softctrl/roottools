@@ -69,6 +69,8 @@ public final class RootToolsInternalMethods {
     public boolean returnPath() throws TimeoutException {
 
         CommandCapture command = null;
+        LineNumberReader lnr = null;
+        FileReader fr = null;
 
         try {
             if (!RootTools.exists("/data/local/tmp")) {
@@ -77,8 +79,6 @@ public final class RootToolsInternalMethods {
             }
 
             InternalVariables.path = new HashSet<String>();
-            // Try to read from the file.
-            LineNumberReader lnr = null;
 
             String mountedas = RootTools.getMountedAs("/");
             RootTools.remount("/", "rw");
@@ -94,8 +94,9 @@ public final class RootToolsInternalMethods {
 
             RootTools.remount("/", mountedas);
 
-            lnr = new LineNumberReader(
-                    new FileReader("/data/local/tmp/init.rc"));
+            fr = new FileReader("/data/local/tmp/init.rc");
+            lnr = new LineNumberReader(fr);
+
             String line;
             while ((line = lnr.readLine()) != null) {
                 RootTools.log(line);
@@ -113,16 +114,30 @@ public final class RootToolsInternalMethods {
                 e.printStackTrace();
             }
             return false;
+        } finally {
+            try {
+                fr.close();
+            } catch (Exception e) {}
+
+            try {
+                lnr.close();
+            } catch (Exception e) {}
         }
     }
 
     public ArrayList<Symlink> getSymLinks() throws IOException {
+
         LineNumberReader lnr = null;
+        FileReader fr = null;
+
         try {
-            lnr = new LineNumberReader(new FileReader(
-                    "/data/local/symlinks.txt"));
+
+            fr = new FileReader("/data/local/symlinks.txt");
+            lnr = new LineNumberReader(fr);
+
             String line;
             ArrayList<Symlink> symlink = new ArrayList<Symlink>();
+
             while ((line = lnr.readLine()) != null) {
 
                 RootTools.log(line);
@@ -134,7 +149,13 @@ public final class RootToolsInternalMethods {
             }
             return symlink;
         } finally {
-            // no need to do anything here.
+            try {
+                fr.close();
+            } catch (Exception e) {}
+
+            try {
+                lnr.close();
+            } catch (Exception e) {}
         }
     }
 
