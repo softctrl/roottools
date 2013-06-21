@@ -395,7 +395,7 @@ public final class RootTools {
      * @throws IOException
      */
     public static Shell getShell(boolean root) throws IOException, TimeoutException, RootDeniedException {
-        return RootTools.getShell(root, 10000);
+        return RootTools.getShell(root, 25000);
     }
 
     /**
