@@ -79,32 +79,7 @@ public final class RootTools {
 
     public static boolean debugMode = false;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
-    public static int lastExitCode;
     public static String utilPath;
-
-    /**
-     * You can use this to force sendshell to use a shell other than the deafult.
-     */
-    public static String customShell = "";
-
-    /**
-     * Change this to a lower/higher setting to speed up/slow down shell commands if things are
-     * taking too long or you are having constant crashes or timeout exceptions.
-     */
-    public static int shellDelay = 0;
-
-    /**
-     * Many Functions here use root by default, but there may be times that you do not want them to
-     * use root. This can be useful when running a lot of commands at once. By default, if all of
-     * these functions are requesting root access then superuser will notify the user everytime that
-     * root is requested...this can lead to a flood of toast messages from superuser notifying the
-     * user that root access is being requested.
-     * <p/>
-     * Setting this to false will cause sendShell to not use root by default. So any commands sent
-     * to the shell will not have root access unless specifically directed to obtain root access by
-     * you. Some commands will not work properly without root access, so use this with care.
-     */
-    public static boolean useRoot = true;
 
     // ---------------------------
     // # Public Variable Getters #

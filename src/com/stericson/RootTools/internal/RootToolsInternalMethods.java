@@ -777,8 +777,6 @@ public final class RootToolsInternalMethods {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        } finally {
-            RootTools.shellDelay = 0;
         }
     }
 
