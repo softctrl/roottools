@@ -279,7 +279,7 @@ public class Shell {
                 Command command = null;
                 int read = 0;
 
-                while (true) {
+                while (!close) {
                     String line = in.readLine();
 
                     /**

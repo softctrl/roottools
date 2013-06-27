@@ -239,6 +239,7 @@ public class SanityCheckRootTools extends Activity {
                 CommandCapture cmd = new CommandCapture(0, "find /");
 
                 shell.add(cmd).waitForFinish();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
