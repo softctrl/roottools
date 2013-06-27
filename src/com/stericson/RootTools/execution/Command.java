@@ -29,9 +29,14 @@ import com.stericson.RootTools.RootTools;
 public abstract class Command {
     final String[] command;
     boolean finished = false;
+    boolean terminated = false;
     int exitCode;
     int id = 0;
-    int timeout = 5000;
+    int timeout = 50000;
+
+    public abstract void output(int id, String line);
+    public abstract void commandTerminated(int id, String reason);
+    public abstract void commandCompleted(int id, int exitCode);
 
     public Command(int id, String... command) {
         this.command = command;
@@ -54,18 +59,46 @@ public abstract class Command {
         return sb.toString();
     }
 
-    public abstract void output(int id, String line);
-
-    public void commandFinished(int id) {
-        RootTools.log("Command " + id + " finished.");
+    protected void commandFinished() {
+        if (!terminated) {
+            synchronized (this) {
+                RootTools.log("Command " + id + " finished.");
+                finished = true;
+                this.notifyAll();
+                commandCompleted(id, exitCode);
+            }
+        }
     }
 
-    public void setExitCode(int code) {
+    protected void setExitCode(int code) {
         synchronized (this) {
             exitCode = code;
-            finished = true;
-            commandFinished(id);
-            this.notifyAll();
+        }
+    }
+
+    protected void startExecution() {
+        synchronized (this) {
+
+            Thread t = new Thread() {
+                public void run() {
+                    while (!finished) {
+
+                        synchronized (Command.this) {
+                            try {
+                                Command.this.wait(timeout);
+                            } catch (InterruptedException e) {}
+                        }
+
+                        if (!finished) {
+                            finished = true;
+                            RootTools.log("Timeout Exception has occurred.");
+                            terminate("Timeout Exception");
+                        }
+                    }
+                }
+            };
+
+            t.start();
         }
     }
 
@@ -74,49 +107,42 @@ public abstract class Command {
             Shell.closeAll();
             RootTools.log("Terminating all shells.");
             terminated(reason);
-        } catch (IOException e) {
+        } catch (IOException e) {}
+    }
+
+    protected void terminated(String reason) {
+        synchronized (Command.this) {
+            setExitCode(-1);
+            terminated = true;
+            this.finished = true;
+            this.notifyAll();
+            RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
+            commandTerminated(id, reason);
         }
     }
 
-    public void terminated(String reason) {
-        setExitCode(-1);
-        RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
-    }
-
-    // waits for this command to finish
-    public void waitForFinish(int timeout) throws InterruptedException {
+    /**
+     * @deprecated This is a deprecated function and should not be used.
+     * Extend Command and implement the methods commandCompleted and commandTerminated
+     * to be notified when a command has completed.
+     */
+    public void waitForFinish() throws InterruptedException {
         synchronized (this) {
             while (!finished) {
                 this.wait(timeout);
-
-                if (!finished) {
-                    finished = true;
-                    RootTools.log("Timeout Exception has occurred.");
-                    terminate("Timeout Exception");
-                }
             }
         }
     }
 
-    // waits for this command to finish and returns the exit code
-    public int exitCode(int timeout) throws InterruptedException {
-        synchronized (this) {
-            waitForFinish(timeout);
-        }
-        return exitCode;
-    }
-
-    // waits for this command to finish
-    public void waitForFinish() throws InterruptedException {
-        synchronized (this) {
-            waitForFinish(timeout);
-        }
-    }
-
-    // waits for this command to finish and returns the exit code
+    /**
+     * @deprecated This is a deprecated function and should not be used.
+     * Extend Command and implement the methods commandCompleted and commandTerminated
+     * to be notified when a command has completed.
+     */
     public int exitCode() throws InterruptedException {
         synchronized (this) {
-            return exitCode(timeout);
+            waitForFinish();
         }
+        return exitCode;
     }
 }

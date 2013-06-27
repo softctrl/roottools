@@ -245,6 +245,7 @@ public class Shell {
                      */
                     if (write < commands.size()) {
                         Command cmd = commands.get(write);
+                        cmd.startExecution();
                         out.write(cmd.getCommand());
                         String line = "\necho " + token + " " + write + " $?\n";
                         out.write(line);
@@ -331,6 +332,7 @@ public class Shell {
 
                             if (id == read) {
                                 command.setExitCode(exitCode);
+                                command.commandFinished();
                                 read++;
                                 command = null;
                                 continue;

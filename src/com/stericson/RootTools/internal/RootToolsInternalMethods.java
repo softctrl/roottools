@@ -437,6 +437,16 @@ public final class RootToolsInternalMethods {
                 RootTools.log(arg1);
                 result.add(arg1);
             }
+
+            @Override
+            public void commandTerminated(int id, String reason) {
+
+            }
+
+            @Override
+            public void commandCompleted(int id, int exitcode) {
+
+            }
         };
 
         try {
@@ -636,6 +646,16 @@ public final class RootToolsInternalMethods {
                     }
                 }
             }
+
+            @Override
+            public void commandTerminated(int id, String reason) {
+
+            }
+
+            @Override
+            public void commandCompleted(int id, int exitcode) {
+
+            }
         };
 
         Shell.startRootShell().add(command);
@@ -665,6 +685,16 @@ public final class RootToolsInternalMethods {
                             InternalVariables.busyboxVersion = temp[1];
                         }
                     }
+                }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
                 }
             };
 
@@ -724,6 +754,16 @@ public final class RootToolsInternalMethods {
                         }
                     }
                 }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
+                }
             };
             Shell.startRootShell().add(command);
             command.waitForFinish();
@@ -761,6 +801,16 @@ public final class RootToolsInternalMethods {
                             RootTools.log("Access Denied?");
                         }
                     }
+                }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
                 }
             };
 
@@ -851,6 +901,16 @@ public final class RootToolsInternalMethods {
                                 RootTools.log(e.getMessage());
                             }
                         }
+                    }
+
+                    @Override
+                    public void commandTerminated(int id, String reason) {
+
+                    }
+
+                    @Override
+                    public void commandCompleted(int id, int exitcode) {
+
                     }
 
                 };
@@ -982,6 +1042,16 @@ public final class RootToolsInternalMethods {
                         }
                     }
                 }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
+                }
             };
 
             Shell.startRootShell().add(command);
@@ -1051,6 +1121,16 @@ public final class RootToolsInternalMethods {
                             results.add(line);
                         }
                     }
+                }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
                 }
             };
 
@@ -1189,8 +1269,18 @@ public final class RootToolsInternalMethods {
                     }
                 }
 
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
+                }
+
             };
-            RootTools.getShell(true).add(command).waitForFinish(5000);
+            RootTools.getShell(true).add(command).waitForFinish();
 
             if (InternalVariables.found) {
                 RootTools.log("Box contains " + util + " util!");
@@ -1274,6 +1364,16 @@ public final class RootToolsInternalMethods {
                         InternalVariables.processRunning = true;
                     }
                 }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
+                }
             };
 
             RootTools.getShell(true).add(cmd).waitForFinish();
@@ -1323,6 +1423,16 @@ public final class RootToolsInternalMethods {
                             e.printStackTrace();
                         }
                     }
+                }
+
+                @Override
+                public void commandTerminated(int id, String reason) {
+
+                }
+
+                @Override
+                public void commandCompleted(int id, int exitcode) {
+
                 }
             };
 

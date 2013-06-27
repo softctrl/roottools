@@ -231,20 +231,20 @@ public class SanityCheckRootTools extends Activity {
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking /data partition size]\n");
             visualUpdate(TestHandler.ACTION_DISPLAY, spaceValue + "k\n\n");
 
-            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
-            visualUpdate(TestHandler.ACTION_HIDE, null);
-
             Shell shell;
 
             try {
                 shell = RootTools.getShell(true);
 
-                CommandCapture cmd = new CommandCapture(0, "echo hello");
+                CommandCapture cmd = new CommandCapture(0, "find /");
 
                 shell.add(cmd).waitForFinish();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
+            visualUpdate(TestHandler.ACTION_HIDE, null);
 
             try {
                 RootTools.closeAllShells();

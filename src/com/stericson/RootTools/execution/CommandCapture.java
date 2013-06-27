@@ -38,6 +38,16 @@ public class CommandCapture extends Command {
     }
 
     @Override
+    public void commandTerminated(int id, String reason) {
+        //pass
+    }
+
+    @Override
+    public void commandCompleted(int id, int exitcode) {
+        //pass
+    }
+
+    @Override
     public String toString() {
         return sb.toString();
     }
