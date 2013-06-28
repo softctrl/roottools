@@ -30,13 +30,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 import android.content.Context;
 import android.util.Log;
 
-class Installer {
+class Installer extends InternalBase {
 
     //-------------
     //# Installer #
@@ -92,8 +91,7 @@ class Installer {
                         try {
                             fos.close();
                             context.deleteFile(BOGUS_FILE_NAME);
-                        } catch (IOException e1) {
-                        }
+                        } catch (IOException e1) {}
                     }
                 }
             } catch (IOException ex) {
@@ -143,11 +141,11 @@ class Installer {
             }
 
             try {
-                CommandCapture command = new CommandCapture(0, "chmod " + mode + " " + filesPath + File.separator + destName);
+                InternalCommand command = new InternalCommand(0, "chmod " + mode + " " + filesPath + File.separator + destName);
                 Shell.startRootShell().add(command);
-                command.waitForFinish();
-            } catch (Exception e) {
-            }
+                commandWait();
+                
+            } catch (Exception e) {}
         }
         return true;
     }

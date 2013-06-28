@@ -25,6 +25,7 @@ package com.stericson.RootTools.internal;
 import java.io.IOException;
 
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
@@ -57,12 +58,46 @@ public class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-                CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
+                InternalCommand command = new InternalCommand(0, privateFilesPath + "/" + binaryName + " " + parameter);
                 Shell.startRootShell().add(command);
-                command.waitForFinish();
+                commandWait();
+
             } catch (Exception e) {
             }
         }
     }
 
+    protected class InternalCommand extends Command {
+
+        public InternalCommand(int id, String... command) {
+            super(id, command);
+        }
+
+        @Override
+        public void output(int id, String line) {
+            //does nothing
+        }
+
+        @Override
+        public void commandTerminated(int id, String reason) {
+            synchronized (this) {
+                this.notifyAll();
+            }
+        }
+
+        @Override
+        public void commandCompleted(int id, int exitCode) {
+            synchronized (this) {
+                this.notifyAll();
+            }
+        }
+    }
+
+    protected void commandWait() {
+        synchronized (this) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {}
+        }
+    }
 }

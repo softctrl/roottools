@@ -41,6 +41,7 @@ import com.stericson.RootTools.Constants;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
@@ -236,9 +237,34 @@ public class SanityCheckRootTools extends Activity {
             try {
                 shell = RootTools.getShell(true);
 
-                CommandCapture cmd = new CommandCapture(0, "find /");
+                Command cmd = new Command(0, "find /") {
 
-                shell.add(cmd).waitForFinish();
+                    @Override
+                    public void output(int id, String line) {
+
+                    }
+
+                    @Override
+                    public void commandTerminated(int id, String reason) {
+                        synchronized (SanityCheckRootTools.this) {
+                            SanityCheckRootTools.this.notifyAll();
+                        }
+                    }
+
+                    @Override
+                    public void commandCompleted(int id, int exitCode) {
+                        synchronized (SanityCheckRootTools.this) {
+                            SanityCheckRootTools.this.notifyAll();
+                        }
+                    }
+                };
+
+                shell.add(cmd);
+
+                synchronized (SanityCheckRootTools.this) {
+                    //wait for completion
+                    SanityCheckRootTools.this.wait();
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();

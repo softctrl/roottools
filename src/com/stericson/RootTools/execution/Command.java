@@ -30,7 +30,7 @@ public abstract class Command {
     final String[] command;
     boolean finished = false;
     boolean terminated = false;
-    int exitCode;
+    int exitCode = -1;
     int id = 0;
     int timeout = 50000;
 
@@ -57,6 +57,10 @@ public abstract class Command {
         }
         RootTools.log("Sending command(s): " + sb.toString());
         return sb.toString();
+    }
+
+    public int getExitCode() {
+        return this.exitCode;
     }
 
     protected void commandFinished() {
