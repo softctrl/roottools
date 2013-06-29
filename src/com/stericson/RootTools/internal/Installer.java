@@ -143,8 +143,8 @@ class Installer {
             }
 
             try {
-                RootToolsInternalMethods.internalCommand = true;
                 CommandCapture command = new CommandCapture(0, "chmod " + mode + " " + filesPath + File.separator + destName);
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -169,8 +169,6 @@ class Installer {
                 cmd.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                RootToolsInternalMethods.internalCommand = true;
             }
         }
     }

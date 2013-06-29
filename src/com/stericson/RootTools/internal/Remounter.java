@@ -104,7 +104,7 @@ public class Remounter {
                         "mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),
                         "/system/bin/toolbox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath()
                 );
-
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -150,8 +150,6 @@ public class Remounter {
                 cmd.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                RootToolsInternalMethods.internalCommand = true;
             }
         }
     }

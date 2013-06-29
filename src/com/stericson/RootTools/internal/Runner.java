@@ -58,8 +58,8 @@ public class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-                RootToolsInternalMethods.internalCommand = true;
                 CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -73,8 +73,6 @@ public class Runner extends Thread {
                 cmd.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                RootToolsInternalMethods.internalCommand = false;
             }
         }
     }

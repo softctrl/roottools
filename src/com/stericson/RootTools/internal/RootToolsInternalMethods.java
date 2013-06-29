@@ -57,21 +57,11 @@ public final class RootToolsInternalMethods {
     // # Internal methods #
     // --------------------
 
-    protected static boolean internalCommand = false;
-
     protected RootToolsInternalMethods() {}
 
     public static void getInstance() {
         //this will allow RootTools to be the only one to get an instance of this class.
         RootTools.setRim(new RootToolsInternalMethods());
-    }
-
-    public static boolean isInternalCommand() {
-        return internalCommand;
-    }
-
-    protected void setInternalCommand(boolean isInternalCommand) {
-        RootToolsInternalMethods.internalCommand = isInternalCommand;
     }
 
     public boolean returnPath() throws TimeoutException {
@@ -83,8 +73,8 @@ public final class RootToolsInternalMethods {
         try {
             if (!RootTools.exists("/data/local/tmp")) {
 
-                setInternalCommand(true);
                 command = new CommandCapture(0, "mkdir /data/local/tmp");
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -95,18 +85,18 @@ public final class RootToolsInternalMethods {
             String mountedas = RootTools.getMountedAs("/");
             RootTools.remount("/", "rw");
 
-            setInternalCommand(true);
             command = new CommandCapture(0, "chmod 0777 /init.rc");
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
 
-            setInternalCommand(true);
             command = new CommandCapture(0,
                     "dd if=/init.rc of=/data/local/tmp/init.rc");
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
 
-            setInternalCommand(true);
             command = new CommandCapture(0,
                     "chmod 0777 /data/local/tmp/init.rc");
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -293,14 +283,14 @@ public final class RootToolsInternalMethods {
                 RootTools.log("cp command is available!");
 
                 if (preserveFileAttributes) {
-                    setInternalCommand(true);
                     CommandCapture command = new CommandCapture(0, "cp -fp " + source + " " + destination);
+                    command.setHandlerEnabled(false);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
                 } else {
-                    setInternalCommand(true);
                     CommandCapture command = new CommandCapture(0, "cp -f " + source + " " + destination);
+                    command.setHandlerEnabled(false);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
@@ -310,14 +300,14 @@ public final class RootToolsInternalMethods {
                     RootTools.log("busybox cp command is available!");
 
                     if (preserveFileAttributes) {
-                        setInternalCommand(true);
                         CommandCapture command = new CommandCapture(0, "busybox cp -fp " + source + " " + destination);
+                        command.setHandlerEnabled(false);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
                     } else {
-                        setInternalCommand(true);
                         CommandCapture command = new CommandCapture(0, "busybox cp -f " + source + " " + destination);
+                        command.setHandlerEnabled(false);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
@@ -336,15 +326,15 @@ public final class RootToolsInternalMethods {
 
                         CommandCapture command;
                         // copy with cat
-                        setInternalCommand(true);
                         command = new CommandCapture(0, "cat " + source + " > " + destination);
+                        command.setHandlerEnabled(false);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
                         if (preserveFileAttributes) {
                             // set premissions of source to destination
-                            setInternalCommand(true);
                             command = new CommandCapture(0, "chmod " + filePermission + " " + destination);
+                            command.setHandlerEnabled(false);
                             Shell.startRootShell().add(command);
                             commandWait(command);
 
@@ -425,8 +415,8 @@ public final class RootToolsInternalMethods {
             if (hasUtil("rm", "toolbox")) {
                 RootTools.log("rm command is available!");
 
-                setInternalCommand(true);
                 CommandCapture command = new CommandCapture(0, "rm -r " + target);
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -438,8 +428,8 @@ public final class RootToolsInternalMethods {
                 if (checkUtil("busybox") && hasUtil("rm", "busybox")) {
                     RootTools.log("busybox cp command is available!");
 
-                    setInternalCommand(true);
                     CommandCapture command = new CommandCapture(0, "busybox rm -rf " + target);
+                    command.setHandlerEnabled(false);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
@@ -472,7 +462,6 @@ public final class RootToolsInternalMethods {
     public boolean exists(final String file) {
         final List<String> result = new ArrayList<String>();
 
-        setInternalCommand(true);
         CommandCapture command = new CommandCapture(0, "ls " + file) {
             @Override
             public void output(int arg0, String arg1) {
@@ -480,6 +469,7 @@ public final class RootToolsInternalMethods {
                 result.add(arg1);
             }
         };
+        command.setHandlerEnabled(false);
 
         try {
             //Try not to open a new shell if one is open.
@@ -548,15 +538,15 @@ public final class RootToolsInternalMethods {
                 List<String> paths = new ArrayList<String>();
                 paths.addAll(RootTools.lastFoundBinaryPaths);
                 for (String path : paths) {
-                    setInternalCommand(true);
                     CommandCapture command = new CommandCapture(0, utilPath + " rm " + path + "/" + util);
+                    command.setHandlerEnabled(false);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
                 }
 
-                setInternalCommand(true);
                 CommandCapture command = new CommandCapture(0, utilPath + " ln -s " + utilPath + " /system/bin/" + util, utilPath + " chmod 0755 /system/bin/" + util);
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -681,7 +671,6 @@ public final class RootToolsInternalMethods {
 
         final List<String> results = new ArrayList<String>();
 
-        setInternalCommand(true);
         CommandCapture command = new CommandCapture(Constants.BBA, path + "busybox --list") {
 
             @Override
@@ -693,7 +682,7 @@ public final class RootToolsInternalMethods {
                 }
             }
         };
-
+        command.setHandlerEnabled(false);
         Shell.startRootShell().add(command);
         commandWait(command);
 
@@ -712,7 +701,6 @@ public final class RootToolsInternalMethods {
         RootTools.log("Getting BusyBox Version");
         InternalVariables.busyboxVersion = "";
         try {
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(Constants.BBV, path + "busybox") {
                 @Override
                 public void output(int id, String line) {
@@ -724,7 +712,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -771,7 +759,6 @@ public final class RootToolsInternalMethods {
      */
     public String getInode(String file) {
         try {
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(Constants.GI, "/data/local/ls -i " + file) {
 
                 @Override
@@ -783,6 +770,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -801,7 +789,6 @@ public final class RootToolsInternalMethods {
             RootTools.log("Checking for Root access");
             InternalVariables.accessGiven = false;
 
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(Constants.IAG, "id") {
                 @Override
                 public void output(int id, String line) {
@@ -822,7 +809,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -874,7 +861,6 @@ public final class RootToolsInternalMethods {
             RootTools.log(file + " was found.");
             try {
 
-                setInternalCommand(true);
                 CommandCapture command = new CommandCapture(
                         Constants.FPS, "ls -l " + file,
                         "busybox ls -l " + file,
@@ -911,6 +897,7 @@ public final class RootToolsInternalMethods {
                         }
                     }
                 };
+                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -1029,7 +1016,6 @@ public final class RootToolsInternalMethods {
         boolean found = false;
         RootTools.log("Looking for Space");
         try {
-            setInternalCommand(true);
             final CommandCapture command = new CommandCapture(Constants.GS, "df " + path) {
 
                 @Override
@@ -1041,7 +1027,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -1100,7 +1086,6 @@ public final class RootToolsInternalMethods {
         try {
             final List<String> results = new ArrayList<String>();
 
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(Constants.GSYM, "ls -l " + file) {
 
                 @Override
@@ -1112,7 +1097,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -1163,8 +1148,8 @@ public final class RootToolsInternalMethods {
             throw new Exception();
         }
 
-        setInternalCommand(true);
         CommandCapture command = new CommandCapture(0, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
+        command.setHandlerEnabled(false);
         Shell.startRootShell().add(command);
         commandWait(command);
 
@@ -1232,7 +1217,6 @@ public final class RootToolsInternalMethods {
 
         try {
 
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(0, box.endsWith("toolbox") ? box + " " + util : box + " --list") {
 
                 @Override
@@ -1250,7 +1234,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1329,7 +1313,6 @@ public final class RootToolsInternalMethods {
         InternalVariables.processRunning = false;
 
         try {
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(0, "ps") {
                 @Override
                 public void output(int id, String line) {
@@ -1338,7 +1321,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1365,7 +1348,6 @@ public final class RootToolsInternalMethods {
 
         try {
 
-            setInternalCommand(true);
             CommandCapture command = new CommandCapture(0, "ps") {
                 @Override
                 public void output(int id, String line) {
@@ -1390,7 +1372,7 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-
+            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1401,8 +1383,8 @@ public final class RootToolsInternalMethods {
             if (!pids.equals("")) {
                 try {
                     // example: kill -9 1234 1222 5343
-                    setInternalCommand(true);
                     command = new CommandCapture(0, "kill -9 " + pids);
+                    command.setHandlerEnabled(false);
                     RootTools.getShell(true).add(command);
                     commandWait(command);
 
@@ -1483,8 +1465,6 @@ public final class RootToolsInternalMethods {
                 cmd.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                RootToolsInternalMethods.internalCommand = false;
             }
         }
     }

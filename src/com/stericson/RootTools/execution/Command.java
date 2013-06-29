@@ -35,12 +35,12 @@ import com.stericson.RootTools.internal.RootToolsInternalMethods;
 public abstract class Command {
 
     Handler mHandler = null;
+    boolean executing = false;
 
     final String[] command;
     boolean finished = false;
     boolean terminated = false;
     boolean handlerEnabled = true;
-    boolean internalCommand = true;
     int exitCode = -1;
     int id = 0;
     int timeout = 50000;
@@ -53,7 +53,7 @@ public abstract class Command {
         this.command = command;
         this.id = id;
 
-        handlerEnabled = RootTools.handlerEnabled && !RootToolsInternalMethods.isInternalCommand();
+        handlerEnabled = RootTools.handlerEnabled;
 
         if (handlerEnabled) {
             mHandler = new CommandHandler();
@@ -65,7 +65,7 @@ public abstract class Command {
         this.id = id;
         this.timeout = timeout;
 
-        handlerEnabled = RootTools.handlerEnabled && !RootToolsInternalMethods.isInternalCommand();
+        handlerEnabled = RootTools.handlerEnabled;
 
         if (handlerEnabled) {
             mHandler = new CommandHandler();
@@ -118,11 +118,23 @@ public abstract class Command {
     }
 
     public void setHandlerEnabled(boolean handlerEnabled) {
+        if (executing) {
+            new Exception("Handler cannot be enabled or disabled once command execution has begun.");
+            return;
+        }
+
+        if (handlerEnabled && mHandler == null) {
+            mHandler = new CommandHandler();
+        } else {
+            mHandler = null;
+        }
+        
         this.handlerEnabled = handlerEnabled;
     }
 
     protected void startExecution() {
         new ExecutionMonitor().start();
+        executing = true;
     }
 
     public void terminate(String reason) {
