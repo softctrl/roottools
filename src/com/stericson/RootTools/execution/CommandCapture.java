@@ -31,8 +31,13 @@ public class CommandCapture extends Command {
         super(id, command);
     }
 
+    public CommandCapture(int id, int timeout, String... command) {
+        super(id, timeout, command);
+    }
+
+
     @Override
-    public void output(int id, String line) {
+    public void commandOutput(int id, String line) {
         sb.append(line).append('\n');
         RootTools.log("Command", "ID: " + id + ", " + line);
     }

@@ -32,6 +32,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.StrictMode;
 import android.widget.ScrollView;
@@ -136,6 +137,7 @@ public class SanityCheckRootTools extends Activity {
         }
 
         public void run() {
+            Looper.prepare();
             visualUpdate(TestHandler.ACTION_SHOW, null);
 
             // First test: Install a binary file for future use
@@ -237,48 +239,64 @@ public class SanityCheckRootTools extends Activity {
             try {
                 shell = RootTools.getShell(true);
 
-                Command cmd = new Command(0, "find /") {
+                CommandCapture cmd = new CommandCapture(42, 1000000, "find /") {
+
+                    boolean _catch = false;
 
                     @Override
-                    public void output(int id, String line) {
+                    public void commandOutput(int id, String line) {
+                        super.commandOutput(id, line);
 
+                        if (_catch) {
+                            RootTools.log("CAUGHT!!!");
+                        }
                     }
 
                     @Override
                     public void commandTerminated(int id, String reason) {
                         synchronized (SanityCheckRootTools.this) {
-                            SanityCheckRootTools.this.notifyAll();
+
+                            _catch = true;
+                            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
+                            visualUpdate(TestHandler.ACTION_HIDE, null);
+
+                            try {
+                                RootTools.closeAllShells();
+                            } catch (IOException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+
                         }
                     }
 
                     @Override
                     public void commandCompleted(int id, int exitCode) {
                         synchronized (SanityCheckRootTools.this) {
-                            SanityCheckRootTools.this.notifyAll();
+                            _catch = true;
+
+                            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
+                            visualUpdate(TestHandler.ACTION_HIDE, null);
+
+                            try {
+                                RootTools.closeAllShells();
+                            } catch (IOException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+
                         }
                     }
                 };
 
                 shell.add(cmd);
 
-                synchronized (SanityCheckRootTools.this) {
-                    //wait for completion
-                    SanityCheckRootTools.this.wait();
-                }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
-            visualUpdate(TestHandler.ACTION_HIDE, null);
+            Looper.loop();
 
-            try {
-                RootTools.closeAllShells();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
         }
 
         private void visualUpdate(int action, String text) {

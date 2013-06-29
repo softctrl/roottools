@@ -22,31 +22,47 @@
 
 package com.stericson.RootTools.execution;
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+
 import java.io.IOException;
 
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.internal.RootToolsInternalMethods;
 
 public abstract class Command {
+
+    Handler mHandler = null;
+
     final String[] command;
     boolean finished = false;
     boolean terminated = false;
+    boolean internal = false;
     int exitCode = -1;
     int id = 0;
     int timeout = 50000;
 
-    public abstract void output(int id, String line);
+    public abstract void commandOutput(int id, String line);
     public abstract void commandTerminated(int id, String reason);
     public abstract void commandCompleted(int id, int exitCode);
 
     public Command(int id, String... command) {
         this.command = command;
         this.id = id;
+
+        mHandler = new CommandHandler();
+        internal = RootToolsInternalMethods.isInternalCommand();
     }
 
     public Command(int id, int timeout, String... command) {
         this.command = command;
         this.id = id;
         this.timeout = timeout;
+
+        mHandler = new CommandHandler();
+        internal = RootToolsInternalMethods.isInternalCommand();
     }
 
     public String getCommand() {
@@ -69,7 +85,17 @@ public abstract class Command {
                 RootTools.log("Command " + id + " finished.");
                 finished = true;
                 this.notifyAll();
-                commandCompleted(id, exitCode);
+
+                if (mHandler != null || internal) {
+                    Message msg = mHandler.obtainMessage();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_COMPLETED);
+                    msg.setData(bundle);
+                    mHandler.sendMessage(msg);
+                }
+                else {
+                    commandCompleted(id, exitCode);
+                }
             }
         }
     }
@@ -81,29 +107,7 @@ public abstract class Command {
     }
 
     protected void startExecution() {
-        synchronized (this) {
-
-            Thread t = new Thread() {
-                public void run() {
-                    while (!finished) {
-
-                        synchronized (Command.this) {
-                            try {
-                                Command.this.wait(timeout);
-                            } catch (InterruptedException e) {}
-                        }
-
-                        if (!finished) {
-                            finished = true;
-                            RootTools.log("Timeout Exception has occurred.");
-                            terminate("Timeout Exception");
-                        }
-                    }
-                }
-            };
-
-            t.start();
-        }
+        new ExecutionMonitor().start();
     }
 
     public void terminate(String reason) {
@@ -121,32 +125,78 @@ public abstract class Command {
             this.finished = true;
             this.notifyAll();
             RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
-            commandTerminated(id, reason);
-        }
-    }
 
-    /**
-     * @deprecated This is a deprecated function and should not be used.
-     * Extend Command and implement the methods commandCompleted and commandTerminated
-     * to be notified when a command has completed.
-     */
-    public void waitForFinish() throws InterruptedException {
-        synchronized (this) {
-            while (!finished) {
-                this.wait(timeout);
+
+            if (mHandler != null || internal) {
+                Message msg = mHandler.obtainMessage();
+                Bundle bundle = new Bundle();
+                bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_TERMINATED);
+                bundle.putString(CommandHandler.TEXT, reason);
+                msg.setData(bundle);
+                mHandler.sendMessage(msg);
+            }
+            else {
+                commandTerminated(id, reason);
             }
         }
     }
 
-    /**
-     * @deprecated This is a deprecated function and should not be used.
-     * Extend Command and implement the methods commandCompleted and commandTerminated
-     * to be notified when a command has completed.
-     */
-    public int exitCode() throws InterruptedException {
-        synchronized (this) {
-            waitForFinish();
+    protected void output(int id, String line) {
+        if (mHandler != null || internal) {
+            Message msg = mHandler.obtainMessage();
+            Bundle bundle = new Bundle();
+            bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_OUTPUT);
+            bundle.putString(CommandHandler.TEXT, line);
+            msg.setData(bundle);
+            mHandler.sendMessage(msg);
         }
-        return exitCode;
+        else {
+            commandOutput(id, line);
+        }
+    }
+
+    private class ExecutionMonitor extends Thread {
+        public void run() {
+            while (!finished) {
+
+                synchronized (Command.this) {
+                    try {
+                        Command.this.wait(timeout);
+                    } catch (InterruptedException e) {}
+                }
+
+                if (!finished) {
+                    finished = true;
+                    RootTools.log("Timeout Exception has occurred.");
+                    terminate("Timeout Exception");
+                }
+            }
+        }
+    }
+
+    private class CommandHandler extends Handler {
+        static final public String ACTION = "action";
+        static final public String TEXT = "text";
+
+        static final public int COMMAND_OUTPUT = 0x01;
+        static final public int COMMAND_COMPLETED = 0x02;
+        static final public int COMMAND_TERMINATED = 0x03;
+
+        public void handleMessage(Message msg) {
+            int action = msg.getData().getInt(ACTION);
+            String text = msg.getData().getString(TEXT);
+
+            switch (action) {
+                case COMMAND_OUTPUT:
+                    commandOutput(id, text);
+                    break;
+                case COMMAND_COMPLETED:
+                    commandCompleted(id, exitCode);
+                    break;
+                case COMMAND_TERMINATED:
+                    commandTerminated(id, text);
+                    break;
+            }
+        }
     }
 }

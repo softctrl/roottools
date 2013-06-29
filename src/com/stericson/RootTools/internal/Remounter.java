@@ -31,9 +31,11 @@ import android.util.Log;
 import com.stericson.RootTools.Constants;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Mount;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
-public class Remounter extends InternalBase {
+public class Remounter {
 
     //-------------
     //# Remounter #
@@ -96,7 +98,7 @@ public class Remounter extends InternalBase {
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
-                InternalCommand command = new InternalCommand(0,
+                CommandCapture command = new CommandCapture(0,
                         "busybox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),
                         "toolbox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),
                         "mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),
@@ -104,7 +106,7 @@ public class Remounter extends InternalBase {
                 );
 
                 Shell.startRootShell().add(command);
-                commandWait();
+                commandWait(command);
 
             } catch (Exception e) {}
 
@@ -140,5 +142,17 @@ public class Remounter extends InternalBase {
             }
         }
         return null;
+    }
+
+    private void commandWait(Command cmd) {
+        synchronized (cmd) {
+            try {
+                cmd.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                RootToolsInternalMethods.internalCommand = true;
+            }
+        }
     }
 }

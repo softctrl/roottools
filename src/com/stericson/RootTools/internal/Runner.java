@@ -58,46 +58,25 @@ public class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-                InternalCommand command = new InternalCommand(0, privateFilesPath + "/" + binaryName + " " + parameter);
+                RootToolsInternalMethods.internalCommand = true;
+                CommandCapture command = new CommandCapture(0, privateFilesPath + "/" + binaryName + " " + parameter);
                 Shell.startRootShell().add(command);
-                commandWait();
+                commandWait(command);
 
-            } catch (Exception e) {
-            }
+            } catch (Exception e) {}
         }
     }
 
-    protected class InternalCommand extends Command {
-
-        public InternalCommand(int id, String... command) {
-            super(id, command);
-        }
-
-        @Override
-        public void output(int id, String line) {
-            //does nothing
-        }
-
-        @Override
-        public void commandTerminated(int id, String reason) {
-            synchronized (this) {
-                this.notifyAll();
-            }
-        }
-
-        @Override
-        public void commandCompleted(int id, int exitCode) {
-            synchronized (this) {
-                this.notifyAll();
-            }
-        }
-    }
-
-    protected void commandWait() {
-        synchronized (this) {
+    private void commandWait(Command cmd) {
+        synchronized (cmd) {
             try {
-                this.wait();
-            } catch (InterruptedException e) {}
+                cmd.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                RootToolsInternalMethods.internalCommand = true;
+            }
         }
     }
+
 }

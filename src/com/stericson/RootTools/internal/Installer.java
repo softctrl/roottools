@@ -30,23 +30,25 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 import android.content.Context;
 import android.util.Log;
 
-class Installer extends InternalBase {
+class Installer {
 
     //-------------
     //# Installer #
     //-------------
 
-    private static final String LOG_TAG = "RootTools::Installer";
+    static final String LOG_TAG = "RootTools::Installer";
 
-    private static final String BOGUS_FILE_NAME = "bogus";
+    static final String BOGUS_FILE_NAME = "bogus";
 
-    private Context context;
-    private String filesPath;
+    Context context;
+    String filesPath;
 
     public Installer(Context context)
             throws IOException {
@@ -141,10 +143,11 @@ class Installer extends InternalBase {
             }
 
             try {
-                InternalCommand command = new InternalCommand(0, "chmod " + mode + " " + filesPath + File.separator + destName);
+                RootToolsInternalMethods.internalCommand = true;
+                CommandCapture command = new CommandCapture(0, "chmod " + mode + " " + filesPath + File.separator + destName);
                 Shell.startRootShell().add(command);
-                commandWait();
-                
+                commandWait(command);
+
             } catch (Exception e) {}
         }
         return true;
@@ -158,5 +161,17 @@ class Installer extends InternalBase {
             // TODO: pass mode as argument and check it matches
         }
         return installed;
+    }
+
+    private void commandWait(Command cmd) {
+        synchronized (cmd) {
+            try {
+                cmd.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                RootToolsInternalMethods.internalCommand = true;
+            }
+        }
     }
 }
