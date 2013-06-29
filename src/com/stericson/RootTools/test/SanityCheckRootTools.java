@@ -238,7 +238,7 @@ public class SanityCheckRootTools extends Activity {
             try {
                 shell = RootTools.getShell(true);
 
-                CommandCapture cmd = new CommandCapture(42, "find /") {
+                CommandCapture cmd = new CommandCapture(42, false, "find /") {
 
                     boolean _catch = false;
 

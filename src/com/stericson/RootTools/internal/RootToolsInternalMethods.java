@@ -73,8 +73,7 @@ public final class RootToolsInternalMethods {
         try {
             if (!RootTools.exists("/data/local/tmp")) {
 
-                command = new CommandCapture(0, "mkdir /data/local/tmp");
-                command.setHandlerEnabled(false);
+                command = new CommandCapture(0, false, "mkdir /data/local/tmp");
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -85,18 +84,15 @@ public final class RootToolsInternalMethods {
             String mountedas = RootTools.getMountedAs("/");
             RootTools.remount("/", "rw");
 
-            command = new CommandCapture(0, "chmod 0777 /init.rc");
-            command.setHandlerEnabled(false);
+            command = new CommandCapture(0, false, "chmod 0777 /init.rc");
             Shell.startRootShell().add(command);
 
-            command = new CommandCapture(0,
+            command = new CommandCapture(0, false,
                     "dd if=/init.rc of=/data/local/tmp/init.rc");
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
 
-            command = new CommandCapture(0,
+            command = new CommandCapture(0, false,
                     "chmod 0777 /data/local/tmp/init.rc");
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -283,14 +279,12 @@ public final class RootToolsInternalMethods {
                 RootTools.log("cp command is available!");
 
                 if (preserveFileAttributes) {
-                    CommandCapture command = new CommandCapture(0, "cp -fp " + source + " " + destination);
-                    command.setHandlerEnabled(false);
+                    CommandCapture command = new CommandCapture(0, false, "cp -fp " + source + " " + destination);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
                 } else {
-                    CommandCapture command = new CommandCapture(0, "cp -f " + source + " " + destination);
-                    command.setHandlerEnabled(false);
+                    CommandCapture command = new CommandCapture(0, false, "cp -f " + source + " " + destination);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
@@ -300,14 +294,12 @@ public final class RootToolsInternalMethods {
                     RootTools.log("busybox cp command is available!");
 
                     if (preserveFileAttributes) {
-                        CommandCapture command = new CommandCapture(0, "busybox cp -fp " + source + " " + destination);
-                        command.setHandlerEnabled(false);
+                        CommandCapture command = new CommandCapture(0, false, "busybox cp -fp " + source + " " + destination);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
                     } else {
-                        CommandCapture command = new CommandCapture(0, "busybox cp -f " + source + " " + destination);
-                        command.setHandlerEnabled(false);
+                        CommandCapture command = new CommandCapture(0, false, "busybox cp -f " + source + " " + destination);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
@@ -326,15 +318,13 @@ public final class RootToolsInternalMethods {
 
                         CommandCapture command;
                         // copy with cat
-                        command = new CommandCapture(0, "cat " + source + " > " + destination);
-                        command.setHandlerEnabled(false);
+                        command = new CommandCapture(0, false, "cat " + source + " > " + destination);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
                         if (preserveFileAttributes) {
                             // set premissions of source to destination
-                            command = new CommandCapture(0, "chmod " + filePermission + " " + destination);
-                            command.setHandlerEnabled(false);
+                            command = new CommandCapture(0, false, "chmod " + filePermission + " " + destination);
                             Shell.startRootShell().add(command);
                             commandWait(command);
 
@@ -415,8 +405,7 @@ public final class RootToolsInternalMethods {
             if (hasUtil("rm", "toolbox")) {
                 RootTools.log("rm command is available!");
 
-                CommandCapture command = new CommandCapture(0, "rm -r " + target);
-                command.setHandlerEnabled(false);
+                CommandCapture command = new CommandCapture(0, false, "rm -r " + target);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -428,8 +417,7 @@ public final class RootToolsInternalMethods {
                 if (checkUtil("busybox") && hasUtil("rm", "busybox")) {
                     RootTools.log("busybox cp command is available!");
 
-                    CommandCapture command = new CommandCapture(0, "busybox rm -rf " + target);
-                    command.setHandlerEnabled(false);
+                    CommandCapture command = new CommandCapture(0, false, "busybox rm -rf " + target);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
@@ -462,14 +450,13 @@ public final class RootToolsInternalMethods {
     public boolean exists(final String file) {
         final List<String> result = new ArrayList<String>();
 
-        CommandCapture command = new CommandCapture(0, "ls " + file) {
+        CommandCapture command = new CommandCapture(0, false, "ls " + file) {
             @Override
             public void output(int arg0, String arg1) {
                 RootTools.log(arg1);
                 result.add(arg1);
             }
         };
-        command.setHandlerEnabled(false);
 
         try {
             //Try not to open a new shell if one is open.
@@ -538,15 +525,13 @@ public final class RootToolsInternalMethods {
                 List<String> paths = new ArrayList<String>();
                 paths.addAll(RootTools.lastFoundBinaryPaths);
                 for (String path : paths) {
-                    CommandCapture command = new CommandCapture(0, utilPath + " rm " + path + "/" + util);
-                    command.setHandlerEnabled(false);
+                    CommandCapture command = new CommandCapture(0, false, utilPath + " rm " + path + "/" + util);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
                 }
 
-                CommandCapture command = new CommandCapture(0, utilPath + " ln -s " + utilPath + " /system/bin/" + util, utilPath + " chmod 0755 /system/bin/" + util);
-                command.setHandlerEnabled(false);
+                CommandCapture command = new CommandCapture(0, false, utilPath + " ln -s " + utilPath + " /system/bin/" + util, utilPath + " chmod 0755 /system/bin/" + util);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -671,7 +656,7 @@ public final class RootToolsInternalMethods {
 
         final List<String> results = new ArrayList<String>();
 
-        CommandCapture command = new CommandCapture(Constants.BBA, path + "busybox --list") {
+        CommandCapture command = new CommandCapture(Constants.BBA, false, path + "busybox --list") {
 
             @Override
             public void output(int id, String line) {
@@ -682,7 +667,6 @@ public final class RootToolsInternalMethods {
                 }
             }
         };
-        command.setHandlerEnabled(false);
         Shell.startRootShell().add(command);
         commandWait(command);
 
@@ -701,7 +685,7 @@ public final class RootToolsInternalMethods {
         RootTools.log("Getting BusyBox Version");
         InternalVariables.busyboxVersion = "";
         try {
-            CommandCapture command = new CommandCapture(Constants.BBV, path + "busybox") {
+            CommandCapture command = new CommandCapture(Constants.BBV, false, path + "busybox") {
                 @Override
                 public void output(int id, String line) {
                     if (id == Constants.BBV) {
@@ -712,7 +696,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -759,7 +742,7 @@ public final class RootToolsInternalMethods {
      */
     public String getInode(String file) {
         try {
-            CommandCapture command = new CommandCapture(Constants.GI, "/data/local/ls -i " + file) {
+            CommandCapture command = new CommandCapture(Constants.GI, false, "/data/local/ls -i " + file) {
 
                 @Override
                 public void output(int id, String line) {
@@ -770,7 +753,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -789,7 +771,7 @@ public final class RootToolsInternalMethods {
             RootTools.log("Checking for Root access");
             InternalVariables.accessGiven = false;
 
-            CommandCapture command = new CommandCapture(Constants.IAG, "id") {
+            CommandCapture command = new CommandCapture(Constants.IAG, false, "id") {
                 @Override
                 public void output(int id, String line) {
                     if (id == Constants.IAG) {
@@ -809,7 +791,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -862,7 +843,7 @@ public final class RootToolsInternalMethods {
             try {
 
                 CommandCapture command = new CommandCapture(
-                        Constants.FPS, "ls -l " + file,
+                        Constants.FPS, false, "ls -l " + file,
                         "busybox ls -l " + file,
                         "/system/bin/failsafe/toolbox ls -l " + file,
                         "toolbox ls -l " + file) {
@@ -897,7 +878,6 @@ public final class RootToolsInternalMethods {
                         }
                     }
                 };
-                command.setHandlerEnabled(false);
                 Shell.startRootShell().add(command);
                 commandWait(command);
 
@@ -1016,7 +996,7 @@ public final class RootToolsInternalMethods {
         boolean found = false;
         RootTools.log("Looking for Space");
         try {
-            final CommandCapture command = new CommandCapture(Constants.GS, "df " + path) {
+            final CommandCapture command = new CommandCapture(Constants.GS, false, "df " + path) {
 
                 @Override
                 public void output(int id, String line) {
@@ -1027,7 +1007,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -1086,7 +1065,7 @@ public final class RootToolsInternalMethods {
         try {
             final List<String> results = new ArrayList<String>();
 
-            CommandCapture command = new CommandCapture(Constants.GSYM, "ls -l " + file) {
+            CommandCapture command = new CommandCapture(Constants.GSYM, false, "ls -l " + file) {
 
                 @Override
                 public void output(int id, String line) {
@@ -1097,7 +1076,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             Shell.startRootShell().add(command);
             commandWait(command);
 
@@ -1148,8 +1126,7 @@ public final class RootToolsInternalMethods {
             throw new Exception();
         }
 
-        CommandCapture command = new CommandCapture(0, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
-        command.setHandlerEnabled(false);
+        CommandCapture command = new CommandCapture(0, false, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
         Shell.startRootShell().add(command);
         commandWait(command);
 
@@ -1217,7 +1194,7 @@ public final class RootToolsInternalMethods {
 
         try {
 
-            CommandCapture command = new CommandCapture(0, box.endsWith("toolbox") ? box + " " + util : box + " --list") {
+            CommandCapture command = new CommandCapture(0, false, box.endsWith("toolbox") ? box + " " + util : box + " --list") {
 
                 @Override
                 public void output(int id, String line) {
@@ -1234,7 +1211,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1313,7 +1289,7 @@ public final class RootToolsInternalMethods {
         InternalVariables.processRunning = false;
 
         try {
-            CommandCapture command = new CommandCapture(0, "ps") {
+            CommandCapture command = new CommandCapture(0, false, "ps") {
                 @Override
                 public void output(int id, String line) {
                     if (line.contains(processName)) {
@@ -1321,7 +1297,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1348,7 +1323,7 @@ public final class RootToolsInternalMethods {
 
         try {
 
-            CommandCapture command = new CommandCapture(0, "ps") {
+            CommandCapture command = new CommandCapture(0, false, "ps") {
                 @Override
                 public void output(int id, String line) {
                     if (line.contains(processName)) {
@@ -1372,7 +1347,6 @@ public final class RootToolsInternalMethods {
                     }
                 }
             };
-            command.setHandlerEnabled(false);
             RootTools.getShell(true).add(command);
             commandWait(command);
 
@@ -1383,8 +1357,7 @@ public final class RootToolsInternalMethods {
             if (!pids.equals("")) {
                 try {
                     // example: kill -9 1234 1222 5343
-                    command = new CommandCapture(0, "kill -9 " + pids);
-                    command.setHandlerEnabled(false);
+                    command = new CommandCapture(0, false, "kill -9 " + pids);
                     RootTools.getShell(true).add(command);
                     commandWait(command);
 

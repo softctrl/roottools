@@ -60,6 +60,17 @@ public abstract class Command {
         }
     }
 
+    public Command(int id, boolean handlerEnabled, String... command) {
+        this.command = command;
+        this.id = id;
+
+        this.handlerEnabled = handlerEnabled;
+
+        if (handlerEnabled) {
+            mHandler = new CommandHandler();
+        }
+    }
+
     public Command(int id, int timeout, String... command) {
         this.command = command;
         this.id = id;
@@ -116,21 +127,6 @@ public abstract class Command {
         synchronized (this) {
             exitCode = code;
         }
-    }
-
-    public void setHandlerEnabled(boolean handlerEnabled) {
-        if (executing) {
-            new Exception("Handler cannot be enabled or disabled once command execution has begun.");
-            return;
-        }
-
-        if (handlerEnabled && mHandler == null) {
-            mHandler = new CommandHandler();
-        } else {
-            mHandler = null;
-        }
-
-        this.handlerEnabled = handlerEnabled;
     }
 
     protected void startExecution() {

@@ -31,6 +31,10 @@ public class CommandCapture extends Command {
         super(id, command);
     }
 
+    public CommandCapture(int id, boolean handlerEnabled, String... command) {
+        super(id, handlerEnabled, command);
+    }
+
     public CommandCapture(int id, int timeout, String... command) {
         super(id, timeout, command);
     }
