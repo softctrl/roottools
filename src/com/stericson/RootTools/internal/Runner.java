@@ -74,7 +74,7 @@ public class Runner extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                RootToolsInternalMethods.internalCommand = true;
+                RootToolsInternalMethods.internalCommand = false;
             }
         }
     }

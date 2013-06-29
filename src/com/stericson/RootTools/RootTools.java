@@ -81,6 +81,15 @@ public final class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static String utilPath;
 
+    /**
+     * Setting this to false will disable the handler that is used
+     * by default for the 3 callback methods for Command.
+     *
+     * By disabling this all callbacks will be called from a thread other than
+     * the main UI thread.
+     */
+    public static boolean handlerEnabled = true;
+
     // ---------------------------
     // # Public Variable Getters #
     // ---------------------------

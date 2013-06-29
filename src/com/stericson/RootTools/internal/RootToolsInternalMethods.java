@@ -95,9 +95,11 @@ public final class RootToolsInternalMethods {
             String mountedas = RootTools.getMountedAs("/");
             RootTools.remount("/", "rw");
 
+            setInternalCommand(true);
             command = new CommandCapture(0, "chmod 0777 /init.rc");
             Shell.startRootShell().add(command);
 
+            setInternalCommand(true);
             command = new CommandCapture(0,
                     "dd if=/init.rc of=/data/local/tmp/init.rc");
             Shell.startRootShell().add(command);

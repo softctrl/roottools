@@ -39,7 +39,8 @@ public abstract class Command {
     final String[] command;
     boolean finished = false;
     boolean terminated = false;
-    boolean internal = false;
+    boolean handlerEnabled = true;
+    boolean internalCommand = true;
     int exitCode = -1;
     int id = 0;
     int timeout = 50000;
@@ -52,8 +53,11 @@ public abstract class Command {
         this.command = command;
         this.id = id;
 
-        mHandler = new CommandHandler();
-        internal = RootToolsInternalMethods.isInternalCommand();
+        handlerEnabled = RootTools.handlerEnabled && !RootToolsInternalMethods.isInternalCommand();
+
+        if (handlerEnabled) {
+            mHandler = new CommandHandler();
+        }
     }
 
     public Command(int id, int timeout, String... command) {
@@ -61,8 +65,32 @@ public abstract class Command {
         this.id = id;
         this.timeout = timeout;
 
-        mHandler = new CommandHandler();
-        internal = RootToolsInternalMethods.isInternalCommand();
+        handlerEnabled = RootTools.handlerEnabled && !RootToolsInternalMethods.isInternalCommand();
+
+        if (handlerEnabled) {
+            mHandler = new CommandHandler();
+        }
+    }
+
+    protected void commandFinished() {
+        if (!terminated) {
+            synchronized (this) {
+                if (mHandler != null || handlerEnabled) {
+                    Message msg = mHandler.obtainMessage();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_COMPLETED);
+                    msg.setData(bundle);
+                    mHandler.sendMessage(msg);
+                }
+                else {
+                    commandCompleted(id, exitCode);
+                }
+
+                RootTools.log("Command " + id + " finished.");
+                finished = true;
+                this.notifyAll();
+            }
+        }
     }
 
     public String getCommand() {
@@ -75,35 +103,22 @@ public abstract class Command {
         return sb.toString();
     }
 
-    public int getExitCode() {
-        return this.exitCode;
+    public boolean isHandlerEnabled() {
+        return handlerEnabled;
     }
 
-    protected void commandFinished() {
-        if (!terminated) {
-            synchronized (this) {
-                RootTools.log("Command " + id + " finished.");
-                finished = true;
-                this.notifyAll();
-
-                if (mHandler != null || internal) {
-                    Message msg = mHandler.obtainMessage();
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_COMPLETED);
-                    msg.setData(bundle);
-                    mHandler.sendMessage(msg);
-                }
-                else {
-                    commandCompleted(id, exitCode);
-                }
-            }
-        }
+    public int getExitCode() {
+        return this.exitCode;
     }
 
     protected void setExitCode(int code) {
         synchronized (this) {
             exitCode = code;
         }
+    }
+
+    public void setHandlerEnabled(boolean handlerEnabled) {
+        this.handlerEnabled = handlerEnabled;
     }
 
     protected void startExecution() {
@@ -120,14 +135,9 @@ public abstract class Command {
 
     protected void terminated(String reason) {
         synchronized (Command.this) {
-            setExitCode(-1);
-            terminated = true;
-            this.finished = true;
-            this.notifyAll();
-            RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
 
 
-            if (mHandler != null || internal) {
+            if (mHandler != null || handlerEnabled) {
                 Message msg = mHandler.obtainMessage();
                 Bundle bundle = new Bundle();
                 bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_TERMINATED);
@@ -138,11 +148,17 @@ public abstract class Command {
             else {
                 commandTerminated(id, reason);
             }
+
+            setExitCode(-1);
+            terminated = true;
+            this.finished = true;
+            RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
+            this.notifyAll();
         }
     }
 
     protected void output(int id, String line) {
-        if (mHandler != null || internal) {
+        if (mHandler != null || handlerEnabled) {
             Message msg = mHandler.obtainMessage();
             Bundle bundle = new Bundle();
             bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_OUTPUT);

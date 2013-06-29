@@ -137,7 +137,6 @@ public class SanityCheckRootTools extends Activity {
         }
 
         public void run() {
-            Looper.prepare();
             visualUpdate(TestHandler.ACTION_SHOW, null);
 
             // First test: Install a binary file for future use
@@ -239,7 +238,7 @@ public class SanityCheckRootTools extends Activity {
             try {
                 shell = RootTools.getShell(true);
 
-                CommandCapture cmd = new CommandCapture(42, 1000000, "find /") {
+                CommandCapture cmd = new CommandCapture(42, "find /") {
 
                     boolean _catch = false;
 
@@ -294,8 +293,6 @@ public class SanityCheckRootTools extends Activity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            Looper.loop();
 
         }
 
