@@ -115,6 +115,10 @@ public abstract class Command {
         return sb.toString();
     }
 
+    public boolean isExecuting() {
+        return executing;
+    }
+
     public boolean isHandlerEnabled() {
         return handlerEnabled;
     }
