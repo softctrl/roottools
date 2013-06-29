@@ -87,6 +87,7 @@ public abstract class Command {
                 }
 
                 RootTools.log("Command " + id + " finished.");
+                executing = false;
                 finished = true;
                 this.notifyAll();
             }
@@ -128,7 +129,7 @@ public abstract class Command {
         } else {
             mHandler = null;
         }
-        
+
         this.handlerEnabled = handlerEnabled;
     }
 
@@ -161,10 +162,11 @@ public abstract class Command {
                 commandTerminated(id, reason);
             }
 
+            RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
             setExitCode(-1);
             terminated = true;
             this.finished = true;
-            RootTools.log("Command " + id + " did not finish because it was terminated. Termination reason: " + reason);
+            executing = false;
             this.notifyAll();
         }
     }
