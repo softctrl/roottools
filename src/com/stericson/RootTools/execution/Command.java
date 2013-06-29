@@ -53,22 +53,14 @@ public abstract class Command {
         this.command = command;
         this.id = id;
 
-        handlerEnabled = RootTools.handlerEnabled;
-
-        if (handlerEnabled) {
-            mHandler = new CommandHandler();
-        }
+        createHandler(RootTools.handlerEnabled);
     }
 
     public Command(int id, boolean handlerEnabled, String... command) {
         this.command = command;
         this.id = id;
 
-        this.handlerEnabled = handlerEnabled;
-
-        if (handlerEnabled) {
-            mHandler = new CommandHandler();
-        }
+        createHandler(handlerEnabled);
     }
 
     public Command(int id, int timeout, String... command) {
@@ -76,11 +68,7 @@ public abstract class Command {
         this.id = id;
         this.timeout = timeout;
 
-        handlerEnabled = RootTools.handlerEnabled;
-
-        if (handlerEnabled) {
-            mHandler = new CommandHandler();
-        }
+        createHandler(RootTools.handlerEnabled);
     }
 
     protected void commandFinished() {
@@ -102,6 +90,15 @@ public abstract class Command {
                 finished = true;
                 this.notifyAll();
             }
+        }
+    }
+
+    private void createHandler(boolean handlerEnabled) {
+
+        this.handlerEnabled = handlerEnabled;
+
+        if (Looper.myLooper() != null && handlerEnabled) {
+            mHandler = new CommandHandler();
         }
     }
 
