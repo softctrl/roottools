@@ -74,7 +74,7 @@ public abstract class Command {
     protected void commandFinished() {
         if (!terminated) {
             synchronized (this) {
-                if (mHandler != null || handlerEnabled) {
+                if (mHandler != null && handlerEnabled) {
                     Message msg = mHandler.obtainMessage();
                     Bundle bundle = new Bundle();
                     bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_COMPLETED);
@@ -147,7 +147,7 @@ public abstract class Command {
         synchronized (Command.this) {
 
 
-            if (mHandler != null || handlerEnabled) {
+            if (mHandler != null && handlerEnabled) {
                 Message msg = mHandler.obtainMessage();
                 Bundle bundle = new Bundle();
                 bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_TERMINATED);
@@ -169,7 +169,7 @@ public abstract class Command {
     }
 
     protected void output(int id, String line) {
-        if (mHandler != null || handlerEnabled) {
+        if (mHandler != null && handlerEnabled) {
             Message msg = mHandler.obtainMessage();
             Bundle bundle = new Bundle();
             bundle.putInt(CommandHandler.ACTION, CommandHandler.COMMAND_OUTPUT);
