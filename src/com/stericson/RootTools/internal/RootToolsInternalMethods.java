@@ -1255,6 +1255,29 @@ public final class RootToolsInternalMethods {
     }
 
     /**
+     * This method checks whether a binary is installed.
+     *
+     * @param context    the current activity's <code>Context</code>
+     * @param binaryName binary file name; appended to /data/data/app.package/files/
+     * @return a <code>boolean</code> which indicates whether or not
+     *         the binary already exists.
+     */
+    public boolean isBinaryAvailable(Context context, String binaryName) {
+        Installer installer;
+
+        try {
+            installer = new Installer(context);
+        } catch (IOException ex) {
+            if (RootTools.debugMode) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
+
+        return (installer.isBinaryInstalled(binaryName));
+    }
+
+    /**
      * This will let you know if an applet is available from BusyBox
      * <p/>
      *
