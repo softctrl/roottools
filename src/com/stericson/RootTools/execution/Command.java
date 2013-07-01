@@ -22,6 +22,7 @@
 
 package com.stericson.RootTools.execution;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,7 +31,6 @@ import android.os.Message;
 import java.io.IOException;
 
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.internal.RootToolsInternalMethods;
 
 public abstract class Command {
 
@@ -38,6 +38,8 @@ public abstract class Command {
     boolean executing = false;
 
     final String[] command;
+    boolean javaCommand = false;
+    Context context = null;
     boolean finished = false;
     boolean terminated = false;
     boolean handlerEnabled = true;
@@ -69,6 +71,39 @@ public abstract class Command {
         this.timeout = timeout;
 
         createHandler(RootTools.handlerEnabled);
+    }
+
+    /**
+     * Constructor for executing Java commands rather than binaries
+     * @param javaCommand when True, it is a java command.
+     * @param context     needed to execute java command.
+     */
+    public Command(int id, boolean javaCommand, Context context, String... command) {
+        this(id, command);
+        this.javaCommand = javaCommand;
+        this.context = context;
+    }
+
+    /**
+     * Constructor for executing Java commands rather than binaries
+     * @param javaCommand when True, it is a java command.
+     * @param context     needed to execute java command.
+     */
+    public Command(int id, boolean handlerEnabled, boolean javaCommand, Context context, String... command) {
+        this(id, handlerEnabled, command);
+        this.javaCommand = javaCommand;
+        this.context = context;
+    }
+
+    /**
+     * Constructor for executing Java commands rather than binaries
+     * @param javaCommand when True, it is a java command.
+     * @param context     needed to execute java command.
+     */
+    public Command(int id, int timeout, boolean javaCommand, Context context, String... command) {
+        this(id, timeout, command);
+        this.javaCommand = javaCommand;
+        this.context = context;
     }
 
     protected void commandFinished() {
@@ -104,9 +139,20 @@ public abstract class Command {
 
     public String getCommand() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < command.length; i++) {
-            sb.append(command[i]);
-            sb.append('\n');
+        if(javaCommand) {
+            String filePath = context.getFilesDir().getPath();
+            for (int i = 0; i < command.length; i++) {
+                sb.append(
+                        "dalvikvm -cp " + filePath + "/anbuild.dex com.stericson.RootTools.containers.RootClass "
+                        + command[i]);
+                sb.append('\n');
+            }
+        }
+        else {
+            for (int i = 0; i < command.length; i++) {
+                sb.append(command[i]);
+                sb.append('\n');
+            }
         }
         RootTools.log("Sending command(s): " + sb.toString());
         return sb.toString();

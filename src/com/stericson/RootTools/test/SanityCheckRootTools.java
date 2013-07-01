@@ -32,18 +32,16 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.os.StrictMode;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.stericson.RootTools.Constants;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.exceptions.RootDeniedException;
-import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.JavaCommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 public class SanityCheckRootTools extends Activity {
@@ -228,12 +226,36 @@ public class SanityCheckRootTools extends Activity {
                 visualUpdate(TestHandler.ACTION_DISPLAY, "Permissions == null k\n\n");
             }
 
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "JAVA");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Running some Java code ]\n");
+
+            Shell shell;
+            try {
+                shell = RootTools.getShell(true);
+                JavaCommandCapture cmd = new JavaCommandCapture(
+                        43,
+                        false,
+                        SanityCheckRootTools.this,
+                        "com.stericson.RootToolsTests.NativeJavaClass") {
+
+                    @Override
+                    public void commandOutput(int id, String line) {
+                        super.commandOutput(id, line);
+                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
+                    }
+                };
+                shell.add(cmd);
+
+            } catch (Exception e) {
+                // Oops. Say, did you run RootClass and move the resulting anbuild.dex " file to res/raw?
+                // If you don't you will not be able to check root mode Java.
+                e.printStackTrace();
+            }
+
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing df");
             long spaceValue = RootTools.getSpace("/data");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking /data partition size]\n");
             visualUpdate(TestHandler.ACTION_DISPLAY, spaceValue + "k\n\n");
-
-            Shell shell;
 
             try {
                 shell = RootTools.getShell(true);
