@@ -82,6 +82,9 @@ public class Shell {
                     proc.destroy();
                 } catch (Exception e) {}
 
+                closeQuietly(in);
+                closeQuietly(out);
+
                 throw new TimeoutException(error);
             }
             /**
@@ -93,6 +96,8 @@ public class Shell {
                     proc.destroy();
                 } catch (Exception e) {}
 
+                closeQuietly(in);
+                closeQuietly(out);
 
                 throw new RootDeniedException("Root Access Denied");
             }
@@ -128,6 +133,22 @@ public class Shell {
         }
 
         return command;
+    }
+
+    private void closeQuietly(final Reader input) {
+        try {
+            if (input != null) {
+                input.close();
+            }
+        } catch (Exception ignore) {}
+    }
+
+    private void closeQuietly(final Writer output) {
+        try {
+            if (output != null) {
+                output.close();
+            }
+        } catch (Exception ignore) {}
     }
 
     public void close() throws IOException {
@@ -257,7 +278,6 @@ public class Shell {
                          */
                         out.write("\nexit 0\n");
                         out.flush();
-                        out.close();
                         RootTools.log("Closing shell");
                         return;
                     }
@@ -266,6 +286,8 @@ public class Shell {
                 RootTools.log(e.getMessage(), 2, e);
             } catch (InterruptedException e) {
                 RootTools.log(e.getMessage(), 2, e);
+            } finally {
+                closeQuietly(out);
             }
         }
     };
@@ -346,6 +368,9 @@ public class Shell {
                     proc.waitFor();
                     proc.destroy();
                 } catch (Exception e) {}
+
+                closeQuietly(out);
+                closeQuietly(in);
 
                 RootTools.log("Shell destroyed");
 
