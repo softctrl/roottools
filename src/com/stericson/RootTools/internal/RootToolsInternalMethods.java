@@ -266,6 +266,8 @@ public final class RootToolsInternalMethods {
      */
     public boolean copyFile(String source, String destination, boolean remountAsRw,
                             boolean preserveFileAttributes) {
+
+        CommandCapture command = null;
         boolean result = true;
 
         try {
@@ -279,14 +281,20 @@ public final class RootToolsInternalMethods {
                 RootTools.log("cp command is available!");
 
                 if (preserveFileAttributes) {
-                    CommandCapture command = new CommandCapture(0, false, "cp -fp " + source + " " + destination);
+                    command = new CommandCapture(0, false, "cp -fp " + source + " " + destination);
                     Shell.startRootShell().add(command);
                     commandWait(command);
 
+                    //ensure that the file was copied, an exitcode of zero means success
+                    result = command.getExitCode() == 0;
+
                 } else {
-                    CommandCapture command = new CommandCapture(0, false, "cp -f " + source + " " + destination);
+                    command = new CommandCapture(0, false, "cp -f " + source + " " + destination);
                     Shell.startRootShell().add(command);
                     commandWait(command);
+
+                    //ensure that the file was copied, an exitcode of zero means success
+                    result = command.getExitCode() == 0;
 
                 }
             } else {
@@ -294,12 +302,12 @@ public final class RootToolsInternalMethods {
                     RootTools.log("busybox cp command is available!");
 
                     if (preserveFileAttributes) {
-                        CommandCapture command = new CommandCapture(0, false, "busybox cp -fp " + source + " " + destination);
+                        command = new CommandCapture(0, false, "busybox cp -fp " + source + " " + destination);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
                     } else {
-                        CommandCapture command = new CommandCapture(0, false, "busybox cp -f " + source + " " + destination);
+                        command = new CommandCapture(0, false, "busybox cp -f " + source + " " + destination);
                         Shell.startRootShell().add(command);
                         commandWait(command);
 
@@ -316,7 +324,6 @@ public final class RootToolsInternalMethods {
                             filePermission = permissions.getPermissions();
                         }
 
-                        CommandCapture command;
                         // copy with cat
                         command = new CommandCapture(0, false, "cat " + source + " > " + destination);
                         Shell.startRootShell().add(command);
@@ -327,7 +334,6 @@ public final class RootToolsInternalMethods {
                             command = new CommandCapture(0, false, "chmod " + filePermission + " " + destination);
                             Shell.startRootShell().add(command);
                             commandWait(command);
-
                         }
                     } else {
                         result = false;
@@ -342,6 +348,11 @@ public final class RootToolsInternalMethods {
         } catch (Exception e) {
             e.printStackTrace();
             result = false;
+        }
+
+        if (command != null) {
+            //ensure that the file was copied, an exitcode of zero means success
+            result = command.getExitCode() == 0;
         }
 
         return result;
