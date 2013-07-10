@@ -51,6 +51,11 @@ public abstract class Command {
     public abstract void commandTerminated(int id, String reason);
     public abstract void commandCompleted(int id, int exitCode);
 
+    /**
+     * Constructor for executing a normal shell command
+     * @param id the id of the command being executed
+     * @param command the command, or commands, to be executed.
+     */
     public Command(int id, String... command) {
         this.command = command;
         this.id = id;
@@ -58,6 +63,13 @@ public abstract class Command {
         createHandler(RootTools.handlerEnabled);
     }
 
+    /**
+     * Constructor for executing a normal shell command
+     * @param id the id of the command being executed
+     * @param handlerEnabled when true the handler will be used to call the
+     *                       callback methods if possible.
+     * @param command the command, or commands, to be executed.
+     */
     public Command(int id, boolean handlerEnabled, String... command) {
         this.command = command;
         this.id = id;
@@ -65,6 +77,13 @@ public abstract class Command {
         createHandler(handlerEnabled);
     }
 
+    /**
+     * Constructor for executing a normal shell command
+     * @param id the id of the command being executed
+     * @param timeout the time allowed before the shell will give up executing the command
+     *                and throw a TimeoutException.
+     * @param command the command, or commands, to be executed.
+     */
     public Command(int id, int timeout, String... command) {
         this.command = command;
         this.id = id;
@@ -139,6 +158,7 @@ public abstract class Command {
 
     public String getCommand() {
         StringBuilder sb = new StringBuilder();
+
         if(javaCommand) {
             String filePath = context.getFilesDir().getPath();
             for (int i = 0; i < command.length; i++) {
