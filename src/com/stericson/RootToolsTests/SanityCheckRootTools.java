@@ -20,7 +20,7 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools.test;
+package com.stericson.RootToolsTests;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
