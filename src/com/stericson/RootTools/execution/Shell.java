@@ -53,7 +53,7 @@ public class Shell {
         RootTools.log("Starting shell: " + cmd);
 
         proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-        in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        in = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
         out = new OutputStreamWriter(proc.getOutputStream(), "UTF-8");
 
         /**
