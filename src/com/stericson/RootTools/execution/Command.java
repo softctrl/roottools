@@ -186,6 +186,10 @@ public abstract class Command {
         return handlerEnabled;
     }
 
+    public boolean isFinished() {
+        return finished;
+    }
+
     public int getExitCode() {
         return this.exitCode;
     }
