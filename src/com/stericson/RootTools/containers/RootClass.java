@@ -8,7 +8,18 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RootClass {
+/* #ANNOTATIONS @SupportedAnnotationTypes("com.stericson.RootTools.containers.RootClass.Candidate") */
+/* #ANNOTATIONS @SupportedSourceVersion(SourceVersion.RELEASE_6) */
+public class RootClass /* #ANNOTATIONS extends AbstractProcessor */ {
+
+    /* #ANNOTATIONS
+    @Override
+    public boolean process(Set<? extends TypeElement> typeElements, RoundEnvironment roundEnvironment) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "I was invoked!!!");
+
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+    */
 
     enum READ_STATE { STARTING, FOUND_ANNOTATION; };
 

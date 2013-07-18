@@ -1,6 +1,5 @@
 package com.stericson.RootToolsTests;
 
-import android.content.SyncAdapterType;
 import com.stericson.RootTools.containers.RootClass;
 
 import java.io.BufferedWriter;
