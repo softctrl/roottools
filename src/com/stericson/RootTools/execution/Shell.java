@@ -112,8 +112,13 @@ public class Shell {
                  *
                  * input, and output are runnables that the threads execute.
                  */
-                new Thread(input, "Shell Input").start();
-                new Thread(output, "Shell Output").start();
+                Thread si = new Thread(input, "Shell Input");
+                si.setPriority(Thread.MIN_PRIORITY);
+                si.start();
+
+                Thread so = new Thread(output, "Shell Output");
+                so.setPriority(Thread.MIN_PRIORITY);
+                so.start();
             }
         } catch (InterruptedException ex) {
             worker.interrupt();
@@ -355,8 +360,8 @@ public class Shell {
                             if (id == read) {
                                 command.setExitCode(exitCode);
                                 command.commandFinished();
-                                read++;
                                 command = null;
+                                read++;
                                 continue;
                             }
                         }

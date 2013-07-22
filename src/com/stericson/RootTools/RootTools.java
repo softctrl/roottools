@@ -90,6 +90,15 @@ public final class RootTools {
      */
     public static boolean handlerEnabled = true;
 
+
+    /**
+     * Setting this will change the default command timeout.
+     *
+     * The default is 50000ms
+     */
+    public static int default_Command_Timeout = 50000;
+
+
     // ---------------------------
     // # Public Variable Getters #
     // ---------------------------

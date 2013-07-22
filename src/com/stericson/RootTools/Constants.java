@@ -9,4 +9,5 @@ public class Constants {
     public static final int GI = 5;
     public static final int GS = 6;
     public static final int GSYM = 7;
+
 }
