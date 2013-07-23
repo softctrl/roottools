@@ -53,8 +53,6 @@ public abstract class Command {
     public abstract void commandTerminated(int id, String reason);
     public abstract void commandCompleted(int id, int exitCode);
 
-    protected Command() {}
-
     /**
      * Constructor for executing a normal shell command
      * @param id the id of the command being executed
