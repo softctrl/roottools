@@ -39,7 +39,7 @@ public abstract class Command {
     Handler mHandler = null;
     boolean executing = false;
 
-    final String[] command;
+    String[] command = {};
     boolean javaCommand = false;
     Context context = null;
     boolean finished = false;
@@ -52,6 +52,8 @@ public abstract class Command {
     public abstract void commandOutput(int id, String line);
     public abstract void commandTerminated(int id, String reason);
     public abstract void commandCompleted(int id, int exitCode);
+
+    protected Command() {}
 
     /**
      * Constructor for executing a normal shell command
@@ -131,7 +133,6 @@ public abstract class Command {
         executing = false;
         finished = true;
         this.notifyAll();
-        executionMonitor = null;
     }
 
     protected void commandFinished() {

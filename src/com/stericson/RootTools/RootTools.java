@@ -94,9 +94,9 @@ public final class RootTools {
     /**
      * Setting this will change the default command timeout.
      *
-     * The default is 50000ms
+     * The default is 20000ms
      */
-    public static int default_Command_Timeout = 50000;
+    public static int default_Command_Timeout = 20000;
 
 
     // ---------------------------
