@@ -49,7 +49,7 @@ public class Shell {
     public static boolean isExecuting = false;
     public static boolean isReading = false;
 
-    private int maxCommands = 1000;
+    private int maxCommands = 300;
     private int read = 0;
     private int write = 0;
     private int totalExecuted = 0;
@@ -313,6 +313,8 @@ public class Shell {
                         isExecuting = true;
                         Command cmd = commands.get(write);
                         cmd.startExecution();
+                        RootTools.log("Executing: " + cmd.getCommand());
+
                         out.write(cmd.getCommand());
                         String line = "\necho " + token + " " + totalExecuted + " $?\n";
                         out.write(line);

@@ -914,11 +914,20 @@ public final class RootToolsInternalMethods {
      * @throws Exception if we cannot return the mount points.
      */
     public ArrayList<Mount> getMounts() throws Exception {
+
+        Shell shell = RootTools.getShell(true);
+
+        CommandCapture cmd = new CommandCapture(0,
+                "cat /proc/mounts > /data/local/RootToolsMounts",
+                "chmod 0777 /data/local/RootToolsMounts");
+        shell.add(cmd);
+        this.commandWait(cmd);
+
         LineNumberReader lnr = null;
         FileReader fr = null;
 
         try {
-            fr = new FileReader("/proc/mounts");
+            fr = new FileReader("/data/local/RootToolsMounts");
             lnr = new LineNumberReader(fr);
             String line;
             ArrayList<Mount> mounts = new ArrayList<Mount>();
@@ -1211,7 +1220,7 @@ public final class RootToolsInternalMethods {
                 @Override
                 public void output(int id, String line) {
                     if (box.endsWith("toolbox")) {
-                        if (line.contains("no such tool")) {
+                        if (!line.contains("no such tool")) {
                             InternalVariables.found = true;
                         }
                     } else if (box.endsWith("busybox")) {

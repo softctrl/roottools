@@ -180,7 +180,6 @@ public abstract class Command {
                 sb.append('\n');
             }
         }
-        RootTools.log("Sending command(s): " + sb.toString());
         return sb.toString();
     }
 
