@@ -22,6 +22,7 @@
 package com.stericson.RootTools.execution;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -573,6 +574,7 @@ public class Shell {
                         continue;
                     if ("Started".equals(line)) {
                         this.exit = 1;
+                        setShellOom();
                         break;
                     }
 
@@ -587,5 +589,28 @@ public class Shell {
             }
 
         }
+
+        /*
+         * setOom for shell processes (sh and su if root shell)
+         * and discard outputs
+         * 
+         */
+        private void setShellOom() {
+			try {
+				Class<?> processClass = proc.getClass();
+				Field field = null;
+				try {
+					field = processClass.getDeclaredField("pid");
+				} catch (NoSuchFieldException e) {
+					field = processClass.getDeclaredField("id");
+				}
+				field.setAccessible(true);
+				int pid = (Integer) field.get(proc);
+				out.write("(echo -17 > /proc/" + pid + "/oom_adj) &> /dev/null\n");
+				out.write("(echo -17 > /proc/$$/oom_adj) &> /dev/null\n");
+				out.flush();
+			} catch (Exception e) {
+			}
+		}
     }
 }
