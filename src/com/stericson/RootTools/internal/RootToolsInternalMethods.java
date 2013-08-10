@@ -1147,7 +1147,11 @@ public final class RootToolsInternalMethods {
             throw new Exception();
         }
 
-        CommandCapture command = new CommandCapture(0, false, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;");
+        CommandCapture command = new CommandCapture(0, false, "dd if=/dev/zero of=/data/local/symlinks.txt bs=1024 count=1", "chmod 0777 /data/local/symlinks.txt");
+        Shell.startRootShell().add(command);
+        commandWait(command);
+
+        command = new CommandCapture(0, false, "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt");
         Shell.startRootShell().add(command);
         commandWait(command);
 
