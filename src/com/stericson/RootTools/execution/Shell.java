@@ -50,7 +50,7 @@ public class Shell {
     public static boolean isExecuting = false;
     public static boolean isReading = false;
 
-    private int maxCommands = 300;
+    private int maxCommands = 1000;
     private int read = 0;
     private int write = 0;
     private int totalExecuted = 0;
@@ -156,7 +156,8 @@ public class Shell {
 
     private void cleanCommands() {
         isCleaning = true;
-        int toClean = Math.abs(maxCommands - (maxCommands / 3));
+        int toClean = Math.abs(maxCommands - (maxCommands / 4));
+        RootTools.log("Cleaning up: " + toClean);
         for (int i = 0; i < toClean; i++) {
             commands.remove(0);
         }
@@ -298,6 +299,14 @@ public class Shell {
                     }
 
                     if (write >= maxCommands) {
+
+                        /**
+                         * wait for the read to catch up.
+                         */
+                        while (read != write)
+                        {
+                            RootTools.log("Waiting for read and write to catch up before cleanup.");
+                        }
                         /**
                          * Clean up the commands, stay neat.
                          */

@@ -1488,7 +1488,9 @@ public final class RootToolsInternalMethods {
 
             synchronized (cmd) {
                 try {
-                    cmd.wait(RootTools.default_Command_Timeout);
+                    if (!cmd.isFinished()) {
+                        cmd.wait(2000);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -158,7 +158,11 @@ public abstract class Command {
         this.handlerEnabled = handlerEnabled;
 
         if (Looper.myLooper() != null && handlerEnabled) {
+            RootTools.log("CommandHandler created");
             mHandler = new CommandHandler();
+        }
+        else {
+            RootTools.log("CommandHandler not created");
         }
     }
 
